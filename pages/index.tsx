@@ -1,61 +1,68 @@
 import Link from 'next/link';
 import { useState } from 'react';
+import PlannedChat from '@/components/PlannedChat';
 
 export default function Home() {
   const [username, setUsername] = useState('');
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <h1 className="text-2xl font-bold">Eleutheria</h1>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-marble-100">
       {/* Hero Section */}
       <main className="max-w-6xl mx-auto px-6 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-5xl font-bold mb-4">Welcome to Eleutheria</h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-            Anonymous, session-based community platform. Speak freely in forums, chatrooms, and random chats.
-          </p>
+        <div className="text-center mb-12 mt-28">
+          <h2 className="text-7xl font-bold mb-4 text-aegean-800 tracking-widest animate-fade-in">ΕΛΕΥΘΕΡΙΑ</h2>
+          <div className="animate-fade-in-delay-1">
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+              Anonymous, session-based community platform. Speak freely in forums, chatrooms, and random chats.
+            </p>
 
-          {/* Username Input */}
-          <div className="max-w-md mx-auto">
+            {/* Username Input */}
+            <div className="max-w-md mx-auto">
             <input
               type="text"
               placeholder="Enter username (optional)"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               maxLength={20}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+              className="w-full px-4 py-3 border-2 border-black text-black rounded-lg focus:outline-none"
+              style={{ }}
+              onFocus={(e) => e.target.style.borderColor = '#4D89B0'}
+              onBlur={(e) => e.target.style.borderColor = 'black'}
             />
-            <p className="text-sm text-gray-500 mt-2">
-              Leave blank for a random Greek-themed username
-            </p>
+              <p className="text-sm text-gray-500 mt-2">
+                Leave blank for a random Greek-themed username
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Two Column Layout */}
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-8 animate-fade-in-delay-2">
           {/* Forums Section */}
-          <div className="bg-white p-8 rounded-lg border-2 border-gray-200">
-            <div className="text-4xl mb-4">📜</div>
-            <h3 className="text-3xl font-bold mb-4">Forums</h3>
+          <div className="bg-marble-200 p-8 rounded-lg border-4 shadow-lg" style={{ borderColor: '#4D89B0' }}>
+            <h3 className="text-3xl font-bold mb-4 flex items-center gap-3" style={{ color: '#4D89B0' }}>
+              <span className="text-4xl">📜</span>
+              Forums
+            </h3>
             <p className="text-gray-600 mb-6">
               Browse public forums and join discussions. Create posts and engage with the community.
             </p>
             <div className="space-y-3">
               <Link
                 href="/feed"
-                className="block w-full py-3 px-4 bg-blue-500 text-white text-center rounded-lg hover:bg-blue-600 transition font-semibold"
+                className="block w-full py-3 px-4 text-white text-center rounded-lg transition font-semibold shadow-md"
+                style={{ backgroundColor: '#4D89B0' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d6e8f'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4D89B0'}
               >
                 View Global Feed
               </Link>
               <Link
                 href="/forums"
-                className="block w-full py-3 px-4 border-2 border-blue-500 text-blue-500 text-center rounded-lg hover:bg-blue-50 transition font-semibold"
+                className="block w-full py-3 px-4 text-white text-center rounded-lg transition font-semibold shadow-md"
+                style={{ backgroundColor: '#4D89B0' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d6e8f'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4D89B0'}
               >
                 Browse Forums
               </Link>
@@ -63,27 +70,40 @@ export default function Home() {
           </div>
 
           {/* Chat Section */}
-          <div className="bg-white p-8 rounded-lg border-2 border-gray-200">
-            <div className="text-4xl mb-4">💬</div>
-            <h3 className="text-3xl font-bold mb-4">Chat</h3>
+          <div className="bg-marble-200 p-8 rounded-lg border-4 shadow-lg" style={{ borderColor: '#AA633F' }}>
+            <h3 className="text-3xl font-bold mb-4 flex items-center gap-3" style={{ color: '#AA633F' }}>
+              <span className="text-4xl">💬</span>
+              Chat
+            </h3>
             <p className="text-gray-600 mb-6">
               Connect with others through random 1-on-1 chats or join public chatrooms for group conversations.
             </p>
             <div className="space-y-3">
               <Link
                 href="/chat/random"
-                className="block w-full py-3 px-4 bg-green-500 text-white text-center rounded-lg hover:bg-green-600 transition font-semibold"
+                className="block w-full py-3 px-4 text-white text-center rounded-lg transition font-semibold shadow-md"
+                style={{ backgroundColor: '#AA633F' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#8a4f32'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#AA633F'}
               >
                 Random Chat
               </Link>
               <Link
                 href="/chatrooms"
-                className="block w-full py-3 px-4 border-2 border-green-500 text-green-500 text-center rounded-lg hover:bg-green-50 transition font-semibold"
+                className="block w-full py-3 px-4 text-white text-center rounded-lg transition font-semibold shadow-md"
+                style={{ backgroundColor: '#AA633F' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#8a4f32'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#AA633F'}
               >
                 Browse Chatrooms
               </Link>
             </div>
           </div>
+        </div>
+
+        {/* Planned Chat Section */}
+        <div className="mt-12 max-w-2xl mx-auto">
+          <PlannedChat />
         </div>
 
         {/* Info Section */}

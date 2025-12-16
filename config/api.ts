@@ -1,0 +1,23 @@
+export const API_BASE_URL = process.env.NODE_ENV === 'development'
+  ? 'http://localhost:3000'
+  : process.env.NEXT_PUBLIC_API_URL || 'https://api.eleutheria.com'; // Update with your prod URL later
+
+export const API_ENDPOINTS = {
+  // Posts
+  getPosts: (forumId: number) => `${API_BASE_URL}/api/forums/${forumId}/posts`,
+  createPost: (forumId: number) => `${API_BASE_URL}/api/forums/${forumId}/posts`,
+
+  // Forums
+  getForums: () => `${API_BASE_URL}/api/forums`,
+  getForum: (forumId: number) => `${API_BASE_URL}/api/forums/${forumId}`,
+  createForum: () => `${API_BASE_URL}/api/forums`,
+
+  // Chat
+  matchRandom: () => `${API_BASE_URL}/api/chat/match-random`,
+  matchPlanned: () => `${API_BASE_URL}/api/chat/match-planned`,
+
+  // Chatrooms
+  getChatrooms: () => `${API_BASE_URL}/api/chatrooms`,
+  createChatroom: () => `${API_BASE_URL}/api/chatrooms`,
+  getChatroomMessages: (chatroomId: number) => `${API_BASE_URL}/api/chatrooms/${chatroomId}/messages`,
+};

@@ -1,15 +1,66 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #E8D5B5;
+  --foreground: #2c2416;
+
+  /* Greek-themed colors */
+  --aegean-blue: #1e40af;
+  --deep-blue: #1e3a8a;
+  --gold: #d97706;
+  --bronze: #92400e;
+  --marble: #E8D5B5;
+  --marble-dark: #D4C4A8;
+  --olive: #65a30d;
+  --terracotta: #dc2626;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-libre), serif;
+  --font-display: var(--font-cinzel), serif;
+
+  /* Greek color palette */
+  --color-aegean-50: #eff6ff;
+  --color-aegean-100: #dbeafe;
+  --color-aegean-200: #bfdbfe;
+  --color-aegean-300: #93c5fd;
+  --color-aegean-400: #60a5fa;
+  --color-aegean-500: #3b82f6;
+  --color-aegean-600: #1e40af;
+  --color-aegean-700: #1e3a8a;
+  --color-aegean-800: #1e3a70;
+  --color-aegean-900: #1e2a50;
+
+  --color-gold-50: #fffbeb;
+  --color-gold-100: #fef3c7;
+  --color-gold-200: #fde68a;
+  --color-gold-300: #fcd34d;
+  --color-gold-400: #fbbf24;
+  --color-gold-500: #f59e0b;
+  --color-gold-600: #d97706;
+  --color-gold-700: #b45309;
+  --color-gold-800: #92400e;
+  --color-gold-900: #78350f;
+
+  --color-marble-50: #F5EFE0;
+  --color-marble-100: #E8D5B5;
+  --color-marble-200: #D4C4A8;
+  --color-marble-300: #C8A55F;
+  --color-marble-400: #B89550;
+  --color-marble-500: #A87F40;
+
+  --color-olive-50: #f7fee7;
+  --color-olive-100: #ecfccb;
+  --color-olive-200: #d9f99d;
+  --color-olive-300: #bef264;
+  --color-olive-400: #a3e635;
+  --color-olive-500: #84cc16;
+  --color-olive-600: #65a30d;
+  --color-olive-700: #4d7c0f;
+  --color-olive-800: #3f6212;
+  --color-olive-900: #365314;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +73,45 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-libre), serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-cinzel), serif;
+  font-weight: 600;
+}
+
+/* Greek decorative element */
+.greek-pattern {
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--gold) 0px,
+    var(--gold) 2px,
+    transparent 2px,
+    transparent 10px
+  );
+}
+
+/* Fade-in animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 1000ms ease-in;
+}
+
+.animate-fade-in-delay-1 {
+  opacity: 0;
+  animation: fade-in 1200ms ease-in 200ms forwards;
+}
+
+.animate-fade-in-delay-2 {
+  opacity: 0;
+  animation: fade-in 1200ms ease-in 400ms forwards;
 }
