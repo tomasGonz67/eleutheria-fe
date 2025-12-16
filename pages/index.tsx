@@ -1,76 +1,96 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import Link from 'next/link';
+import { useState } from 'react';
 
 export default function Home() {
+  const [username, setUsername] = useState('');
+
   return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black`}
-    >
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the index.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <h1 className="text-2xl font-bold">Eleutheria</h1>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+      </header>
+
+      {/* Hero Section */}
+      <main className="max-w-6xl mx-auto px-6 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-5xl font-bold mb-4">Welcome to Eleutheria</h2>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+            Anonymous, session-based community platform. Speak freely in forums, chatrooms, and random chats.
+          </p>
+
+          {/* Username Input */}
+          <div className="max-w-md mx-auto">
+            <input
+              type="text"
+              placeholder="Enter username (optional)"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              maxLength={20}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs/pages/getting-started?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <p className="text-sm text-gray-500 mt-2">
+              Leave blank for a random Greek-themed username
+            </p>
+          </div>
+        </div>
+
+        {/* Two Column Layout */}
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Forums Section */}
+          <div className="bg-white p-8 rounded-lg border-2 border-gray-200">
+            <div className="text-4xl mb-4">📜</div>
+            <h3 className="text-3xl font-bold mb-4">Forums</h3>
+            <p className="text-gray-600 mb-6">
+              Browse public forums and join discussions. Create posts and engage with the community.
+            </p>
+            <div className="space-y-3">
+              <Link
+                href="/feed"
+                className="block w-full py-3 px-4 bg-blue-500 text-white text-center rounded-lg hover:bg-blue-600 transition font-semibold"
+              >
+                View Global Feed
+              </Link>
+              <Link
+                href="/forums"
+                className="block w-full py-3 px-4 border-2 border-blue-500 text-blue-500 text-center rounded-lg hover:bg-blue-50 transition font-semibold"
+              >
+                Browse Forums
+              </Link>
+            </div>
+          </div>
+
+          {/* Chat Section */}
+          <div className="bg-white p-8 rounded-lg border-2 border-gray-200">
+            <div className="text-4xl mb-4">💬</div>
+            <h3 className="text-3xl font-bold mb-4">Chat</h3>
+            <p className="text-gray-600 mb-6">
+              Connect with others through random 1-on-1 chats or join public chatrooms for group conversations.
+            </p>
+            <div className="space-y-3">
+              <Link
+                href="/chat/random"
+                className="block w-full py-3 px-4 bg-green-500 text-white text-center rounded-lg hover:bg-green-600 transition font-semibold"
+              >
+                Random Chat
+              </Link>
+              <Link
+                href="/chatrooms"
+                className="block w-full py-3 px-4 border-2 border-green-500 text-green-500 text-center rounded-lg hover:bg-green-50 transition font-semibold"
+              >
+                Browse Chatrooms
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Info Section */}
+        <div className="mt-16 text-center">
+          <p className="text-gray-500">
+            All interactions are anonymous. No sign-up required. Your session is tracked by cookies for moderation purposes only.
+          </p>
         </div>
       </main>
     </div>
