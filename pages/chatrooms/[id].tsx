@@ -1,48 +1,179 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
+import { clientApi } from '@/lib/api';
+import { createChatroomMessage, updateChatroom, deleteChatroom } from '@/lib/services/chatrooms';
+
+interface Message {
+  id: number;
+  content: string;
+  username: string;
+  sender_session_token: string;
+  created_at: string;
+}
+
+interface Chatroom {
+  id: number;
+  name: string;
+  description: string;
+  creator_session_token: string | null;
+}
 
 export default function ChatroomMessagesPage() {
   const router = useRouter();
   const { id } = router.query;
 
   const [newMessage, setNewMessage] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [chatroom, setChatroom] = useState<Chatroom | null>(null);
+  const [userSessionToken, setUserSessionToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [chatroomName, setChatroomName] = useState('');
+  const [chatroomDescription, setChatroomDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
 
-  // Mock data - will be replaced with real API data later
-  const chatroom = {
-    id: 1,
-    name: 'General Chat',
-    description: 'General discussion and casual conversation',
-  };
+  // Fetch chatroom info and messages on component mount and when ID changes
+  useEffect(() => {
+    if (!id) return;
 
-  const messages = [
-    {
-      id: 1,
-      content: 'Hey everyone! What\'s up?',
-      username: 'WiseAthena',
-      created_at: '2025-01-15T10:30:00Z',
-    },
-    {
-      id: 2,
-      content: 'Not much, just enjoying the chat!',
-      username: 'BravePegasus',
-      created_at: '2025-01-15T10:31:00Z',
-    },
-    {
-      id: 3,
-      content: 'This is a cool chatroom. Anyone here into philosophy?',
-      username: 'SwiftHermes',
-      created_at: '2025-01-15T10:35:00Z',
-    },
-  ];
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+      try {
+        // Fetch user session, chatrooms, and messages in parallel
+        const [userResponse, chatroomsResponse, messagesResponse] = await Promise.all([
+          clientApi.get('/api/session/me'),
+          clientApi.get('/api/chatrooms'),
+          clientApi.get(`/api/chatrooms/${id}/messages`)
+        ]);
+
+        // Get user session token
+        if (userResponse.data?.user?.session_token) {
+          setUserSessionToken(userResponse.data.user.session_token);
+        }
+
+        // Find the specific chatroom by ID
+        const chatroomsData = chatroomsResponse.data;
+        const chatrooms = Array.isArray(chatroomsData) ? chatroomsData : (chatroomsData.chatrooms || []);
+        const foundChatroom = chatrooms.find((c: Chatroom) => c.id === Number(id));
+
+        if (foundChatroom) {
+          setChatroom(foundChatroom);
+        }
+
+        setMessages(messagesResponse.data.messages || []);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError('Failed to load chatroom');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Call createChatroomMessage API
-    console.log('New message:', newMessage);
-    setNewMessage('');
+
+    if (!newMessage.trim() || !id) return;
+
+    setIsSending(true);
+
+    try {
+      await createChatroomMessage(Number(id), { content: newMessage.trim() });
+      setNewMessage('');
+
+      // Refresh messages after sending
+      const response = await clientApi.get(`/api/chatrooms/${id}/messages`);
+      setMessages(response.data.messages || []);
+    } catch (err) {
+      console.error('Error sending message:', err);
+      setError('Failed to send message');
+    } finally {
+      setIsSending(false);
+    }
   };
+
+  const handleStartEdit = () => {
+    if (!chatroom) return;
+    setChatroomName(chatroom.name);
+    setChatroomDescription(chatroom.description || '');
+    setIsEditModalOpen(true);
+    setFormError('');
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!chatroom || !chatroomName.trim() || !chatroomDescription.trim()) {
+      setFormError('Both name and description are required');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFormError('');
+
+    try {
+      await updateChatroom(chatroom.id, {
+        name: chatroomName.trim(),
+        description: chatroomDescription.trim(),
+      });
+
+      // Update local state
+      setChatroom({
+        ...chatroom,
+        name: chatroomName.trim(),
+        description: chatroomDescription.trim(),
+      });
+
+      // Reset form and close modal
+      setChatroomName('');
+      setChatroomDescription('');
+      setIsEditModalOpen(false);
+    } catch (err) {
+      console.error('Error updating chatroom:', err);
+      setFormError('Failed to update chatroom. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!chatroom) return;
+
+    if (!confirm(`Are you sure you want to delete "${chatroom.name}"? All messages in this chatroom will also be deleted.`)) {
+      return;
+    }
+
+    try {
+      await deleteChatroom(chatroom.id);
+      // Redirect to chatrooms list
+      router.push('/chatrooms');
+    } catch (err) {
+      console.error('Error deleting chatroom:', err);
+      alert('Failed to delete chatroom. Please try again.');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-marble-100">
+        <Header currentPage="chatrooms" />
+        <main className="max-w-4xl mx-auto px-6 py-8">
+          <div className="bg-white p-8 rounded-lg border-4" style={{ borderColor: '#4D89B0' }}>
+            <p className="text-gray-600">Loading messages...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-marble-100">
@@ -50,30 +181,79 @@ export default function ChatroomMessagesPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-white p-8 rounded-lg border-4" style={{ borderColor: '#AA633F' }}>
-          <a href="/chatrooms" className="text-sm mb-4 inline-block hover:underline" style={{ color: '#AA633F' }}>
-            ← Back to Chatrooms
-          </a>
-          <h1 className="text-3xl font-bold mb-2 text-gray-800">{chatroom.name}</h1>
-          <p className="text-gray-600 mb-6">{chatroom.description}</p>
+        {error ? (
+          <div className="bg-white p-8 rounded-lg border-4 border-red-500">
+            <p className="text-red-600">{error}</p>
+          </div>
+        ) : (
+          <div className="bg-white p-8 rounded-lg border-4" style={{ borderColor: '#4D89B0' }}>
+            <Link href="/chatrooms" className="text-sm mb-4 inline-block hover:underline" style={{ color: '#4D89B0' }}>
+              ← Back to Chatrooms
+            </Link>
+
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold mb-2 text-gray-800">
+                  {chatroom?.name || 'Chatroom'}
+                </h1>
+                {chatroom?.description && (
+                  <p className="text-gray-600 mb-4">{chatroom.description}</p>
+                )}
+              </div>
+              {/* Show Edit and Delete buttons only for current user's chatrooms */}
+              {userSessionToken && chatroom?.creator_session_token === userSessionToken && (
+                <div className="flex items-center gap-3 ml-4">
+                  <button
+                    onClick={handleStartEdit}
+                    className="text-sm font-semibold hover:underline"
+                    style={{ color: '#4D89B0' }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="text-sm font-semibold text-red-600 hover:underline"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {!chatroom?.description && <div className="mb-2" />}
 
           <div className="border border-black rounded-lg">
             {/* Messages */}
             <div className="p-6 space-y-4 min-h-[400px] max-h-[500px] overflow-y-auto">
-              {messages.map((message) => (
-                <div key={message.id} className="p-4 rounded-lg border border-black">
-                  {/* Message Header */}
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold text-gray-800">{message.username}</span>
-                    <span className="text-xs text-gray-500">
-                      {new Date(message.created_at).toLocaleTimeString()}
-                    </span>
-                  </div>
+              {messages.map((message) => {
+                const isOwnMessage = message.sender_session_token === userSessionToken;
 
-                  {/* Message Content */}
-                  <p className="text-gray-700">{message.content}</p>
-                </div>
-              ))}
+                return (
+                  <div
+                    key={message.id}
+                    className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[70%] p-4 rounded-lg ${
+                        isOwnMessage
+                          ? 'bg-gray-300'
+                          : 'bg-gray-100'
+                      }`}
+                    >
+                      {/* Message Header */}
+                      <div className="flex items-center justify-between mb-2 gap-3">
+                        <span className="font-semibold text-gray-800 text-sm">{message.username}</span>
+                        <span className="text-xs text-gray-500 whitespace-nowrap">
+                          {new Date(message.created_at).toLocaleTimeString()}
+                        </span>
+                      </div>
+
+                      {/* Message Content */}
+                      <p className="text-gray-700 break-words">{message.content}</p>
+                    </div>
+                  </div>
+                );
+              })}
 
               {/* Empty State */}
               {messages.length === 0 && (
@@ -91,22 +271,126 @@ export default function ChatroomMessagesPage() {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 px-4 py-2 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
+                  disabled={isSending}
+                  className="flex-1 px-4 py-2 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none disabled:bg-gray-100"
                 />
                 <button
                   type="submit"
-                  disabled={!newMessage.trim()}
+                  disabled={!newMessage.trim() || isSending}
                   className="px-6 py-2 text-white rounded-lg transition font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: '#AA633F' }}
-                  onMouseEnter={(e) => !newMessage.trim() ? null : e.currentTarget.style.backgroundColor = '#8a4f32'}
-                  onMouseLeave={(e) => !newMessage.trim() ? null : e.currentTarget.style.backgroundColor = '#AA633F'}
+                  style={{ backgroundColor: isSending || !newMessage.trim() ? '#9ca3af' : '#4D89B0' }}
+                  onMouseEnter={(e) => {
+                    if (!isSending && newMessage.trim()) {
+                      e.currentTarget.style.backgroundColor = '#3d6e8f';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSending && newMessage.trim()) {
+                      e.currentTarget.style.backgroundColor = '#4D89B0';
+                    }
+                  }}
                 >
-                  Send
+                  {isSending ? 'Sending...' : 'Send'}
                 </button>
               </div>
             </form>
           </div>
         </div>
+        )}
+
+        {/* Edit Chatroom Modal */}
+        {isEditModalOpen && chatroom && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full p-6 border-4" style={{ borderColor: '#4D89B0' }}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-gray-800">Edit Chatroom</h2>
+                <button
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setFormError('');
+                    setChatroomName('');
+                    setChatroomDescription('');
+                  }}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <form onSubmit={handleEditSubmit}>
+                {formError && (
+                  <div className="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                    {formError}
+                  </div>
+                )}
+
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Chatroom Name
+                  </label>
+                  <input
+                    type="text"
+                    value={chatroomName}
+                    onChange={(e) => setChatroomName(e.target.value)}
+                    placeholder="e.g., General Chat"
+                    maxLength={100}
+                    disabled={isSubmitting}
+                    className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
+                  />
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={chatroomDescription}
+                    onChange={(e) => setChatroomDescription(e.target.value)}
+                    placeholder="e.g., A place for general discussion"
+                    maxLength={500}
+                    rows={4}
+                    disabled={isSubmitting}
+                    className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditModalOpen(false);
+                      setFormError('');
+                      setChatroomName('');
+                      setChatroomDescription('');
+                    }}
+                    disabled={isSubmitting}
+                    className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || !chatroomName.trim() || !chatroomDescription.trim()}
+                    className="flex-1 px-4 py-2 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: isSubmitting || !chatroomName.trim() || !chatroomDescription.trim() ? '#9ca3af' : '#4D89B0' }}
+                    onMouseEnter={(e) => {
+                      if (!isSubmitting && chatroomName.trim() && chatroomDescription.trim()) {
+                        e.currentTarget.style.backgroundColor = '#3d6e8f';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSubmitting && chatroomName.trim() && chatroomDescription.trim()) {
+                        e.currentTarget.style.backgroundColor = '#4D89B0';
+                      }
+                    }}
+                  >
+                    {isSubmitting ? 'Updating...' : 'Update Chatroom'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

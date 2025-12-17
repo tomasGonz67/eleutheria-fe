@@ -11,12 +11,4 @@ export const clientApi = axios.create({
   },
 });
 
-// Server-side API instance (for SSR - simple GET requests, no auth needed)
-export const serverApi = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
 export default clientApi;

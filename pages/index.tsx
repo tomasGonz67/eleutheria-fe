@@ -1,9 +1,28 @@
-import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 import PlannedChat from '@/components/PlannedChat';
+import { createSession } from '@/lib/services/session';
 
 export default function Home() {
+  const router = useRouter();
   const [username, setUsername] = useState('');
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
+
+  const handleNavigate = async (path: string) => {
+    setIsCreatingSession(true);
+    try {
+      // Create session with username (or empty for random username)
+      await createSession(username.trim() || undefined);
+      // Navigate after session is created
+      router.push(path);
+    } catch (error) {
+      console.error('Error creating session:', error);
+      // Navigate anyway (session might already exist)
+      router.push(path);
+    } finally {
+      setIsCreatingSession(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-marble-100">
@@ -48,24 +67,26 @@ export default function Home() {
               Browse public forums and join discussions. Create posts and engage with the community.
             </p>
             <div className="space-y-3">
-              <Link
-                href="/feed"
-                className="block w-full py-3 px-4 text-white text-center rounded-lg transition font-semibold shadow-md"
+              <button
+                onClick={() => handleNavigate('/feed')}
+                disabled={isCreatingSession}
+                className="block w-full py-3 px-4 text-white text-center rounded-lg transition font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#4D89B0' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d6e8f'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4D89B0'}
+                onMouseEnter={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#3d6e8f')}
+                onMouseLeave={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#4D89B0')}
               >
-                View Global Feed
-              </Link>
-              <Link
-                href="/forums"
-                className="block w-full py-3 px-4 text-white text-center rounded-lg transition font-semibold shadow-md"
+                {isCreatingSession ? 'Loading...' : 'View Global Feed'}
+              </button>
+              <button
+                onClick={() => handleNavigate('/forums')}
+                disabled={isCreatingSession}
+                className="block w-full py-3 px-4 text-white text-center rounded-lg transition font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#4D89B0' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d6e8f'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4D89B0'}
+                onMouseEnter={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#3d6e8f')}
+                onMouseLeave={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#4D89B0')}
               >
-                Browse Forums
-              </Link>
+                {isCreatingSession ? 'Loading...' : 'Browse Forums'}
+              </button>
             </div>
           </div>
 
@@ -79,24 +100,26 @@ export default function Home() {
               Connect with others through random 1-on-1 chats or join public chatrooms for group conversations.
             </p>
             <div className="space-y-3">
-              <Link
-                href="/chat/random"
-                className="block w-full py-3 px-4 text-white text-center rounded-lg transition font-semibold shadow-md"
+              <button
+                onClick={() => handleNavigate('/chat/random')}
+                disabled={isCreatingSession}
+                className="block w-full py-3 px-4 text-white text-center rounded-lg transition font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#AA633F' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#8a4f32'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#AA633F'}
+                onMouseEnter={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#8a4f32')}
+                onMouseLeave={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#AA633F')}
               >
-                Random Chat
-              </Link>
-              <Link
-                href="/chatrooms"
-                className="block w-full py-3 px-4 text-white text-center rounded-lg transition font-semibold shadow-md"
+                {isCreatingSession ? 'Loading...' : 'Random Chat'}
+              </button>
+              <button
+                onClick={() => handleNavigate('/chatrooms')}
+                disabled={isCreatingSession}
+                className="block w-full py-3 px-4 text-white text-center rounded-lg transition font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#AA633F' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#8a4f32'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#AA633F'}
+                onMouseEnter={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#8a4f32')}
+                onMouseLeave={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#AA633F')}
               >
-                Browse Chatrooms
-              </Link>
+                {isCreatingSession ? 'Loading...' : 'Browse Chatrooms'}
+              </button>
             </div>
           </div>
         </div>

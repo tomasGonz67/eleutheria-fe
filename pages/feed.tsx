@@ -7,15 +7,20 @@ interface Post {
   id: number;
   content: string;
   username: string;
+  author_session_token: string;
   created_at: string;
 }
 
 interface FeedPageProps {
   posts: Post[];
+  username: string;
+  userSessionToken: string | null;
+  currentPage: number;
+  totalPages: number;
   error?: string;
 }
 
-export default function FeedPage({ posts, error }: FeedPageProps) {
+export default function FeedPage({ posts, username, userSessionToken, currentPage, totalPages, error }: FeedPageProps) {
   return (
     <div className="min-h-screen bg-marble-100">
       <Header currentPage="feed" />
@@ -27,7 +32,14 @@ export default function FeedPage({ posts, error }: FeedPageProps) {
             <p className="text-red-600">Error loading posts: {error}</p>
           </div>
         ) : (
-          <Feed posts={posts} />
+          <Feed 
+            posts={posts} 
+            forumId={1} 
+            username={username} 
+            userSessionToken={userSessionToken}
+            currentPage={currentPage}
+            totalPages={totalPages}
+          />
         )}
       </main>
     </div>
@@ -35,26 +47,53 @@ export default function FeedPage({ posts, error }: FeedPageProps) {
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  try {
-    // Fetch posts from forum 1 (global feed)
-    const response = await fetch(API_ENDPOINTS.getPosts(1), {
-      headers: {
-        'Cookie': context.req.headers.cookie || '',
-      },
-    });
+  const page = parseInt(context.query.page as string) || 1;
+  const limit = 20; // Default limit
 
-    if (!response.ok) {
-      throw new Error(`API responded with status: ${response.status}`);
+  try {
+    const API_URL = process.env.NODE_ENV === 'development'
+      ? 'http://localhost:3000'
+      : process.env.NEXT_PUBLIC_API_URL;
+
+    // Fetch current user and posts in parallel
+    const [userResponse, postsResponse] = await Promise.all([
+      fetch(`${API_URL}/api/session/me`, {
+        headers: {
+          'Cookie': context.req.headers.cookie || '',
+        },
+      }),
+      fetch(API_ENDPOINTS.getPosts(1, page, limit), {
+        headers: {
+          'Cookie': context.req.headers.cookie || '',
+        },
+      }),
+    ]);
+
+    if (!postsResponse.ok) {
+      throw new Error(`API responded with status: ${postsResponse.status}`);
     }
 
-    const data = await response.json();
+    const postsData = await postsResponse.json();
+    const posts = Array.isArray(postsData) ? postsData : (postsData.posts || []);
+    const total = postsData.totalPosts || postsData.total || posts.length;
+    const totalPages = Math.ceil(total / limit);
 
-    // Handle different response formats
-    const posts = Array.isArray(data) ? data : (data.posts || []);
+    // Get username and session token from user response (if available)
+    let username = 'Anonymous';
+    let userSessionToken = null;
+    if (userResponse.ok) {
+      const userData = await userResponse.json();
+      username = userData.user?.username || 'Anonymous';
+      userSessionToken = userData.user?.session_token || null;
+    }
 
     return {
       props: {
         posts,
+        username,
+        userSessionToken,
+        currentPage: page,
+        totalPages,
       },
     };
   } catch (error) {
@@ -62,6 +101,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     return {
       props: {
         posts: [],
+        username: 'Anonymous',
+        userSessionToken: null,
+        currentPage: 1,
+        totalPages: 1,
         error: error instanceof Error ? error.message : 'Failed to load posts',
       },
     };

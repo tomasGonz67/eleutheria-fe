@@ -4,7 +4,8 @@ export const API_BASE_URL = process.env.NODE_ENV === 'development'
 
 export const API_ENDPOINTS = {
   // Posts
-  getPosts: (forumId: number) => `${API_BASE_URL}/api/forums/${forumId}/posts`,
+  getPosts: (forumId: number, page: number = 1, limit: number = 20) => 
+    `${API_BASE_URL}/api/forums/${forumId}/posts?page=${page}&limit=${limit}`,
   createPost: (forumId: number) => `${API_BASE_URL}/api/forums/${forumId}/posts`,
 
   // Forums
@@ -18,6 +19,6 @@ export const API_ENDPOINTS = {
 
   // Chatrooms
   getChatrooms: () => `${API_BASE_URL}/api/chatrooms`,
-  createChatroom: () => `${API_BASE_URL}/api/chatrooms`,
+  createChatroom: () => `${API_BASE_URL}/api/chatrooms/create`,
   getChatroomMessages: (chatroomId: number) => `${API_BASE_URL}/api/chatrooms/${chatroomId}/messages`,
 };

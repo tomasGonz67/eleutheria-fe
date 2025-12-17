@@ -1,12 +1,16 @@
+import { useState } from 'react';
+import { useRouter } from 'next/router';
 import Header from '@/components/Header';
 import Feed from '@/components/Feed';
 import { API_ENDPOINTS } from '@/config/api';
 import { GetServerSideProps } from 'next';
+import { updateForum, deleteForum } from '@/lib/services/forums';
 
 interface Post {
   id: number;
   content: string;
   username: string;
+  author_session_token: string;
   created_at: string;
 }
 
@@ -14,15 +18,81 @@ interface Forum {
   id: number;
   name: string;
   description: string;
+  creator_session_token: string | null;
 }
 
 interface ForumPostsPageProps {
   forum: Forum;
   posts: Post[];
+  username: string;
+  userSessionToken: string | null;
+  currentPage: number;
+  totalPages: number;
   error?: string;
 }
 
-export default function ForumPostsPage({ forum, posts, error }: ForumPostsPageProps) {
+export default function ForumPostsPage({ forum, posts, username, userSessionToken, currentPage, totalPages, error }: ForumPostsPageProps) {
+  const router = useRouter();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [forumName, setForumName] = useState('');
+  const [forumDescription, setForumDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  const handleStartEdit = () => {
+    setForumName(forum.name);
+    setForumDescription(forum.description || '');
+    setIsEditModalOpen(true);
+    setFormError('');
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!forumName.trim() || !forumDescription.trim()) {
+      setFormError('Both name and description are required');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFormError('');
+
+    try {
+      await updateForum(forum.id, {
+        name: forumName.trim(),
+        description: forumDescription.trim(),
+      });
+
+      // Reset form and close modal
+      setForumName('');
+      setForumDescription('');
+      setIsEditModalOpen(false);
+
+      // Refresh the page to show the updated forum
+      router.replace(router.asPath);
+    } catch (err) {
+      console.error('Error updating forum:', err);
+      setFormError('Failed to update forum. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(`Are you sure you want to delete "${forum.name}"? All posts in this forum will also be deleted.`)) {
+      return;
+    }
+
+    try {
+      await deleteForum(forum.id);
+      // Redirect to forums list
+      router.push('/forums');
+    } catch (err) {
+      console.error('Error deleting forum:', err);
+      alert('Failed to delete forum. Please try again.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-marble-100">
       <Header currentPage="forums" />
@@ -34,12 +104,116 @@ export default function ForumPostsPage({ forum, posts, error }: ForumPostsPagePr
             <p className="text-red-600">Error loading forum: {error}</p>
           </div>
         ) : (
-          <Feed
-            title={forum.name}
-            description={forum.description}
-            backLink={{ href: '/forums', label: 'Back to Forums' }}
-            posts={posts}
-          />
+          <>
+            <Feed
+              title={forum.name}
+              description={forum.description}
+              backLink={{ href: '/forums', label: 'Back to Forums' }}
+              posts={posts}
+              forumId={forum.id}
+              username={username}
+              userSessionToken={userSessionToken}
+              showForumActions={userSessionToken !== null && forum.creator_session_token === userSessionToken}
+              onEditForum={handleStartEdit}
+              onDeleteForum={handleDelete}
+              currentPage={currentPage}
+              totalPages={totalPages}
+            />
+
+            {/* Edit Forum Modal */}
+            {isEditModalOpen && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg max-w-md w-full p-6 border-4" style={{ borderColor: '#AA633F' }}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-bold text-gray-800">Edit Forum</h2>
+                    <button
+                      onClick={() => {
+                        setIsEditModalOpen(false);
+                        setFormError('');
+                        setForumName('');
+                        setForumDescription('');
+                      }}
+                      className="text-gray-500 hover:text-gray-700 text-2xl"
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleEditSubmit}>
+                    {formError && (
+                      <div className="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                        {formError}
+                      </div>
+                    )}
+
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Forum Name
+                      </label>
+                      <input
+                        type="text"
+                        value={forumName}
+                        onChange={(e) => setForumName(e.target.value)}
+                        placeholder="e.g., General Discussion"
+                        maxLength={100}
+                        disabled={isSubmitting}
+                        className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="mb-6">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Description
+                      </label>
+                      <textarea
+                        value={forumDescription}
+                        onChange={(e) => setForumDescription(e.target.value)}
+                        placeholder="e.g., A place for general discussion"
+                        maxLength={500}
+                        rows={4}
+                        disabled={isSubmitting}
+                        className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                      />
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditModalOpen(false);
+                          setFormError('');
+                          setForumName('');
+                          setForumDescription('');
+                        }}
+                        disabled={isSubmitting}
+                        className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSubmitting || !forumName.trim() || !forumDescription.trim()}
+                        className="flex-1 px-4 py-2 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        style={{ backgroundColor: isSubmitting || !forumName.trim() || !forumDescription.trim() ? '#9ca3af' : '#AA633F' }}
+                        onMouseEnter={(e) => {
+                          if (!isSubmitting && forumName.trim() && forumDescription.trim()) {
+                            e.currentTarget.style.backgroundColor = '#8a4f32';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isSubmitting && forumName.trim() && forumDescription.trim()) {
+                            e.currentTarget.style.backgroundColor = '#AA633F';
+                          }
+                        }}
+                      >
+                        {isSubmitting ? 'Updating...' : 'Update Forum'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>
@@ -48,44 +222,83 @@ export default function ForumPostsPage({ forum, posts, error }: ForumPostsPagePr
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params as { id: string };
+  const page = parseInt(context.query.page as string) || 1;
+  const limit = 20; // Default limit
 
   try {
-    // Fetch forum details and posts
-    const [forumResponse, postsResponse] = await Promise.all([
-      fetch(API_ENDPOINTS.getForum(parseInt(id)), {
+    const API_URL = process.env.NODE_ENV === 'development'
+      ? 'http://localhost:3000'
+      : process.env.NEXT_PUBLIC_API_URL;
+
+    // Fetch user, all forums (to get forum details), and posts
+    const [userResponse, forumsResponse, postsResponse] = await Promise.all([
+      fetch(`${API_URL}/api/session/me`, {
         headers: {
           'Cookie': context.req.headers.cookie || '',
         },
       }),
-      fetch(API_ENDPOINTS.getPosts(parseInt(id)), {
+      fetch(API_ENDPOINTS.getForums(), {
+        headers: {
+          'Cookie': context.req.headers.cookie || '',
+        },
+      }),
+      fetch(API_ENDPOINTS.getPosts(parseInt(id), page, limit), {
         headers: {
           'Cookie': context.req.headers.cookie || '',
         },
       }),
     ]);
 
-    if (!forumResponse.ok || !postsResponse.ok) {
+    if (!forumsResponse.ok || !postsResponse.ok) {
       throw new Error('Failed to fetch forum data');
     }
 
-    const forum = await forumResponse.json();
+    const forumsData = await forumsResponse.json();
+    const forums = Array.isArray(forumsData) ? forumsData : (forumsData.forums || []);
+
+    // Find the specific forum by ID
+    const forum = forums.find((f: Forum) => f.id === parseInt(id));
+
+    if (!forum) {
+      throw new Error('Forum not found');
+    }
+
     const postsData = await postsResponse.json();
 
     // Handle different response formats
     const posts = Array.isArray(postsData) ? postsData : (postsData.posts || []);
+    const total = postsData.totalPosts || postsData.total || posts.length;
+    const totalPages = Math.ceil(total / limit);
+
+    // Get username and session token from user response (if available)
+    let username = 'Anonymous';
+    let userSessionToken = null;
+    if (userResponse.ok) {
+      const userData = await userResponse.json();
+      username = userData.user?.username || 'Anonymous';
+      userSessionToken = userData.user?.session_token || null;
+    }
 
     return {
       props: {
         forum,
         posts,
+        username,
+        userSessionToken,
+        currentPage: page,
+        totalPages,
       },
     };
   } catch (error) {
     console.error('Error fetching forum:', error);
     return {
       props: {
-        forum: { id: parseInt(id), name: 'Forum', description: '' },
+        forum: { id: parseInt(id), name: 'Forum', description: '', creator_session_token: null },
         posts: [],
+        username: 'Anonymous',
+        userSessionToken: null,
+        currentPage: 1,
+        totalPages: 1,
         error: error instanceof Error ? error.message : 'Failed to load forum',
       },
     };

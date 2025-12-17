@@ -1,34 +1,19 @@
 import { useState } from 'react';
 import Header from '@/components/Header';
 
+interface Message {
+  id: number;
+  content: string;
+  username: string;
+  is_me: boolean;
+  created_at: string;
+}
+
 export default function RandomChatPage() {
   const [chatStatus, setChatStatus] = useState<'idle' | 'waiting' | 'matched'>('idle');
   const [newMessage, setNewMessage] = useState('');
-
-  // Mock data - will be replaced with real API data later
-  const messages = [
-    {
-      id: 1,
-      content: 'Hey! Nice to meet you',
-      username: 'BravePegasus',
-      is_me: false,
-      created_at: '2025-01-15T10:30:00Z',
-    },
-    {
-      id: 2,
-      content: 'Hi there! How are you?',
-      username: 'You',
-      is_me: true,
-      created_at: '2025-01-15T10:31:00Z',
-    },
-    {
-      id: 3,
-      content: 'Pretty good! What brings you here?',
-      username: 'BravePegasus',
-      is_me: false,
-      created_at: '2025-01-15T10:32:00Z',
-    },
-  ];
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [partnerUsername, setPartnerUsername] = useState('');
 
   const handleFindChat = () => {
     // TODO: Call matchRandom API
@@ -40,6 +25,13 @@ export default function RandomChatPage() {
   const handleEndChat = () => {
     // TODO: Call end chat API
     setChatStatus('idle');
+  };
+
+  const handleReroll = () => {
+    // TODO: Call reroll/next chat API
+    setChatStatus('waiting');
+    // Simulate finding a new match
+    setTimeout(() => setChatStatus('matched'), 2000);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -55,7 +47,7 @@ export default function RandomChatPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-white p-8 rounded-lg border-4" style={{ borderColor: '#AA633F' }}>
+        <div className="bg-white p-8 rounded-lg border-4" style={{ borderColor: '#4D89B0' }}>
           <h1 className="text-3xl font-bold mb-6 text-gray-800">Random Chat</h1>
 
           {/* Idle State - Not matched */}
@@ -69,9 +61,9 @@ export default function RandomChatPage() {
               <button
                 onClick={handleFindChat}
                 className="px-8 py-3 text-white rounded-lg transition font-semibold text-lg"
-                style={{ backgroundColor: '#AA633F' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#8a4f32'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#AA633F'}
+                style={{ backgroundColor: '#4D89B0' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d6e8f'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4D89B0'}
               >
                 Start Random Chat
               </button>
@@ -82,7 +74,7 @@ export default function RandomChatPage() {
           {chatStatus === 'waiting' && (
             <div className="p-12 text-center border border-black rounded-lg">
               <div className="text-6xl mb-6 animate-pulse">⏳</div>
-              <h2 className="text-2xl font-semibold mb-4">Looking for a chat partner...</h2>
+              <h2 className="text-2xl font-semibold mb-4 text-gray-800">Looking for a chat partner...</h2>
               <p className="text-gray-600">Please wait while we find someone for you</p>
             </div>
           )}
@@ -93,15 +85,26 @@ export default function RandomChatPage() {
               {/* Chat Header */}
               <div className="p-4 border-b border-black flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold">Chatting with: <span style={{ color: '#AA633F' }}>BravePegasus</span></h2>
+                  <h2 className="text-lg font-semibold text-gray-800">Chatting with: <span style={{ color: '#4D89B0' }}>{partnerUsername || 'Anonymous'}</span></h2>
                   <p className="text-sm text-gray-500">Random 1-on-1 Chat</p>
                 </div>
-                <button
-                  onClick={handleEndChat}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-semibold"
-                >
-                  End Chat
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleReroll}
+                    className="px-4 py-2 text-white rounded-lg transition font-semibold"
+                    style={{ backgroundColor: '#4D89B0' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d6e8f'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4D89B0'}
+                  >
+                    Reroll
+                  </button>
+                  <button
+                    onClick={handleEndChat}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-semibold"
+                  >
+                    End Chat
+                  </button>
+                </div>
               </div>
 
               {/* Messages */}
@@ -114,11 +117,11 @@ export default function RandomChatPage() {
                         ? 'ml-12 border border-black'
                         : 'border border-black mr-12'
                     }`}
-                    style={message.is_me ? { backgroundColor: '#f5e6dc' } : {}}
+                    style={message.is_me ? { backgroundColor: '#e3f2fd' } : {}}
                   >
                     {/* Message Header */}
                     <div className="flex items-center justify-between mb-2">
-                      <span className={`font-semibold ${message.is_me ? '' : 'text-gray-800'}`} style={message.is_me ? { color: '#AA633F' } : {}}>
+                      <span className={`font-semibold ${message.is_me ? '' : 'text-gray-800'}`} style={message.is_me ? { color: '#4D89B0' } : {}}>
                         {message.username}
                       </span>
                       <span className="text-xs text-gray-500">
@@ -146,9 +149,9 @@ export default function RandomChatPage() {
                     type="submit"
                     disabled={!newMessage.trim()}
                     className="px-6 py-2 text-white rounded-lg transition font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: '#AA633F' }}
-                    onMouseEnter={(e) => !newMessage.trim() ? null : e.currentTarget.style.backgroundColor = '#8a4f32'}
-                    onMouseLeave={(e) => !newMessage.trim() ? null : e.currentTarget.style.backgroundColor = '#AA633F'}
+                    style={{ backgroundColor: '#4D89B0' }}
+                    onMouseEnter={(e) => !newMessage.trim() ? null : e.currentTarget.style.backgroundColor = '#3d6e8f'}
+                    onMouseLeave={(e) => !newMessage.trim() ? null : e.currentTarget.style.backgroundColor = '#4D89B0'}
                   >
                     Send
                   </button>

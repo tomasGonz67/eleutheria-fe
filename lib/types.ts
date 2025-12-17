@@ -107,6 +107,11 @@ export interface CreateChatroomRequest {
   description?: string;
 }
 
+export interface UpdateChatroomRequest {
+  name: string;
+  description?: string;
+}
+
 export interface ChatroomMessage {
   id: number;
   chatroom_id: number;

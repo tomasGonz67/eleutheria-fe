@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useChatStore } from '@/store/chatStore';
 
 export default function PlannedChat() {
   const [inviteTarget, setInviteTarget] = useState('');
+  const { addPlannedChat } = useChatStore();
 
   // Mock data - will be replaced with real data later
   const receivedInvites = [
@@ -35,6 +37,16 @@ export default function PlannedChat() {
   const handleAccept = (inviteId: number) => {
     // TODO: Call acceptChatRequest API
     console.log('Accept invite:', inviteId);
+
+    // TEST: Add to floating chat widget
+    // Use inviteId directly to ensure unique IDs
+    addPlannedChat({
+      id: inviteId,
+      inviteCode: `TEST-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+      partnerUsername: 'TestPartner',
+      isMinimized: false,
+      unreadCount: 0,
+    });
   };
 
   const handleReject = (inviteId: number) => {
