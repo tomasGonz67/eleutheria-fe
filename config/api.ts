@@ -23,7 +23,10 @@ export const API_ENDPOINTS = {
   matchPlanned: () => `${API_BASE_URL}/api/chat/match-planned`,
 
   // Chatrooms
-  getChatrooms: () => `${API_BASE_URL}/api/chatrooms`,
+  getChatrooms: (page: number = 1, limit: number = 20) => 
+    `${API_BASE_URL}/api/chatrooms?page=${page}&limit=${limit}`,
+  searchChatrooms: (query: string, page: number = 1, limit: number = 20) => 
+    `${API_BASE_URL}/api/chatrooms/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`,
   createChatroom: () => `${API_BASE_URL}/api/chatrooms/create`,
   getChatroomMessages: (chatroomId: number) => `${API_BASE_URL}/api/chatrooms/${chatroomId}/messages`,
 };

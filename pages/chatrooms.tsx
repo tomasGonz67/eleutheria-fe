@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Header from '@/components/Header';
+import SearchBar from '@/components/SearchBar';
+import Pagination from '@/components/Pagination';
 import { API_ENDPOINTS } from '@/config/api';
 import { GetServerSideProps } from 'next';
 import { createChatroom, updateChatroom, deleteChatroom } from '@/lib/services/chatrooms';
@@ -17,10 +19,12 @@ interface Chatroom {
 interface ChatroomsPageProps {
   chatrooms: Chatroom[];
   userSessionToken: string | null;
+  currentPage: number;
+  totalPages: number;
   error?: string;
 }
 
-export default function ChatroomsPage({ chatrooms, userSessionToken, error }: ChatroomsPageProps) {
+export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage, totalPages, error }: ChatroomsPageProps) {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -127,6 +131,25 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, error }: Ch
     }
   };
 
+  const handleSearch = (query: string) => {
+    if (query) {
+      router.push(`/chatrooms?q=${encodeURIComponent(query)}`);
+    } else {
+      router.push('/chatrooms');
+    }
+  };
+
+  const handleClearSearch = () => {
+    router.push('/chatrooms');
+  };
+
+  const handlePageChange = (page: number) => {
+    router.push({
+      pathname: router.pathname,
+      query: { ...router.query, page },
+    });
+  };
+
   return (
     <div className="min-h-screen bg-marble-100">
       <Header currentPage="chatrooms" />
@@ -151,6 +174,15 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, error }: Ch
                 Create Chatroom
               </button>
             </div>
+
+            {/* Search Bar */}
+            <SearchBar
+              initialQuery={(router.query.q as string) || ''}
+              onSearch={handleSearch}
+              onClear={handleClearSearch}
+              placeholder="Search chatrooms..."
+              color="#4D89B0"
+            />
 
             {/* Chatrooms List */}
             <div className="space-y-4">
@@ -210,6 +242,14 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, error }: Ch
                 <p className="text-gray-500">No chatrooms yet. Create the first one!</p>
               </div>
             )}
+
+            {/* Pagination */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              color="#4D89B0"
+            />
           </div>
         )}
 
@@ -408,10 +448,19 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, error }: Ch
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
+  const page = parseInt(context.query.page as string) || 1;
+  const searchQuery = context.query.q as string;
+  const limit = 20; // Default limit
+
   try {
     const API_URL = process.env.NODE_ENV === 'development'
       ? 'http://localhost:3000'
       : process.env.NEXT_PUBLIC_API_URL;
+
+    // Determine which endpoint to call based on search query
+    const chatroomsEndpoint = searchQuery 
+      ? API_ENDPOINTS.searchChatrooms(searchQuery, page, limit)
+      : API_ENDPOINTS.getChatrooms(page, limit);
 
     // Fetch user session and chatrooms
     const [userResponse, chatroomsResponse] = await Promise.all([
@@ -420,7 +469,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           'Cookie': context.req.headers.cookie || '',
         },
       }),
-      fetch(API_ENDPOINTS.getChatrooms(), {
+      fetch(chatroomsEndpoint, {
         headers: {
           'Cookie': context.req.headers.cookie || '',
         },
@@ -435,6 +484,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     // Handle different response formats
     const chatrooms = Array.isArray(data) ? data : (data.chatrooms || []);
+    const total = data.totalChatrooms || data.totalPosts || data.total || chatrooms.length;
+    const totalPages = data.totalPages || Math.ceil(total / limit);
 
     // Get user's session token (if authenticated)
     let userSessionToken = null;
@@ -447,6 +498,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: {
         chatrooms,
         userSessionToken,
+        currentPage: page,
+        totalPages,
       },
     };
   } catch (error) {
@@ -455,6 +508,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: {
         chatrooms: [],
         userSessionToken: null,
+        currentPage: 1,
+        totalPages: 1,
         error: error instanceof Error ? error.message : 'Failed to load chatrooms',
       },
     };

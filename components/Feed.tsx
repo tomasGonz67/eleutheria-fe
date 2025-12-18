@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { createPost, updatePost, deletePost } from '@/lib/services/posts';
 import Pagination from './Pagination';
+import SearchBar from './SearchBar';
 
 interface Post {
   id: number;
@@ -38,7 +39,6 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
   const [error, setError] = useState('');
   const [editingPostId, setEditingPostId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState('');
-  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,21 +121,19 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
     router.push(`${basePath}?${params.toString()}`);
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = (query: string) => {
     // If on /feed, navigate to /forums/1 instead
     const basePath = router.asPath.split('?')[0] === '/feed' 
       ? `/forums/${forumId}` 
       : router.asPath.split('?')[0];
-    if (searchQuery.trim()) {
-      router.push(`${basePath}?q=${encodeURIComponent(searchQuery.trim())}&page=1`);
+    if (query) {
+      router.push(`${basePath}?q=${encodeURIComponent(query)}&page=1`);
     } else {
       router.push(basePath);
     }
   };
 
   const handleClearSearch = () => {
-    setSearchQuery('');
     // If on /feed, navigate to /forums/1 instead
     const basePath = router.asPath.split('?')[0] === '/feed' 
       ? `/forums/${forumId}` 
@@ -179,50 +177,13 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
       {!description && <div className="mb-2" />}
       
       {/* Search Bar */}
-      <form onSubmit={handleSearch} className="mb-6">
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search posts in this forum..."
-              className="w-full px-4 py-2 pr-10 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-          <button
-            type="submit"
-            className="px-6 py-2 text-white rounded-lg transition font-semibold"
-            style={{ backgroundColor: '#AA633F' }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#8a4f32'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#AA633F'}
-          >
-            Search
-          </button>
-        </div>
-      </form>
-
-      {initialSearchQuery && (
-        <div className="mb-4 flex items-center gap-2 text-gray-600">
-          <span>Searching for: <strong>{initialSearchQuery}</strong></span>
-          <button
-            onClick={handleClearSearch}
-            className="text-sm hover:underline"
-            style={{ color: '#AA633F' }}
-          >
-            Clear
-          </button>
-        </div>
-      )}
+      <SearchBar
+        initialQuery={initialSearchQuery}
+        onSearch={handleSearch}
+        onClear={handleClearSearch}
+        placeholder="Search posts in this forum..."
+        color="#AA633F"
+      />
       
       <div className="border border-black">
         {/* Create Post Section */}

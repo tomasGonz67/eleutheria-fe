@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Pagination from '@/components/Pagination';
+import SearchBar from '@/components/SearchBar';
 import { API_ENDPOINTS } from '@/config/api';
 import { GetServerSideProps } from 'next';
 import { createForum, updateForum, deleteForum } from '@/lib/services/forums';
@@ -32,7 +33,6 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
   const [forumDescription, setForumDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
-  const [searchQuery, setSearchQuery] = useState((router.query.q as string) || '');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,17 +122,15 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/forums?q=${encodeURIComponent(searchQuery.trim())}`);
+  const handleSearch = (query: string) => {
+    if (query) {
+      router.push(`/forums?q=${encodeURIComponent(query)}`);
     } else {
       router.push('/forums');
     }
   };
 
   const handleClearSearch = () => {
-    setSearchQuery('');
     router.push('/forums');
   };
 
@@ -169,50 +167,13 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
             </div>
 
             {/* Search Bar */}
-            <form onSubmit={handleSearch} className="mb-6">
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search forums..."
-                    className="w-full px-4 py-3 pr-10 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={handleClearSearch}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-                <button
-                  type="submit"
-                  className="px-6 py-3 text-white rounded-lg transition font-semibold"
-                  style={{ backgroundColor: '#AA633F' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#8a4f32'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#AA633F'}
-                >
-                  Search
-                </button>
-              </div>
-            </form>
-
-            {router.query.q && (
-              <div className="mb-4 flex items-center gap-2 text-gray-600">
-                <span>Searching for: <strong>{router.query.q}</strong></span>
-                <button
-                  onClick={handleClearSearch}
-                  className="text-sm hover:underline"
-                  style={{ color: '#AA633F' }}
-                >
-                  Clear
-                </button>
-              </div>
-            )}
+            <SearchBar
+              initialQuery={(router.query.q as string) || ''}
+              onSearch={handleSearch}
+              onClear={handleClearSearch}
+              placeholder="Search forums..."
+              color="#AA633F"
+            />
 
             {/* Forums List */}
             <div className="space-y-4">
