@@ -28,10 +28,11 @@ interface ForumPostsPageProps {
   userSessionToken: string | null;
   currentPage: number;
   totalPages: number;
+  searchQuery?: string;
   error?: string;
 }
 
-export default function ForumPostsPage({ forum, posts, username, userSessionToken, currentPage, totalPages, error }: ForumPostsPageProps) {
+export default function ForumPostsPage({ forum, posts, username, userSessionToken, currentPage, totalPages, searchQuery, error }: ForumPostsPageProps) {
   const router = useRouter();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [forumName, setForumName] = useState('');
@@ -118,6 +119,7 @@ export default function ForumPostsPage({ forum, posts, username, userSessionToke
               onDeleteForum={handleDelete}
               currentPage={currentPage}
               totalPages={totalPages}
+              searchQuery={searchQuery}
             />
 
             {/* Edit Forum Modal */}
@@ -223,12 +225,18 @@ export default function ForumPostsPage({ forum, posts, username, userSessionToke
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params as { id: string };
   const page = parseInt(context.query.page as string) || 1;
+  const searchQuery = context.query.q as string;
   const limit = 20; // Default limit
 
   try {
     const API_URL = process.env.NODE_ENV === 'development'
       ? 'http://localhost:3000'
       : process.env.NEXT_PUBLIC_API_URL;
+
+    // Determine which endpoint to call based on search query
+    const postsEndpoint = searchQuery
+      ? API_ENDPOINTS.searchPosts(parseInt(id), searchQuery, page, limit)
+      : API_ENDPOINTS.getPosts(parseInt(id), page, limit);
 
     // Fetch user, all forums (to get forum details), and posts
     const [userResponse, forumsResponse, postsResponse] = await Promise.all([
@@ -242,7 +250,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           'Cookie': context.req.headers.cookie || '',
         },
       }),
-      fetch(API_ENDPOINTS.getPosts(parseInt(id), page, limit), {
+      fetch(postsEndpoint, {
         headers: {
           'Cookie': context.req.headers.cookie || '',
         },
@@ -287,6 +295,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         userSessionToken,
         currentPage: page,
         totalPages,
+        searchQuery: searchQuery || null,
       },
     };
   } catch (error) {
@@ -299,6 +308,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         userSessionToken: null,
         currentPage: 1,
         totalPages: 1,
+        searchQuery: null,
         error: error instanceof Error ? error.message : 'Failed to load forum',
       },
     };

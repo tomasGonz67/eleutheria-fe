@@ -6,6 +6,8 @@ export const API_ENDPOINTS = {
   // Posts
   getPosts: (forumId: number, page: number = 1, limit: number = 20) => 
     `${API_BASE_URL}/api/forums/${forumId}/posts?page=${page}&limit=${limit}`,
+  searchPosts: (forumId: number, query: string, page: number = 1, limit: number = 20) =>
+    `${API_BASE_URL}/api/forums/${forumId}/posts/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`,
   createPost: (forumId: number) => `${API_BASE_URL}/api/forums/${forumId}/posts`,
 
   // Forums
