@@ -112,35 +112,35 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
   };
 
   const handlePageChange = (page: number) => {
-    router.push({
-      pathname: router.pathname,
-      query: { ...router.query, page },
-    });
+    // If on /feed, navigate to /forums/1 instead
+    const basePath = router.asPath.split('?')[0] === '/feed' 
+      ? `/forums/${forumId}` 
+      : router.asPath.split('?')[0];
+    const params = new URLSearchParams(window.location.search);
+    params.set('page', page.toString());
+    router.push(`${basePath}?${params.toString()}`);
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    // If on /feed, navigate to /forums/1 instead
+    const basePath = router.asPath.split('?')[0] === '/feed' 
+      ? `/forums/${forumId}` 
+      : router.asPath.split('?')[0];
     if (searchQuery.trim()) {
-      router.push({
-        pathname: router.pathname,
-        query: { ...router.query, q: searchQuery.trim(), page: 1 },
-      });
+      router.push(`${basePath}?q=${encodeURIComponent(searchQuery.trim())}&page=1`);
     } else {
-      const { q, ...restQuery } = router.query;
-      router.push({
-        pathname: router.pathname,
-        query: restQuery,
-      });
+      router.push(basePath);
     }
   };
 
   const handleClearSearch = () => {
     setSearchQuery('');
-    const { q, ...restQuery } = router.query;
-    router.push({
-      pathname: router.pathname,
-      query: restQuery,
-    });
+    // If on /feed, navigate to /forums/1 instead
+    const basePath = router.asPath.split('?')[0] === '/feed' 
+      ? `/forums/${forumId}` 
+      : router.asPath.split('?')[0];
+    router.push(basePath);
   };
 
   return (

@@ -75,8 +75,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const postsData = await postsResponse.json();
     const posts = Array.isArray(postsData) ? postsData : (postsData.posts || []);
-    const total = postsData.totalPosts || postsData.total || posts.length;
-    const totalPages = Math.ceil(total / limit);
+    
+    // Use totalPages from backend if available, otherwise calculate it
+    const totalPages = postsData.totalPages || Math.ceil((postsData.totalPosts || postsData.total || posts.length) / limit);
 
     // Get username and session token from user response (if available)
     let username = 'Anonymous';
