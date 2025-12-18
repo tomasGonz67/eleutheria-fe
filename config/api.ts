@@ -9,9 +9,12 @@ export const API_ENDPOINTS = {
   createPost: (forumId: number) => `${API_BASE_URL}/api/forums/${forumId}/posts`,
 
   // Forums
-  getForums: () => `${API_BASE_URL}/api/forums`,
+  getForums: (page: number = 1, limit: number = 20) => 
+    `${API_BASE_URL}/api/forums?page=${page}&limit=${limit}`,
   getForum: (forumId: number) => `${API_BASE_URL}/api/forums/${forumId}`,
   createForum: () => `${API_BASE_URL}/api/forums`,
+  searchForums: (query: string, page: number = 1, limit: number = 20) => 
+    `${API_BASE_URL}/api/forums/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`,
 
   // Chat
   matchRandom: () => `${API_BASE_URL}/api/chat/match-random`,

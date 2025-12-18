@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { createPost, updatePost, deletePost } from '@/lib/services/posts';
+import Pagination from './Pagination';
 
 interface Post {
   id: number;
@@ -291,46 +292,12 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-8 flex justify-center items-center gap-2">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Previous
-          </button>
-
-          <div className="flex gap-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`px-4 py-2 rounded-lg font-semibold transition ${
-                  page === currentPage
-                    ? 'text-white'
-                    : 'border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
-                style={
-                  page === currentPage
-                    ? { backgroundColor: '#AA633F' }
-                    : {}
-                }
-              >
-                {page}
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-          </button>
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        color="#AA633F"
+      />
     </div>
   );
 }

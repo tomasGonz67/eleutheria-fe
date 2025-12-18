@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Header from '@/components/Header';
+import Pagination from '@/components/Pagination';
 import { API_ENDPOINTS } from '@/config/api';
 import { GetServerSideProps } from 'next';
 import { createForum, updateForum, deleteForum } from '@/lib/services/forums';
@@ -17,10 +18,12 @@ interface Forum {
 interface ForumsPageProps {
   forums: Forum[];
   userSessionToken: string | null;
+  currentPage: number;
+  totalPages: number;
   error?: string;
 }
 
-export default function ForumsPage({ forums, userSessionToken, error }: ForumsPageProps) {
+export default function ForumsPage({ forums, userSessionToken, currentPage, totalPages, error }: ForumsPageProps) {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -29,6 +32,7 @@ export default function ForumsPage({ forums, userSessionToken, error }: ForumsPa
   const [forumDescription, setForumDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
+  const [searchQuery, setSearchQuery] = useState((router.query.q as string) || '');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,6 +122,27 @@ export default function ForumsPage({ forums, userSessionToken, error }: ForumsPa
     }
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/forums?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push('/forums');
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    router.push('/forums');
+  };
+
+  const handlePageChange = (page: number) => {
+    router.push({
+      pathname: router.pathname,
+      query: { ...router.query, page },
+    });
+  };
+
   return (
     <div className="min-h-screen bg-marble-100">
       <Header currentPage="forums" />
@@ -142,6 +167,52 @@ export default function ForumsPage({ forums, userSessionToken, error }: ForumsPa
                 Create Forum
               </button>
             </div>
+
+            {/* Search Bar */}
+            <form onSubmit={handleSearch} className="mb-6">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search forums..."
+                    className="w-full px-4 py-3 pr-10 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={handleClearSearch}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                <button
+                  type="submit"
+                  className="px-6 py-3 text-white rounded-lg transition font-semibold"
+                  style={{ backgroundColor: '#AA633F' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#8a4f32'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#AA633F'}
+                >
+                  Search
+                </button>
+              </div>
+            </form>
+
+            {router.query.q && (
+              <div className="mb-4 flex items-center gap-2 text-gray-600">
+                <span>Searching for: <strong>{router.query.q}</strong></span>
+                <button
+                  onClick={handleClearSearch}
+                  className="text-sm hover:underline"
+                  style={{ color: '#AA633F' }}
+                >
+                  Clear
+                </button>
+              </div>
+            )}
 
             {/* Forums List */}
             <div className="space-y-4">
@@ -201,6 +272,14 @@ export default function ForumsPage({ forums, userSessionToken, error }: ForumsPa
                 <p className="text-gray-500">No forums yet. Create the first one!</p>
               </div>
             )}
+
+            {/* Pagination */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              color="#AA633F"
+            />
           </div>
         )}
 
@@ -399,10 +478,19 @@ export default function ForumsPage({ forums, userSessionToken, error }: ForumsPa
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
+  const page = parseInt(context.query.page as string) || 1;
+  const searchQuery = context.query.q as string;
+  const limit = 20; // Default limit
+
   try {
     const API_URL = process.env.NODE_ENV === 'development'
       ? 'http://localhost:3000'
       : process.env.NEXT_PUBLIC_API_URL;
+
+    // Determine which endpoint to call based on search query
+    const forumsEndpoint = searchQuery 
+      ? API_ENDPOINTS.searchForums(searchQuery, page, limit)
+      : API_ENDPOINTS.getForums(page, limit);
 
     // Fetch user session and forums
     const [userResponse, forumsResponse] = await Promise.all([
@@ -411,7 +499,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           'Cookie': context.req.headers.cookie || '',
         },
       }),
-      fetch(API_ENDPOINTS.getForums(), {
+      fetch(forumsEndpoint, {
         headers: {
           'Cookie': context.req.headers.cookie || '',
         },
@@ -426,6 +514,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     // Handle different response formats
     const forums = Array.isArray(data) ? data : (data.forums || []);
+    const total = data.totalForums || data.totalPosts || data.total || data.totalCount || data.total_count || forums.length;
+    const totalPages = Math.ceil(total / limit);
 
     // Get user's session token (if authenticated)
     let userSessionToken = null;
@@ -438,6 +528,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: {
         forums,
         userSessionToken,
+        currentPage: page,
+        totalPages,
       },
     };
   } catch (error) {
@@ -446,6 +538,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: {
         forums: [],
         userSessionToken: null,
+        currentPage: 1,
+        totalPages: 1,
         error: error instanceof Error ? error.message : 'Failed to load forums',
       },
     };
