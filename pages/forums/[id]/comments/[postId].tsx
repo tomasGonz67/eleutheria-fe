@@ -644,7 +644,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
             {/* Comments List */}
             <div>
               <h2 className="text-lg font-semibold mb-4 text-gray-800">
-                Comments ({comments.length})
+                Direct Replies ({comments.length})
               </h2>
 
               {comments.length === 0 ? (
