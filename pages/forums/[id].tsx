@@ -12,6 +12,7 @@ interface Post {
   username: string;
   author_session_token: string;
   created_at: string;
+  comment_count?: number;
 }
 
 interface Forum {

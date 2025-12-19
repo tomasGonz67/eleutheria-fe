@@ -80,6 +80,7 @@ export interface PostResponse {
 
 export interface CreatePostRequest {
   content: string;
+  parent_id?: number;
 }
 
 export interface UpdatePostRequest {
