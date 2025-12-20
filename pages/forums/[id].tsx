@@ -239,14 +239,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       ? API_ENDPOINTS.searchPosts(parseInt(id), searchQuery, page, limit)
       : API_ENDPOINTS.getPosts(parseInt(id), page, limit);
 
-    // Fetch user, all forums (to get forum details), and posts
-    const [userResponse, forumsResponse, postsResponse] = await Promise.all([
+    // Fetch user and posts (forum metadata should be in posts response)
+    const [userResponse, postsResponse] = await Promise.all([
       fetch(`${API_URL}/api/session/me`, {
-        headers: {
-          'Cookie': context.req.headers.cookie || '',
-        },
-      }),
-      fetch(API_ENDPOINTS.getForums(), {
         headers: {
           'Cookie': context.req.headers.cookie || '',
         },
@@ -258,21 +253,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       }),
     ]);
 
-    if (!forumsResponse.ok || !postsResponse.ok) {
+    if (!postsResponse.ok) {
       throw new Error('Failed to fetch forum data');
     }
 
-    const forumsData = await forumsResponse.json();
-    const forums = Array.isArray(forumsData) ? forumsData : (forumsData.forums || []);
-
-    // Find the specific forum by ID
-    const forum = forums.find((f: Forum) => f.id === parseInt(id));
-
-    if (!forum) {
-      throw new Error('Forum not found');
-    }
-
     const postsData = await postsResponse.json();
+    
+    // Get forum from posts response (if backend includes it)
+    const forum = postsData.forum || { id: parseInt(id), name: 'Forum', description: '', creator_session_token: null };
 
     // Handle different response formats
     const posts = Array.isArray(postsData) ? postsData : (postsData.posts || []);

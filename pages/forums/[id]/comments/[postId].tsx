@@ -313,6 +313,10 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
       // Re-fetch top-level comments to show the new reply without losing expanded state
       const commentsResponse = await clientApi.get(`/api/forums/${forum.id}/posts?parent_id=${postId}`);
       const updatedComments = Array.isArray(commentsResponse.data) ? commentsResponse.data : (commentsResponse.data.posts || []);
+      
+      // Sort by most recent first
+      updatedComments.sort((a: Post, b: Post) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      
       setComments(updatedComments);
     } catch (err) {
       console.error('Error creating reply:', err);
@@ -468,6 +472,10 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
         // If the parent comment is expanded, re-fetch its replies to show the new one
         const repliesResponse = await clientApi.get(`/api/forums/${forum.id}/posts?parent_id=${parentCommentId}`);
         const replies = Array.isArray(repliesResponse.data) ? repliesResponse.data : (repliesResponse.data.posts || []);
+        
+        // Sort by most recent first
+        replies.sort((a: Post, b: Post) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        
         setLoadedReplies(prev => new Map(prev).set(parentCommentId, replies));
       }
       
@@ -509,6 +517,10 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
     try {
       const response = await clientApi.get(`/api/forums/${forum.id}/posts?parent_id=${commentId}`);
       const replies = Array.isArray(response.data) ? response.data : (response.data.posts || []);
+      
+      // Sort replies by most recent first
+      replies.sort((a: Post, b: Post) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      
       console.log('✅ Loaded replies for comment', commentId, ':', replies.length, 'replies');
       
       // Store replies in state
@@ -705,14 +717,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     
     console.log('Fetching comments from:', commentsUrl);
 
-    // Fetch user, forum details, and comments
-    const [userResponse, forumsResponse, commentsResponse] = await Promise.all([
+    // Fetch user and comments (forum metadata should be in comments response)
+    const [userResponse, commentsResponse] = await Promise.all([
       fetch(`${API_URL}/api/session/me`, {
-        headers: {
-          'Cookie': context.req.headers.cookie || '',
-        },
-      }),
-      fetch(API_ENDPOINTS.getForums(), {
         headers: {
           'Cookie': context.req.headers.cookie || '',
         },
@@ -725,25 +732,19 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     ]);
 
     // Check each response individually for better error messages
-    if (!forumsResponse.ok) {
-      console.error('Forums fetch failed:', forumsResponse.status, forumsResponse.statusText);
-      throw new Error(`Failed to fetch forums: ${forumsResponse.status}`);
-    }
     if (!commentsResponse.ok) {
       console.error('Comments fetch failed:', commentsResponse.status, commentsResponse.statusText);
       throw new Error(`Failed to fetch comments: ${commentsResponse.status}`);
     }
 
-    const forumsData = await forumsResponse.json();
-    const forums = Array.isArray(forumsData) ? forumsData : (forumsData.forums || []);
-    const forum = forums.find((f: Forum) => f.id === parseInt(forumId));
-
-    if (!forum) {
-      throw new Error('Forum not found');
-    }
-
     const commentsData = await commentsResponse.json();
     const comments = Array.isArray(commentsData) ? commentsData : (commentsData.posts || []);
+    
+    // Sort comments by most recent first
+    comments.sort((a: Post, b: Post) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    
+    // Get forum from comments response (if backend includes it), otherwise use fallback
+    const forum = commentsData.forum || { id: parseInt(forumId), name: 'Forum', description: '' };
 
     // Get username and session token from user response (if available)
     let username = 'Anonymous';
