@@ -47,6 +47,14 @@ export async function cancelChatRequest(sessionId: number): Promise<{ success: b
  * Send a message in a chat session (requires authentication)
  */
 export async function createChatMessage(sessionId: number, request: CreateChatMessageRequest): Promise<ChatMessageResponse> {
-  const { data } = await clientApi.post<ChatMessageResponse>(`/api/chat/${sessionId}/messages`, request);
+  const { data} = await clientApi.post<ChatMessageResponse>(`/api/chat/${sessionId}/messages`, request);
+  return data;
+}
+
+/**
+ * End or delete a chat session (requires authentication)
+ */
+export async function endChatSession(sessionId: number): Promise<{ success: boolean; message: string }> {
+  const { data } = await clientApi.delete(`/api/chat/sessions/${sessionId}`);
   return data;
 }

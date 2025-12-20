@@ -1,5 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/router';
 import Header from '@/components/Header';
+import { clientApi } from '@/lib/api';
+import { API_ENDPOINTS } from '@/config/api';
+import { endChatSession } from '@/lib/services/chat';
 
 interface Message {
   id: number;
@@ -10,35 +14,116 @@ interface Message {
 }
 
 export default function RandomChatPage() {
+  const router = useRouter();
   const [chatStatus, setChatStatus] = useState<'idle' | 'waiting' | 'matched'>('idle');
+  const [chatSessionId, setChatSessionId] = useState<number | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [partnerUsername, setPartnerUsername] = useState('');
+  const [error, setError] = useState('');
+  const cleanupCalled = useRef(false);
 
-  const handleFindChat = () => {
-    // TODO: Call matchRandom API
-    setChatStatus('waiting');
-    // Simulate finding a match after 2 seconds
-    setTimeout(() => setChatStatus('matched'), 2000);
+  // Auto-cleanup session on unmount or navigation
+  useEffect(() => {
+    const cleanup = async () => {
+      if (chatSessionId && !cleanupCalled.current) {
+        cleanupCalled.current = true;
+        console.log('🧹 Cleaning up chat session:', chatSessionId);
+        try {
+          await endChatSession(chatSessionId);
+        } catch (err) {
+          console.error('Error cleaning up session:', err);
+        }
+      }
+    };
+
+    // Cleanup on page navigation
+    const handleRouteChange = () => {
+      cleanup();
+    };
+
+    // Cleanup on page refresh or close (more reliable for browser events)
+    const handleBeforeUnload = () => {
+      if (chatSessionId && !cleanupCalled.current) {
+        cleanupCalled.current = true;
+        // Use fetch with keepalive - browser will complete request even after page closes
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/chat/sessions/${chatSessionId}`, {
+          method: 'DELETE',
+          keepalive: true,  // Ensures request completes
+          credentials: 'include',
+        }).catch(err => console.error('Cleanup error:', err));
+      }
+    };
+
+    router.events.on('routeChangeStart', handleRouteChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Cleanup on unmount
+    return () => {
+      router.events.off('routeChangeStart', handleRouteChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      cleanup();
+    };
+  }, [chatSessionId, router.events]);
+
+  const handleFindChat = async () => {
+    setError('');
+    try {
+      const response = await clientApi.post(API_ENDPOINTS.matchRandom());
+      
+      if (response.data.success) {
+        setChatSessionId(response.data.chat_session_id);
+        setChatStatus(response.data.status);
+        cleanupCalled.current = false; // Reset cleanup flag for new session
+        
+        console.log('Chat session created:', response.data);
+        // TODO: Join Socket.io room and poll for match
+      }
+    } catch (err) {
+      console.error('Error starting random chat:', err);
+      setError('Failed to start chat. Please try again.');
+      setChatStatus('idle');
+    }
   };
 
-  const handleEndChat = () => {
-    // TODO: Call end chat API
-    setChatStatus('idle');
+  const handleEndChat = async () => {
+    if (!chatSessionId) return;
+    
+    try {
+      await endChatSession(chatSessionId);
+      setChatSessionId(null);
+      setChatStatus('idle');
+      setMessages([]);
+      setPartnerUsername('');
+      cleanupCalled.current = true; // Mark as cleaned up
+    } catch (err) {
+      console.error('Error ending chat:', err);
+      setError('Failed to end chat.');
+    }
   };
 
-  const handleReroll = () => {
-    // TODO: Call reroll/next chat API
-    setChatStatus('waiting');
-    // Simulate finding a new match
-    setTimeout(() => setChatStatus('matched'), 2000);
+  const handleReroll = async () => {
+    // End current session and start new one
+    await handleEndChat();
+    await handleFindChat();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Call createChatMessage API
-    console.log('New message:', newMessage);
-    setNewMessage('');
+    
+    if (!newMessage.trim() || !chatSessionId) return;
+
+    try {
+      await clientApi.post(API_ENDPOINTS.sendChatMessage(chatSessionId), {
+        content: newMessage.trim()
+      });
+      
+      setNewMessage('');
+      // TODO: Message will appear via Socket.io or polling
+    } catch (err) {
+      console.error('Error sending message:', err);
+      setError('Failed to send message.');
+    }
   };
 
   return (
@@ -49,6 +134,13 @@ export default function RandomChatPage() {
       <main className="max-w-4xl mx-auto px-6 py-8">
         <div className="bg-white p-8 rounded-lg border-4" style={{ borderColor: '#4D89B0' }}>
           <h1 className="text-3xl font-bold mb-6 text-gray-800">Random Chat</h1>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 p-4 bg-red-100 border-2 border-red-400 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
 
           {/* Idle State - Not matched */}
           {chatStatus === 'idle' && (

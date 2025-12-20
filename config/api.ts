@@ -23,8 +23,10 @@ export const API_ENDPOINTS = {
     `${API_BASE_URL}/api/forums/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`,
 
   // Chat
-  matchRandom: () => `${API_BASE_URL}/api/chat/match-random`,
-  matchPlanned: () => `${API_BASE_URL}/api/chat/match-planned`,
+  matchRandom: () => `${API_BASE_URL}/api/chat/match/random`,
+  matchPlanned: () => `${API_BASE_URL}/api/chat/match/planned`,
+  sendChatMessage: (sessionId: number) => `${API_BASE_URL}/api/chat/${sessionId}/messages`,
+  getChatMessages: (sessionId: number) => `${API_BASE_URL}/api/chat/${sessionId}/messages`,
 
   // Chatrooms
   getChatrooms: (page: number = 1, limit: number = 20) => 
