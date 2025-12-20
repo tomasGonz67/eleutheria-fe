@@ -168,7 +168,7 @@ function CommentItem({
               {isLoading 
                 ? 'Loading...' 
                 : isExpanded 
-                  ? `Hide Replies${comment.comment_count !== undefined ? ` (${comment.comment_count})` : ''}`
+                  ? 'Hide Comments (-)'
                   : `See Replies${comment.comment_count !== undefined ? ` (${comment.comment_count})` : ''}`
               }
             </button>
@@ -467,17 +467,16 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
         parent_id: parentCommentId 
       });
       
-      // Optimistically update the UI by re-fetching replies for the parent comment
-      if (expandedComments.has(parentCommentId)) {
-        // If the parent comment is expanded, re-fetch its replies to show the new one
-        const repliesResponse = await clientApi.get(`/api/forums/${forum.id}/posts?parent_id=${parentCommentId}`);
-        const replies = Array.isArray(repliesResponse.data) ? repliesResponse.data : (repliesResponse.data.posts || []);
-        
-        // Sort by most recent first
-        replies.sort((a: Post, b: Post) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        
-        setLoadedReplies(prev => new Map(prev).set(parentCommentId, replies));
-      }
+      // Always re-fetch replies and auto-expand to show the new reply
+      const repliesResponse = await clientApi.get(`/api/forums/${forum.id}/posts?parent_id=${parentCommentId}`);
+      const replies = Array.isArray(repliesResponse.data) ? repliesResponse.data : (repliesResponse.data.posts || []);
+      
+      // Sort by most recent first
+      replies.sort((a: Post, b: Post) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      
+      // Update loaded replies and expand the comment to show new reply
+      setLoadedReplies(prev => new Map(prev).set(parentCommentId, replies));
+      setExpandedComments(prev => new Set(prev).add(parentCommentId));
       
       // Update comment_count for the parent comment
       const updateCommentCount = (commentsList: Post[]): Post[] => {

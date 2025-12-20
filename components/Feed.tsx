@@ -40,8 +40,6 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
   const [error, setError] = useState('');
   const [editingPostId, setEditingPostId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState('');
-  const [replyingToPostId, setReplyingToPostId] = useState<number | null>(null);
-  const [replyContent, setReplyContent] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,39 +107,6 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
     } catch (err) {
       console.error('Error deleting post:', err);
       setError('Failed to delete post. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleStartReply = (postId: number) => {
-    setReplyingToPostId(postId);
-    setReplyContent('');
-  };
-
-  const handleCancelReply = () => {
-    setReplyingToPostId(null);
-    setReplyContent('');
-  };
-
-  const handleSubmitReply = async (parentId: number) => {
-    if (!replyContent.trim()) return;
-
-    setIsSubmitting(true);
-    setError('');
-
-    try {
-      await createPost(forumId, { 
-        content: replyContent.trim(),
-        parent_id: parentId 
-      });
-      setReplyingToPostId(null);
-      setReplyContent('');
-      // Refresh the page to show the new reply
-      router.replace(router.asPath);
-    } catch (err) {
-      console.error('Error creating reply:', err);
-      setError('Failed to post reply. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -330,14 +295,6 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
                   >
                     View Comments {post.comment_count !== undefined && `(${post.comment_count})`}
                   </button>
-                  <p className="text-gray-500">|</p>
-                  <button
-                    onClick={() => handleStartReply(post.id)}
-                    className="text-sm font-semibold hover:underline"
-                    style={{ color: '#AA633F' }}
-                  >
-                    Reply
-                  </button>
                   {/* Show Edit and Delete buttons only for current user's posts */}
                   {userSessionToken && post.author_session_token === userSessionToken && (
                     <>
@@ -358,42 +315,6 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
                       </button>
                     </>
                   )}
-                </div>
-              )}
-
-              {/* Reply Form */}
-              {replyingToPostId === post.id && (
-                <div className="mt-4 pl-6 border-l-4" style={{ borderColor: '#AA633F' }}>
-                  <div className="mb-2">
-                    <span className="text-sm text-gray-600">Replying to {post.username} as: </span>
-                    <span className="text-sm font-semibold text-gray-800">{username}</span>
-                  </div>
-                  <textarea
-                    value={replyContent}
-                    onChange={(e) => setReplyContent(e.target.value)}
-                    placeholder="Write your reply..."
-                    className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
-                    rows={3}
-                    maxLength={300}
-                    disabled={isSubmitting}
-                  />
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => handleSubmitReply(post.id)}
-                      disabled={isSubmitting || !replyContent.trim()}
-                      className="px-4 py-1 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
-                      style={{ backgroundColor: isSubmitting || !replyContent.trim() ? '#9ca3af' : '#AA633F' }}
-                    >
-                      {isSubmitting ? 'Replying...' : 'Post Reply'}
-                    </button>
-                    <button
-                      onClick={handleCancelReply}
-                      disabled={isSubmitting}
-                      className="px-4 py-1 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold text-sm disabled:opacity-50"
-                    >
-                      Cancel
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
