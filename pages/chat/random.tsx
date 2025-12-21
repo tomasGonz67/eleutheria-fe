@@ -4,33 +4,57 @@ import Header from '@/components/Header';
 import { clientApi } from '@/lib/api';
 import { API_ENDPOINTS } from '@/config/api';
 import { endChatSession } from '@/lib/services/chat';
-
-interface Message {
-  id: number;
-  content: string;
-  username: string;
-  is_me: boolean;
-  created_at: string;
-}
+import { useChatStore } from '@/store/chatStore';
+import { useSocketEvents } from '@/lib/hooks/useSocketEvents';
 
 export default function RandomChatPage() {
   const router = useRouter();
-  const [chatStatus, setChatStatus] = useState<'idle' | 'waiting' | 'matched'>('idle');
-  const [chatSessionId, setChatSessionId] = useState<number | null>(null);
   const [newMessage, setNewMessage] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [partnerUsername, setPartnerUsername] = useState('');
+  const [currentUsername, setCurrentUsername] = useState('');
   const [error, setError] = useState('');
+  const [chatEndedMessage, setChatEndedMessage] = useState('');
   const cleanupCalled = useRef(false);
+
+  // Zustand store
+  const {
+    randomChatStatus,
+    randomChatSessionId,
+    randomChatPartner,
+    randomChatMessages,
+    setRandomChatStatus,
+    setRandomChatSessionId,
+    clearRandomChat,
+    joinChatSession,
+    leaveChatSession,
+  } = useChatStore();
+
+  // Get current user's username on mount
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await clientApi.get('/api/session/me');
+        if (response.data?.user?.username) {
+          setCurrentUsername(response.data.user.username);
+        }
+      } catch (err) {
+        console.error('Error fetching user:', err);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  // Initialize Socket.io event listeners
+  useSocketEvents(currentUsername, setChatEndedMessage);
 
   // Auto-cleanup session on unmount or navigation
   useEffect(() => {
     const cleanup = async () => {
-      if (chatSessionId && !cleanupCalled.current) {
+      if (randomChatSessionId && !cleanupCalled.current) {
         cleanupCalled.current = true;
-        console.log('🧹 Cleaning up chat session:', chatSessionId);
+        console.log('🧹 Cleaning up chat session:', randomChatSessionId);
         try {
-          await endChatSession(chatSessionId);
+          await endChatSession(randomChatSessionId);
+          clearRandomChat();
         } catch (err) {
           console.error('Error cleaning up session:', err);
         }
@@ -44,10 +68,10 @@ export default function RandomChatPage() {
 
     // Cleanup on page refresh or close (more reliable for browser events)
     const handleBeforeUnload = () => {
-      if (chatSessionId && !cleanupCalled.current) {
+      if (randomChatSessionId && !cleanupCalled.current) {
         cleanupCalled.current = true;
         // Use fetch with keepalive - browser will complete request even after page closes
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/chat/sessions/${chatSessionId}`, {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://10.0.1.65:3000'}/api/chat/sessions/${randomChatSessionId}`, {
           method: 'DELETE',
           keepalive: true,  // Ensures request completes
           credentials: 'include',
@@ -64,37 +88,49 @@ export default function RandomChatPage() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       cleanup();
     };
-  }, [chatSessionId, router.events]);
+  }, [randomChatSessionId, router.events]);
 
   const handleFindChat = async () => {
     setError('');
+    setChatEndedMessage(''); // Clear any previous ended message
     try {
       const response = await clientApi.post(API_ENDPOINTS.matchRandom());
-      
+
       if (response.data.success) {
-        setChatSessionId(response.data.chat_session_id);
-        setChatStatus(response.data.status);
+        const sessionId = response.data.chat_session_id;
+        const status = response.data.status;
+
+        setRandomChatSessionId(sessionId);
+        setRandomChatStatus(status);
         cleanupCalled.current = false; // Reset cleanup flag for new session
-        
+
         console.log('Chat session created:', response.data);
-        // TODO: Join Socket.io room and poll for match
+
+        // Join Socket.io room
+        joinChatSession(sessionId);
       }
     } catch (err) {
       console.error('Error starting random chat:', err);
       setError('Failed to start chat. Please try again.');
-      setChatStatus('idle');
+      setRandomChatStatus('idle');
     }
   };
 
   const handleEndChat = async () => {
-    if (!chatSessionId) return;
-    
+    if (!randomChatSessionId) return;
+
     try {
-      await endChatSession(chatSessionId);
-      setChatSessionId(null);
-      setChatStatus('idle');
-      setMessages([]);
-      setPartnerUsername('');
+      // Leave Socket.io room
+      leaveChatSession(randomChatSessionId);
+
+      // End session via REST API
+      await endChatSession(randomChatSessionId);
+
+      // Show banner
+      setChatEndedMessage('You ended the chat');
+
+      // Reset state
+      clearRandomChat();
       cleanupCalled.current = true; // Mark as cleaned up
     } catch (err) {
       console.error('Error ending chat:', err);
@@ -110,16 +146,17 @@ export default function RandomChatPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!newMessage.trim() || !chatSessionId) return;
+
+    if (!newMessage.trim() || !randomChatSessionId) return;
 
     try {
-      await clientApi.post(API_ENDPOINTS.sendChatMessage(chatSessionId), {
+      // Send message via REST API
+      // Backend will emit Socket.io event to both users
+      await clientApi.post(API_ENDPOINTS.sendChatMessage(randomChatSessionId), {
         content: newMessage.trim()
       });
-      
+
       setNewMessage('');
-      // TODO: Message will appear via Socket.io or polling
     } catch (err) {
       console.error('Error sending message:', err);
       setError('Failed to send message.');
@@ -130,8 +167,26 @@ export default function RandomChatPage() {
     <div className="min-h-screen bg-marble-100">
       <Header currentPage="random-chat" />
 
+      {/* Chat Ended Banner */}
+      {chatEndedMessage && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-red-500 text-white px-6 py-4 shadow-lg">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">⚠️</span>
+              <span className="font-semibold text-lg">Chat Ended: {chatEndedMessage}</span>
+            </div>
+            <button
+              onClick={() => setChatEndedMessage('')}
+              className="text-white hover:text-red-100 font-bold text-xl"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className="max-w-4xl mx-auto px-6 py-8" style={{ marginTop: chatEndedMessage ? '80px' : '0' }}>
         <div className="bg-white p-8 rounded-lg border-4" style={{ borderColor: '#4D89B0' }}>
           <h1 className="text-3xl font-bold mb-6 text-gray-800">Random Chat</h1>
 
@@ -143,7 +198,7 @@ export default function RandomChatPage() {
           )}
 
           {/* Idle State - Not matched */}
-          {chatStatus === 'idle' && (
+          {randomChatStatus === 'idle' && (
             <div className="p-12 text-center border border-black rounded-lg">
               <div className="text-6xl mb-6">🦴</div>
               <h2 className="text-2xl text-gray-800 font-semibold mb-4">Cast the Astragaloi</h2>
@@ -163,21 +218,27 @@ export default function RandomChatPage() {
           )}
 
           {/* Waiting State - Looking for match */}
-          {chatStatus === 'waiting' && (
+          {randomChatStatus === 'waiting' && (
             <div className="p-12 text-center border border-black rounded-lg">
               <div className="text-6xl mb-6 animate-pulse">⏳</div>
               <h2 className="text-2xl font-semibold mb-4 text-gray-800">Looking for a chat partner...</h2>
-              <p className="text-gray-600">Please wait while we find someone for you</p>
+              <p className="text-gray-600 mb-6">Please wait while we find someone for you</p>
+              <button
+                onClick={handleEndChat}
+                className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-semibold"
+              >
+                Cancel Search
+              </button>
             </div>
           )}
 
           {/* Matched State - Active chat */}
-          {chatStatus === 'matched' && (
+          {randomChatStatus === 'matched' && (
             <div className="border border-black rounded-lg">
               {/* Chat Header */}
               <div className="p-4 border-b border-black flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-800">Chatting with: <span style={{ color: '#4D89B0' }}>{partnerUsername || 'Anonymous'}</span></h2>
+                  <h2 className="text-lg font-semibold text-gray-800">Chatting with: <span style={{ color: '#4D89B0' }}>{randomChatPartner || 'Anonymous'}</span></h2>
                   <p className="text-sm text-gray-500">Random 1-on-1 Chat</p>
                 </div>
                 <div className="flex gap-2">
@@ -201,28 +262,35 @@ export default function RandomChatPage() {
 
               {/* Messages */}
               <div className="p-6 space-y-4 min-h-[400px] max-h-[500px] overflow-y-auto">
-                {messages.map((message) => (
+                {randomChatMessages.map((message) => (
                   <div
                     key={message.id}
-                    className={`p-4 rounded-lg ${
-                      message.is_me
-                        ? 'ml-12 border border-black'
-                        : 'border border-black mr-12'
-                    }`}
-                    style={message.is_me ? { backgroundColor: '#e3f2fd' } : {}}
+                    className={`flex ${message.is_me ? 'justify-end' : 'justify-start'}`}
                   >
-                    {/* Message Header */}
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`font-semibold ${message.is_me ? '' : 'text-gray-800'}`} style={message.is_me ? { color: '#4D89B0' } : {}}>
-                        {message.username}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {new Date(message.created_at).toLocaleTimeString()}
-                      </span>
-                    </div>
+                    <div
+                      className={`max-w-[70%] p-4 rounded-lg ${
+                        message.is_me
+                          ? 'border border-black'
+                          : 'border border-black'
+                      }`}
+                      style={message.is_me ? { backgroundColor: '#e3f2fd' } : { backgroundColor: '#f5f5f5' }}
+                    >
+                      {/* Message Header */}
+                      <div className="flex items-center justify-between mb-2">
+                        <span
+                          className="font-semibold text-sm"
+                          style={message.is_me ? { color: '#4D89B0' } : { color: '#6b7280' }}
+                        >
+                          {message.username}
+                        </span>
+                        <span className="text-xs text-gray-500 ml-3">
+                          {new Date(message.created_at).toLocaleTimeString()}
+                        </span>
+                      </div>
 
-                    {/* Message Content */}
-                    <p className="text-gray-700">{message.content}</p>
+                      {/* Message Content */}
+                      <p className="text-gray-700">{message.content}</p>
+                    </div>
                   </div>
                 ))}
               </div>

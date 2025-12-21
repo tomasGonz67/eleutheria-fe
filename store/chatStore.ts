@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { Socket } from 'socket.io-client';
+import { getSocket, connectSocket, disconnectSocket, joinSession, leaveSession } from '@/lib/socket';
 
 interface PlannedChat {
   id: number;
@@ -8,11 +10,42 @@ interface PlannedChat {
   unreadCount: number;
 }
 
+interface Message {
+  id: number;
+  content: string;
+  username: string;
+  is_me: boolean;
+  created_at: string;
+}
+
 interface ChatStore {
+  // Socket.io
+  socket: Socket | null;
+  isConnected: boolean;
+
+  // Random chat state
+  randomChatStatus: 'idle' | 'waiting' | 'matched';
+  randomChatSessionId: number | null;
+  randomChatPartner: string;
+  randomChatMessages: Message[];
+
   // Planned chats state
   plannedChats: PlannedChat[];
 
-  // Actions
+  // Socket.io actions
+  initializeSocket: () => void;
+  cleanupSocket: () => void;
+  joinChatSession: (sessionId: number) => void;
+  leaveChatSession: (sessionId: number) => void;
+
+  // Random chat actions
+  setRandomChatStatus: (status: 'idle' | 'waiting' | 'matched') => void;
+  setRandomChatSessionId: (id: number | null) => void;
+  setRandomChatPartner: (username: string) => void;
+  addRandomChatMessage: (message: Message) => void;
+  clearRandomChat: () => void;
+
+  // Planned chat actions
   addPlannedChat: (chat: PlannedChat) => void;
   removePlannedChat: (id: number) => void;
   toggleMinimize: (id: number) => void;
@@ -20,8 +53,62 @@ interface ChatStore {
   clearUnread: (id: number) => void;
 }
 
-export const useChatStore = create<ChatStore>((set) => ({
+export const useChatStore = create<ChatStore>((set, get) => ({
+  // Socket.io initial state
+  socket: null,
+  isConnected: false,
+
+  // Random chat initial state
+  randomChatStatus: 'idle',
+  randomChatSessionId: null,
+  randomChatPartner: '',
+  randomChatMessages: [],
+
+  // Planned chats initial state
   plannedChats: [],
+
+  // Socket.io actions
+  initializeSocket: () => {
+    const socket = getSocket();
+    connectSocket();
+
+    set({ socket, isConnected: true });
+  },
+
+  cleanupSocket: () => {
+    disconnectSocket();
+    set({ socket: null, isConnected: false });
+  },
+
+  joinChatSession: (sessionId: number) => {
+    joinSession(sessionId);
+  },
+
+  leaveChatSession: (sessionId: number) => {
+    leaveSession(sessionId);
+  },
+
+  // Random chat actions
+  setRandomChatStatus: (status) => set({ randomChatStatus: status }),
+
+  setRandomChatSessionId: (id) => set({ randomChatSessionId: id }),
+
+  setRandomChatPartner: (username) => set({ randomChatPartner: username }),
+
+  addRandomChatMessage: (message) =>
+    set((state) => ({
+      randomChatMessages: [...state.randomChatMessages, message],
+    })),
+
+  clearRandomChat: () =>
+    set({
+      randomChatStatus: 'idle',
+      randomChatSessionId: null,
+      randomChatPartner: '',
+      randomChatMessages: [],
+    }),
+
+  // Planned chat actions
 
   addPlannedChat: (chat) =>
     set((state) => ({

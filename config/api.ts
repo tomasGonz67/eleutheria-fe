@@ -1,6 +1,6 @@
 export const API_BASE_URL = process.env.NODE_ENV === 'development'
-  ? 'http://localhost:3000'
-  : process.env.NEXT_PUBLIC_API_URL || 'https://api.eleutheria.com'; // Update with your prod URL later
+  ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000')
+  : (process.env.NEXT_PUBLIC_API_URL || 'https://api.eleutheria.com');
 
 export const API_ENDPOINTS = {
   // Posts
