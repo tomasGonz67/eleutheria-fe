@@ -6,6 +6,7 @@ import { API_ENDPOINTS } from '@/config/api';
 import { GetServerSideProps } from 'next';
 import { createPost, updatePost, deletePost } from '@/lib/services/posts';
 import { clientApi } from '@/lib/api';
+import UserActionMenu from '@/components/UserActionMenu';
 
 interface Post {
   id: number;
@@ -54,6 +55,7 @@ interface CommentItemProps {
   loadedReplies: Map<number, Post[]>;
   loadingReplies: Set<number>;
   parentUsername?: string;
+  parentSessionToken?: string;
   onStartEdit: (comment: Post) => void;
   onCancelEdit: () => void;
   onSaveEdit: (commentId: number) => void;
@@ -81,6 +83,7 @@ function CommentItem({
   loadedReplies,
   loadingReplies,
   parentUsername,
+  parentSessionToken,
   onStartEdit,
   onCancelEdit,
   onSaveEdit,
@@ -110,11 +113,27 @@ function CommentItem({
         {/* Comment Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-gray-800 px-3 py-1 bg-gray-200 rounded-md">{comment.username}</span>
+            <span className="font-semibold text-gray-800 px-3 py-1 bg-gray-200 rounded-md">
+              <UserActionMenu
+                username={comment.username}
+                userSessionToken={comment.author_session_token}
+                currentUserSessionToken={userSessionToken}
+                accentColor="#AA633F"
+                className="font-semibold text-gray-800"
+              />
+            </span>
             {parentUsername && (
               <>
                 <span className="text-sm text-gray-500">Reply to →</span>
-                <span className="text-sm font-semibold text-gray-700">{parentUsername}</span>
+                <span className="text-sm font-semibold text-gray-700">
+                  <UserActionMenu
+                    username={parentUsername}
+                    userSessionToken={parentSessionToken}
+                    currentUserSessionToken={userSessionToken}
+                    accentColor="#AA633F"
+                    className="text-sm font-semibold text-gray-700"
+                  />
+                </span>
               </>
             )}
           </div>
@@ -260,6 +279,7 @@ function CommentItem({
               loadedReplies={loadedReplies}
               loadingReplies={loadingReplies}
               parentUsername={comment.username}
+              parentSessionToken={comment.author_session_token}
               onStartEdit={onStartEdit}
               onCancelEdit={onCancelEdit}
               onSaveEdit={onSaveEdit}
@@ -601,7 +621,13 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
                 <div className="p-4 bg-gray-100 rounded-lg border border-gray-300 mb-2">
                   <p className="text-gray-700">{postContent}</p>
                 </div>
-                <p className="text-sm text-gray-600">by {postUsername}</p>
+                <p className="text-sm text-gray-600">
+                  by <UserActionMenu
+                    username={postUsername}
+                    accentColor="#AA633F"
+                    className="text-sm text-gray-600"
+                  />
+                </p>
               </div>
             ) : (
               <h1 className="text-2xl font-bold mb-4 text-gray-800">Comments for Post #{postId}</h1>

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { createPost, updatePost, deletePost } from '@/lib/services/posts';
 import Pagination from './Pagination';
 import SearchBar from './SearchBar';
+import UserActionMenu from './UserActionMenu';
 
 interface Post {
   id: number;
@@ -238,7 +239,15 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
             >
               {/* Post Header */}
               <div className="flex items-center justify-between mb-3">
-                <span className="font-semibold text-gray-800 px-3 py-1 bg-gray-100 rounded-md">{post.username}</span>
+                <span className="font-semibold text-gray-800 px-3 py-1 bg-gray-100 rounded-md">
+                  <UserActionMenu
+                    username={post.username}
+                    userSessionToken={post.author_session_token}
+                    currentUserSessionToken={userSessionToken}
+                    accentColor="#AA633F"
+                    className="font-semibold text-gray-800"
+                  />
+                </span>
                 <span className="text-sm text-gray-500">
                   {new Date(post.created_at).toLocaleDateString()}
                 </span>

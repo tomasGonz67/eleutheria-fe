@@ -83,6 +83,7 @@ export function useSocketEvents(
           content: data.content,
           username: data.sender_username,
           is_me: data.sender_username === currentUsername,
+          sender_session_token: data.sender_session_token,
           created_at: data.created_at,
         });
       }

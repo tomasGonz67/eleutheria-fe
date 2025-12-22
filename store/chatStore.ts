@@ -15,6 +15,7 @@ interface Message {
   content: string;
   username: string;
   is_me: boolean;
+  sender_session_token?: string;
   created_at: string;
 }
 

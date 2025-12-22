@@ -6,11 +6,13 @@ import { API_ENDPOINTS } from '@/config/api';
 import { endChatSession } from '@/lib/services/chat';
 import { useChatStore } from '@/store/chatStore';
 import { useSocketEvents } from '@/lib/hooks/useSocketEvents';
+import UserActionMenu from '@/components/UserActionMenu';
 
 export default function RandomChatPage() {
   const router = useRouter();
   const [newMessage, setNewMessage] = useState('');
   const [currentUsername, setCurrentUsername] = useState('');
+  const [userSessionToken, setUserSessionToken] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [chatEndedMessage, setChatEndedMessage] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);
@@ -37,6 +39,9 @@ export default function RandomChatPage() {
         const response = await clientApi.get('/api/session/me');
         if (response.data?.user?.username) {
           setCurrentUsername(response.data.user.username);
+        }
+        if (response.data?.user?.session_token) {
+          setUserSessionToken(response.data.user.session_token);
         }
       } catch (err) {
         console.error('Error fetching user:', err);
@@ -176,26 +181,8 @@ export default function RandomChatPage() {
     <div className="min-h-screen bg-marble-100">
       <Header currentPage="random-chat" />
 
-      {/* Chat Ended Banner */}
-      {chatEndedMessage && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-red-500 text-white px-6 py-4 shadow-lg">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">⚠️</span>
-              <span className="font-semibold text-lg">Chat Ended: {chatEndedMessage}</span>
-            </div>
-            <button
-              onClick={() => setChatEndedMessage('')}
-              className="text-white hover:text-red-100 font-bold text-xl"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-6 py-8" style={{ marginTop: chatEndedMessage ? '80px' : '0' }}>
+      <main className="max-w-4xl mx-auto px-6 py-8">
         <div className="bg-white p-8 rounded-lg border-4" style={{ borderColor: '#4D89B0' }}>
           <h1 className="text-3xl font-bold mb-6 text-gray-800">Random Chat</h1>
 
@@ -247,7 +234,14 @@ export default function RandomChatPage() {
               {/* Chat Header */}
               <div className="p-4 border-b border-black flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-800">Chatting with: <span style={{ color: '#4D89B0' }}>{randomChatPartner || 'Anonymous'}</span></h2>
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Chatting with: <UserActionMenu
+                      username={randomChatPartner || 'Anonymous'}
+                      accentColor="#4D89B0"
+                      className="font-semibold"
+                      style={{ color: '#4D89B0' }}
+                    />
+                  </h2>
                   <p className="text-sm text-gray-500">Random 1-on-1 Chat</p>
                 </div>
                 <div className="flex gap-2">
@@ -286,12 +280,14 @@ export default function RandomChatPage() {
                     >
                       {/* Message Header */}
                       <div className="flex items-center justify-between mb-2">
-                        <span
+                        <UserActionMenu
+                          username={message.username}
+                          userSessionToken={message.sender_session_token}
+                          currentUserSessionToken={userSessionToken}
+                          accentColor="#4D89B0"
                           className="font-semibold text-sm"
                           style={message.is_me ? { color: '#4D89B0' } : { color: '#6b7280' }}
-                        >
-                          {message.username}
-                        </span>
+                        />
                         <span className="text-xs text-gray-500 ml-3">
                           {new Date(message.created_at).toLocaleTimeString()}
                         </span>
@@ -344,6 +340,24 @@ export default function RandomChatPage() {
           )}
         </div>
       </main>
+
+      {/* Chat Ended Banner */}
+      {chatEndedMessage && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-red-500 text-white px-6 py-4 shadow-lg">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">⚠️</span>
+              <span className="font-semibold text-lg">Chat Ended: {chatEndedMessage}</span>
+            </div>
+            <button
+              onClick={() => setChatEndedMessage('')}
+              className="text-white hover:text-red-100 font-bold text-xl"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

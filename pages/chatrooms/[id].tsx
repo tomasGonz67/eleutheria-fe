@@ -6,6 +6,7 @@ import { clientApi } from '@/lib/api';
 import { createChatroomMessage, updateChatroom, deleteChatroom } from '@/lib/services/chatrooms';
 import { useChatStore } from '@/store/chatStore';
 import { joinChatroom, leaveChatroom } from '@/lib/socket';
+import UserActionMenu from '@/components/UserActionMenu';
 
 interface Message {
   id: number;
@@ -330,7 +331,13 @@ export default function ChatroomMessagesPage() {
                       >
                         {/* Message Header */}
                         <div className="flex items-center justify-between mb-2 gap-3">
-                          <span className="font-semibold text-gray-800 text-sm">{message.username}</span>
+                          <UserActionMenu
+                            username={message.username}
+                            userSessionToken={message.sender_session_token}
+                            currentUserSessionToken={userSessionToken}
+                            accentColor="#4D89B0"
+                            className="font-semibold text-gray-800 text-sm"
+                          />
                           <span className="text-xs text-gray-500 whitespace-nowrap">
                             {new Date(message.created_at).toLocaleTimeString()}
                           </span>
