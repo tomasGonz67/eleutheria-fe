@@ -2,17 +2,24 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import PlannedChat from '@/components/PlannedChat';
 import { createSession } from '@/lib/services/session';
+import { useChatStore } from '@/store/chatStore';
 
 export default function Home() {
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const { initializeSocket } = useChatStore();
 
   const handleNavigate = async (path: string) => {
     setIsCreatingSession(true);
     try {
       // Create session with username (or empty for random username)
       await createSession(username.trim() || undefined);
+      
+      // Initialize Socket.io connection once session is created
+      initializeSocket();
+      console.log('🔌 Socket initialized after session creation');
+      
       // Navigate after session is created
       router.push(path);
     } catch (error) {

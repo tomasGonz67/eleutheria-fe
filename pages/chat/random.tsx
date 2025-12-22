@@ -21,6 +21,8 @@ export default function RandomChatPage() {
 
   // Zustand store
   const {
+    socket,
+    initializeSocket,
     randomChatStatus,
     randomChatSessionId,
     randomChatPartner,
@@ -49,6 +51,14 @@ export default function RandomChatPage() {
     };
     fetchUser();
   }, []);
+
+  // Ensure socket is initialized (in case user navigated directly to URL)
+  useEffect(() => {
+    if (!socket) {
+      console.log('🔌 Socket not initialized, initializing now...');
+      initializeSocket();
+    }
+  }, [socket, initializeSocket]);
 
   // Initialize Socket.io event listeners
   useSocketEvents(currentUsername, setChatEndedMessage);

@@ -20,24 +20,14 @@ export function useSocketEvents(
 ) {
   const {
     socket,
-    initializeSocket,
-    cleanupSocket,
     setRandomChatStatus,
     setRandomChatPartner,
     addRandomChatMessage,
-    clearRandomChat,
     randomChatSessionId,
   } = useChatStore();
 
-  useEffect(() => {
-    // Initialize socket on mount
-    initializeSocket();
-
-    return () => {
-      // Cleanup on unmount
-      cleanupSocket();
-    };
-  }, []);
+  // Socket should already be initialized from home page
+  // This hook just sets up event listeners
 
   useEffect(() => {
     if (!socket || !currentUsername) return;

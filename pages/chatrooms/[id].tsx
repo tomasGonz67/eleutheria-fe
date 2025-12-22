@@ -48,11 +48,13 @@ export default function ChatroomMessagesPage() {
   // Get Socket.io from Zustand store
   const { socket, initializeSocket, cleanupSocket } = useChatStore();
 
-  // Initialize Socket.io connection
+  // Socket should already be initialized from home page
+  // Just ensure it's connected (in case user navigated directly to URL)
   useEffect(() => {
-    initializeSocket();
-    return () => cleanupSocket();
-  }, []);
+    if (!socket) {
+      initializeSocket();
+    }
+  }, [socket, initializeSocket]);
 
   // Join chatroom Socket.io room and listen for messages
   useEffect(() => {
