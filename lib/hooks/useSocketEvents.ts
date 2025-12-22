@@ -67,8 +67,9 @@ export function useSocketEvents(
       console.log('User left:', data);
 
       if (data.session_id === randomChatSessionId) {
-        // Partner left, end chat
-        setRandomChatStatus('idle');
+        // Partner left, mark as ended but keep chat visible
+        setChatEndedMessage(`${data.username} left the chat`);
+        setRandomChatStatus('ended');
       }
     };
 
@@ -95,7 +96,7 @@ export function useSocketEvents(
 
       if (data.session_id === randomChatSessionId) {
         setChatEndedMessage(data.reason);
-        clearRandomChat();
+        setRandomChatStatus('ended'); // Mark as ended but keep messages visible
       }
     };
 

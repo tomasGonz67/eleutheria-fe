@@ -140,15 +140,17 @@ export default function RandomChatPage() {
       // End session via REST API
       await endChatSession(randomChatSessionId);
 
-      // Show banner
-      setChatEndedMessage('You ended the chat');
-
-      // Reset state
+      // Reset state - go back to idle screen
       clearRandomChat();
+      setChatEndedMessage(''); // Clear any messages
+      setError(''); // Clear any errors
       cleanupCalled.current = true; // Mark as cleaned up
     } catch (err) {
       console.error('Error ending chat:', err);
-      setError('Failed to end chat.');
+      // Even if API fails, reset UI
+      clearRandomChat();
+      setChatEndedMessage('');
+      cleanupCalled.current = true;
     }
   };
 
@@ -228,8 +230,8 @@ export default function RandomChatPage() {
             </div>
           )}
 
-          {/* Matched State - Active chat */}
-          {randomChatStatus === 'matched' && (
+          {/* Matched/Ended State - Active or ended chat */}
+          {(randomChatStatus === 'matched' || randomChatStatus === 'ended') && (
             <div className="border border-black rounded-lg">
               {/* Chat Header */}
               <div className="p-4 border-b border-black flex items-center justify-between">
@@ -258,7 +260,7 @@ export default function RandomChatPage() {
                     onClick={handleEndChat}
                     className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-semibold"
                   >
-                    End Chat
+                    Leave Chat
                   </button>
                 </div>
               </div>
@@ -321,16 +323,17 @@ export default function RandomChatPage() {
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type a message..."
-                    className="flex-1 px-4 py-2 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
+                    placeholder={randomChatStatus === 'ended' ? 'Chat has ended' : 'Type a message...'}
+                    disabled={randomChatStatus === 'ended'}
+                    className="flex-1 px-4 py-2 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
                   <button
                     type="submit"
-                    disabled={!newMessage.trim()}
+                    disabled={!newMessage.trim() || randomChatStatus === 'ended'}
                     className="px-6 py-2 text-white rounded-lg transition font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: '#4D89B0' }}
-                    onMouseEnter={(e) => !newMessage.trim() ? null : e.currentTarget.style.backgroundColor = '#3d6e8f'}
-                    onMouseLeave={(e) => !newMessage.trim() ? null : e.currentTarget.style.backgroundColor = '#4D89B0'}
+                    style={{ backgroundColor: randomChatStatus === 'ended' ? '#9ca3af' : '#4D89B0' }}
+                    onMouseEnter={(e) => (!newMessage.trim() || randomChatStatus === 'ended') ? null : e.currentTarget.style.backgroundColor = '#3d6e8f'}
+                    onMouseLeave={(e) => (!newMessage.trim() || randomChatStatus === 'ended') ? null : e.currentTarget.style.backgroundColor = '#4D89B0'}
                   >
                     Send
                   </button>

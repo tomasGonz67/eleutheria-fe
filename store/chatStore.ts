@@ -25,7 +25,7 @@ interface ChatStore {
   isConnected: boolean;
 
   // Random chat state
-  randomChatStatus: 'idle' | 'waiting' | 'matched';
+  randomChatStatus: 'idle' | 'waiting' | 'matched' | 'ended';
   randomChatSessionId: number | null;
   randomChatPartner: string;
   randomChatMessages: Message[];
@@ -40,7 +40,7 @@ interface ChatStore {
   leaveChatSession: (sessionId: number) => void;
 
   // Random chat actions
-  setRandomChatStatus: (status: 'idle' | 'waiting' | 'matched') => void;
+  setRandomChatStatus: (status: 'idle' | 'waiting' | 'matched' | 'ended') => void;
   setRandomChatSessionId: (id: number | null) => void;
   setRandomChatPartner: (username: string) => void;
   addRandomChatMessage: (message: Message) => void;
