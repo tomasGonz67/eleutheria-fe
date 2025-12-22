@@ -13,7 +13,9 @@ export default function RandomChatPage() {
   const [currentUsername, setCurrentUsername] = useState('');
   const [error, setError] = useState('');
   const [chatEndedMessage, setChatEndedMessage] = useState('');
+  const [autoScroll, setAutoScroll] = useState(true);
   const cleanupCalled = useRef(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Zustand store
   const {
@@ -45,6 +47,13 @@ export default function RandomChatPage() {
 
   // Initialize Socket.io event listeners
   useSocketEvents(currentUsername, setChatEndedMessage);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (autoScroll) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [randomChatMessages, autoScroll]);
 
   // Auto-cleanup session on unmount or navigation
   useEffect(() => {
@@ -293,10 +302,24 @@ export default function RandomChatPage() {
                     </div>
                   </div>
                 ))}
+
+                {/* Auto-scroll anchor */}
+                <div ref={messagesEndRef} />
               </div>
 
               {/* Send Message Form */}
               <form onSubmit={handleSubmit} className="p-4 border-t border-black">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={autoScroll}
+                      onChange={(e) => setAutoScroll(e.target.checked)}
+                      className="w-4 h-4 cursor-pointer"
+                    />
+                    <span>Auto-scroll to new messages</span>
+                  </label>
+                </div>
                 <div className="flex gap-3">
                   <input
                     type="text"

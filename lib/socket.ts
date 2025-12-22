@@ -65,3 +65,19 @@ export function leaveSession(sessionId: number): void {
   const socket = getSocket();
   socket.emit('leave_session', { session_id: sessionId });
 }
+
+/**
+ * Join a chatroom
+ */
+export function joinChatroom(chatroomId: number): void {
+  const socket = getSocket();
+  socket.emit('join_chatroom', { chatroom_id: chatroomId });
+}
+
+/**
+ * Leave a chatroom
+ */
+export function leaveChatroom(chatroomId: number): void {
+  const socket = getSocket();
+  socket.emit('leave_chatroom', { chatroom_id: chatroomId });
+}

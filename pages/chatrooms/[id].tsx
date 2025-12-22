@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import { clientApi } from '@/lib/api';
 import { createChatroomMessage, updateChatroom, deleteChatroom } from '@/lib/services/chatrooms';
+import { useChatStore } from '@/store/chatStore';
+import { joinChatroom, leaveChatroom } from '@/lib/socket';
 
 interface Message {
   id: number;
@@ -36,6 +38,60 @@ export default function ChatroomMessagesPage() {
   const [chatroomDescription, setChatroomDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
+  const [activeUsers, setActiveUsers] = useState<string[]>([]);
+  const [autoScroll, setAutoScroll] = useState(true);
+  const [isActiveUsersModalOpen, setIsActiveUsersModalOpen] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageInputRef = useRef<HTMLInputElement>(null);
+
+  // Get Socket.io from Zustand store
+  const { socket, initializeSocket, cleanupSocket } = useChatStore();
+
+  // Initialize Socket.io connection
+  useEffect(() => {
+    initializeSocket();
+    return () => cleanupSocket();
+  }, []);
+
+  // Join chatroom Socket.io room and listen for messages
+  useEffect(() => {
+    if (!socket || !id) return;
+
+    const chatroomId = Number(id);
+
+    // Join the chatroom
+    joinChatroom(chatroomId);
+
+    // Listen for new messages
+    const handleNewMessage = (data: any) => {
+      if (data.chatroom_id === chatroomId) {
+        setMessages((prevMessages) => [...prevMessages, {
+          id: data.id,
+          content: data.content,
+          username: data.username,
+          sender_session_token: data.sender_session_token,
+          created_at: data.created_at,
+        }]);
+      }
+    };
+
+    // Listen for active users updates
+    const handleUsersUpdated = (data: any) => {
+      if (data.chatroom_id === chatroomId) {
+        setActiveUsers(data.users || []);
+      }
+    };
+
+    socket.on('new_chatroom_message', handleNewMessage);
+    socket.on('chatroom_users_updated', handleUsersUpdated);
+
+    // Cleanup on unmount or when ID changes
+    return () => {
+      socket.off('new_chatroom_message', handleNewMessage);
+      socket.off('chatroom_users_updated', handleUsersUpdated);
+      leaveChatroom(chatroomId);
+    };
+  }, [socket, id]);
 
   // Fetch chatroom info and messages on component mount and when ID changes
   useEffect(() => {
@@ -79,6 +135,20 @@ export default function ChatroomMessagesPage() {
     fetchData();
   }, [id]);
 
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (autoScroll) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, autoScroll]);
+
+  // Auto-focus on message input when page loads
+  useEffect(() => {
+    if (chatroom && !isLoading) {
+      messageInputRef.current?.focus();
+    }
+  }, [chatroom, isLoading]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -89,10 +159,7 @@ export default function ChatroomMessagesPage() {
     try {
       await createChatroomMessage(Number(id), { content: newMessage.trim() });
       setNewMessage('');
-
-      // Refresh messages after sending
-      const response = await clientApi.get(`/api/chatrooms/${id}/messages`);
-      setMessages(response.data.messages || []);
+      // No need to refresh messages - Socket.io will handle it in real-time
     } catch (err) {
       console.error('Error sending message:', err);
       setError('Failed to send message');
@@ -191,111 +258,147 @@ export default function ChatroomMessagesPage() {
               ← Back to Chatrooms
             </Link>
 
-            <div className="flex items-start justify-between mb-2">
+            <div className="flex justify-between gap-4 mb-4">
               <div className="flex-1">
-                <h1 className="text-3xl font-bold mb-2 text-gray-800">
-                  {chatroom?.name || 'Chatroom'}
-                </h1>
-                {chatroom?.description && (
-                  <p className="text-gray-600 mb-4">{chatroom.description}</p>
-                )}
-              </div>
-              {/* Show Edit and Delete buttons only for current user's chatrooms */}
-              {userSessionToken && chatroom?.creator_session_token === userSessionToken && (
-                <div className="flex items-center gap-3 ml-4">
-                  <button
-                    onClick={handleStartEdit}
-                    className="text-sm font-semibold hover:underline"
-                    style={{ color: '#4D89B0' }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    className="text-sm font-semibold text-red-600 hover:underline"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {!chatroom?.description && <div className="mb-2" />}
-
-          <div className="border border-black rounded-lg">
-            {/* Messages */}
-            <div className="p-6 space-y-4 min-h-[400px] max-h-[500px] overflow-y-auto">
-              {messages.map((message) => {
-                const isOwnMessage = message.sender_session_token === userSessionToken;
-
-                return (
-                  <div
-                    key={message.id}
-                    className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[70%] p-4 rounded-lg ${
-                        isOwnMessage
-                          ? 'bg-gray-300'
-                          : 'bg-gray-100'
-                      }`}
-                    >
-                      {/* Message Header */}
-                      <div className="flex items-center justify-between mb-2 gap-3">
-                        <span className="font-semibold text-gray-800 text-sm">{message.username}</span>
-                        <span className="text-xs text-gray-500 whitespace-nowrap">
-                          {new Date(message.created_at).toLocaleTimeString()}
-                        </span>
-                      </div>
-
-                      {/* Message Content */}
-                      <p className="text-gray-700 break-words">{message.content}</p>
-                    </div>
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1">
+                    <h1 className="text-2xl font-bold mb-1 text-gray-800">
+                      {chatroom?.name || 'Chatroom'}
+                    </h1>
+                    {chatroom?.description && (
+                      <p className="text-gray-600 text-sm mb-2">{chatroom.description}</p>
+                    )}
                   </div>
-                );
-              })}
-
-              {/* Empty State */}
-              {messages.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-gray-500">No messages yet. Start the conversation!</p>
+                  {/* Show Edit and Delete buttons only for current user's chatrooms */}
+                  {userSessionToken && chatroom?.creator_session_token === userSessionToken && (
+                    <div className="flex items-center gap-3 ml-4">
+                      <button
+                        onClick={handleStartEdit}
+                        className="text-sm font-semibold hover:underline"
+                        style={{ color: '#4D89B0' }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={handleDelete}
+                        className="text-sm font-semibold text-red-600 hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+
+              {/* Active Users Sidebar */}
+              <div className="w-64 self-start">
+                <div className="border border-black rounded-lg p-4">
+                  <h3 className="font-bold text-gray-800 mb-3 text-sm">
+                    Active Users ({activeUsers.length})
+                  </h3>
+                  <button
+                    onClick={() => setIsActiveUsersModalOpen(true)}
+                    className="w-full px-4 py-2 text-sm font-semibold rounded-lg transition"
+                    style={{ backgroundColor: '#4D89B0', color: 'white' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d6e8f'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4D89B0'}
+                  >
+                    Show all
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* Send Message Form */}
-            <form onSubmit={handleSubmit} className="p-4 border-t border-black">
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  disabled={isSending}
-                  className="flex-1 px-4 py-2 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none disabled:bg-gray-100"
-                />
-                <button
-                  type="submit"
-                  disabled={!newMessage.trim() || isSending}
-                  className="px-6 py-2 text-white rounded-lg transition font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: isSending || !newMessage.trim() ? '#9ca3af' : '#4D89B0' }}
-                  onMouseEnter={(e) => {
-                    if (!isSending && newMessage.trim()) {
-                      e.currentTarget.style.backgroundColor = '#3d6e8f';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isSending && newMessage.trim()) {
-                      e.currentTarget.style.backgroundColor = '#4D89B0';
-                    }
-                  }}
-                >
-                  {isSending ? 'Sending...' : 'Send'}
-                </button>
+            {/* Chat Area */}
+            <div className="border border-black rounded-lg">
+              {/* Messages */}
+              <div className="p-6 space-y-4 min-h-[500px] max-h-[600px] overflow-y-auto">
+                {messages.map((message) => {
+                  const isOwnMessage = message.sender_session_token === userSessionToken;
+
+                  return (
+                    <div
+                      key={message.id}
+                      className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[70%] p-4 rounded-lg ${
+                          isOwnMessage
+                            ? 'bg-gray-300'
+                            : 'bg-gray-100'
+                        }`}
+                      >
+                        {/* Message Header */}
+                        <div className="flex items-center justify-between mb-2 gap-3">
+                          <span className="font-semibold text-gray-800 text-sm">{message.username}</span>
+                          <span className="text-xs text-gray-500 whitespace-nowrap">
+                            {new Date(message.created_at).toLocaleTimeString()}
+                          </span>
+                        </div>
+
+                        {/* Message Content */}
+                        <p className="text-gray-700 break-words">{message.content}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Empty State */}
+                {messages.length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500">No messages yet. Start the conversation!</p>
+                  </div>
+                )}
+
+                {/* Auto-scroll anchor */}
+                <div ref={messagesEndRef} />
               </div>
-            </form>
+
+              {/* Send Message Form */}
+              <form onSubmit={handleSubmit} className="p-4 border-t border-black">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={autoScroll}
+                      onChange={(e) => setAutoScroll(e.target.checked)}
+                      className="w-4 h-4 cursor-pointer"
+                    />
+                    <span>Auto-scroll to new messages</span>
+                  </label>
+                </div>
+                <div className="flex gap-3">
+                  <input
+                    ref={messageInputRef}
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type a message..."
+                    disabled={isSending}
+                    className="flex-1 px-4 py-2 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none disabled:bg-gray-100"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newMessage.trim() || isSending}
+                    className="px-6 py-2 text-white rounded-lg transition font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: isSending || !newMessage.trim() ? '#9ca3af' : '#4D89B0' }}
+                    onMouseEnter={(e) => {
+                      if (!isSending && newMessage.trim()) {
+                        e.currentTarget.style.backgroundColor = '#3d6e8f';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSending && newMessage.trim()) {
+                        e.currentTarget.style.backgroundColor = '#4D89B0';
+                      }
+                    }}
+                  >
+                    {isSending ? 'Sending...' : 'Send'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
         )}
 
         {/* Edit Chatroom Modal */}
@@ -388,6 +491,39 @@ export default function ChatroomMessagesPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Active Users Modal */}
+        {isActiveUsersModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full p-6 border-4" style={{ borderColor: '#4D89B0' }}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-gray-800">Active Users ({activeUsers.length})</h2>
+                <button
+                  onClick={() => setIsActiveUsersModalOpen(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {activeUsers.length === 0 ? (
+                  <p className="text-gray-500 text-sm text-center py-4">No users online</p>
+                ) : (
+                  activeUsers.map((username, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded"
+                    >
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-sm text-gray-700">{username}</span>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         )}
