@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import PlannedChat from '@/components/PlannedChat';
 import { createSession } from '@/lib/services/session';
 import { useChatStore } from '@/store/chatStore';
 
@@ -129,11 +128,6 @@ export default function Home() {
               </button>
             </div>
           </div>
-        </div>
-
-        {/* Planned Chat Section */}
-        <div className="mt-12 max-w-2xl mx-auto">
-          <PlannedChat />
         </div>
 
         {/* Info Section */}

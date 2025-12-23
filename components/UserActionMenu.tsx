@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { clientApi } from '@/lib/api';
 import { useChatStore } from '@/store/chatStore';
 
 interface UserActionMenuProps {
@@ -68,10 +69,26 @@ export default function UserActionMenu({
     };
   }, [isOpen]);
 
-  const handleSendMessage = () => {
-    // TODO: Implement send message functionality
-    console.log('Send message to:', username);
-    setIsOpen(false);
+  const handleSendMessage = async () => {
+    if (!userSessionToken) {
+      alert('Cannot send message request - user session not found');
+      setIsOpen(false);
+      return;
+    }
+
+    try {
+      const response = await clientApi.post('/api/chat/match/planned', {
+        recipientId: userSessionToken
+      });
+
+      console.log('Message request sent:', response.data);
+      alert(`Message request sent to ${username}!`);
+      setIsOpen(false);
+    } catch (error: any) {
+      console.error('Error sending message request:', error);
+      alert(error.response?.data?.error || 'Failed to send message request');
+      setIsOpen(false);
+    }
   };
 
   const handleReport = () => {

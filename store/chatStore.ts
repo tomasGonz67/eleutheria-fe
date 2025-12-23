@@ -19,6 +19,13 @@ interface Message {
   created_at: string;
 }
 
+interface MessageRequest {
+  session_id: number;
+  requester_username: string;
+  requester_session_token: string;
+  created_at: string;
+}
+
 interface ChatStore {
   // Socket.io
   socket: Socket | null;
@@ -32,6 +39,9 @@ interface ChatStore {
 
   // Planned chats state
   plannedChats: PlannedChat[];
+
+  // Message requests state
+  messageRequests: MessageRequest[];
 
   // Socket.io actions
   initializeSocket: () => void;
@@ -52,6 +62,10 @@ interface ChatStore {
   toggleMinimize: (id: number) => void;
   setUnreadCount: (id: number, count: number) => void;
   clearUnread: (id: number) => void;
+
+  // Message request actions
+  addMessageRequest: (request: MessageRequest) => void;
+  removeMessageRequest: (sessionId: number) => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -67,6 +81,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   // Planned chats initial state
   plannedChats: [],
+
+  // Message requests initial state
+  messageRequests: [],
 
   // Socket.io actions
   initializeSocket: () => {
@@ -144,5 +161,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       plannedChats: state.plannedChats.map((chat) =>
         chat.id === id ? { ...chat, unreadCount: 0 } : chat
       ),
+    })),
+
+  // Message request actions
+  addMessageRequest: (request) =>
+    set((state) => ({
+      messageRequests: [...state.messageRequests, request],
+    })),
+
+  removeMessageRequest: (sessionId) =>
+    set((state) => ({
+      messageRequests: state.messageRequests.filter((req) => req.session_id !== sessionId),
     })),
 }));

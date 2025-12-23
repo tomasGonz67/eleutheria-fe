@@ -12,9 +12,9 @@ export async function matchRandom(): Promise<ChatSessionResponse> {
 /**
  * Match with a specific user for 1-on-1 chat (requires authentication)
  */
-export async function matchPlanned(targetSessionToken: string): Promise<ChatSessionResponse> {
+export async function matchPlanned(recipientId: string): Promise<ChatSessionResponse> {
   const { data } = await clientApi.post<ChatSessionResponse>('/api/chat/match/planned', {
-    target_session_token: targetSessionToken,
+    recipientId: recipientId,
   });
   return data;
 }
