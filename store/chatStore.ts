@@ -17,6 +17,7 @@ interface Message {
   is_me: boolean;
   sender_session_token?: string;
   created_at: string;
+  isSystem?: boolean; // For system messages like "User left"
 }
 
 interface MessageRequest {

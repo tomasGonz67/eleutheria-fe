@@ -68,12 +68,3 @@ export async function endChatSession(sessionId: number): Promise<{ success: bool
   const { data } = await clientApi.put(`/api/chat/${sessionId}/end`);
   return data;
 }
-
-/**
- * Delete a chat session completely (requires authentication)
- * Removes session from database
- */
-export async function deleteChatSession(sessionId: number): Promise<{ success: boolean; message: string }> {
-  const { data } = await clientApi.delete(`/api/chat/${sessionId}`);
-  return data;
-}

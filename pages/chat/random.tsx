@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import Header from '@/components/Header';
 import { clientApi } from '@/lib/api';
 import { API_ENDPOINTS } from '@/config/api';
-import { endChatSession } from '@/lib/services/chat';
+import { endChatSession, cancelChatSession } from '@/lib/services/chat';
 import { useChatStore } from '@/store/chatStore';
 import { useSocketEvents } from '@/lib/hooks/useSocketEvents';
 import UserActionMenu from '@/components/UserActionMenu';
@@ -14,7 +14,6 @@ export default function RandomChatPage() {
   const [currentUsername, setCurrentUsername] = useState('');
   const [userSessionToken, setUserSessionToken] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const [chatEndedMessage, setChatEndedMessage] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);
   const cleanupCalled = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -33,6 +32,9 @@ export default function RandomChatPage() {
     joinChatSession,
     leaveChatSession,
   } = useChatStore();
+
+  // Keep a ref to the current status to avoid stale closures in cleanup
+  const statusRef = useRef(randomChatStatus);
 
   // Get current user's username on mount
   useEffect(() => {
@@ -61,7 +63,12 @@ export default function RandomChatPage() {
   }, [socket, initializeSocket]);
 
   // Initialize Socket.io event listeners
-  useSocketEvents(currentUsername, setChatEndedMessage);
+  useSocketEvents(currentUsername);
+
+  // Keep statusRef in sync with current status
+  useEffect(() => {
+    statusRef.current = randomChatStatus;
+  }, [randomChatStatus]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -77,7 +84,12 @@ export default function RandomChatPage() {
         cleanupCalled.current = true;
         console.log('🧹 Cleaning up chat session:', randomChatSessionId);
         try {
-          await endChatSession(randomChatSessionId);
+          // If waiting, cancel the search. If active/ended, end the session
+          if (statusRef.current === 'waiting') {
+            await cancelChatSession(randomChatSessionId);
+          } else {
+            await endChatSession(randomChatSessionId);
+          }
           clearRandomChat();
         } catch (err) {
           console.error('Error cleaning up session:', err);
@@ -95,8 +107,15 @@ export default function RandomChatPage() {
       if (randomChatSessionId && !cleanupCalled.current) {
         cleanupCalled.current = true;
         // Use fetch with keepalive - browser will complete request even after page closes
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://10.0.1.65:3000'}/api/chat/sessions/${randomChatSessionId}`, {
-          method: 'DELETE',
+        // If waiting, cancel the search. If active/ended, end the session
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://10.0.0.110:3000';
+        const endpoint = statusRef.current === 'waiting'
+          ? `/api/chat/${randomChatSessionId}/cancel`
+          : `/api/chat/${randomChatSessionId}/end`;
+        const method = statusRef.current === 'waiting' ? 'DELETE' : 'PUT';
+
+        fetch(`${baseUrl}${endpoint}`, {
+          method: method,
           keepalive: true,  // Ensures request completes
           credentials: 'include',
         }).catch(err => console.error('Cleanup error:', err));
@@ -116,7 +135,6 @@ export default function RandomChatPage() {
 
   const handleFindChat = async () => {
     setError('');
-    setChatEndedMessage(''); // Clear any previous ended message
     try {
       const response = await clientApi.post(API_ENDPOINTS.matchRandom());
 
@@ -148,18 +166,21 @@ export default function RandomChatPage() {
       leaveChatSession(randomChatSessionId);
 
       // End session via REST API
-      await endChatSession(randomChatSessionId);
+      // If waiting, cancel the search. If active/ended, end the session
+      if (randomChatStatus === 'waiting') {
+        await cancelChatSession(randomChatSessionId);
+      } else {
+        await endChatSession(randomChatSessionId);
+      }
 
       // Reset state - go back to idle screen
       clearRandomChat();
-      setChatEndedMessage(''); // Clear any messages
       setError(''); // Clear any errors
       cleanupCalled.current = true; // Mark as cleaned up
     } catch (err) {
       console.error('Error ending chat:', err);
       // Even if API fails, reset UI
       clearRandomChat();
-      setChatEndedMessage('');
       cleanupCalled.current = true;
     }
   };
@@ -278,37 +299,47 @@ export default function RandomChatPage() {
               {/* Messages */}
               <div className="p-6 space-y-4 min-h-[400px] max-h-[500px] overflow-y-auto">
                 {randomChatMessages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.is_me ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[70%] p-4 rounded-lg ${
-                        message.is_me
-                          ? 'border border-black'
-                          : 'border border-black'
-                      }`}
-                      style={message.is_me ? { backgroundColor: '#e3f2fd' } : { backgroundColor: '#f5f5f5' }}
-                    >
-                      {/* Message Header */}
-                      <div className="flex items-center justify-between mb-2">
-                        <UserActionMenu
-                          username={message.username}
-                          userSessionToken={message.sender_session_token}
-                          currentUserSessionToken={userSessionToken}
-                          accentColor="#4D89B0"
-                          className="font-semibold text-sm"
-                          style={message.is_me ? { color: '#4D89B0' } : { color: '#6b7280' }}
-                        />
-                        <span className="text-xs text-gray-500 ml-3">
-                          {new Date(message.created_at).toLocaleTimeString()}
-                        </span>
+                  message.isSystem ? (
+                    // System message (centered)
+                    <div key={message.id} className="flex justify-center">
+                      <div className="px-4 py-2 bg-gray-200 text-gray-600 rounded-full text-sm italic">
+                        {message.content}
                       </div>
-
-                      {/* Message Content */}
-                      <p className="text-gray-700">{message.content}</p>
                     </div>
-                  </div>
+                  ) : (
+                    // Regular user message
+                    <div
+                      key={message.id}
+                      className={`flex ${message.is_me ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[70%] p-4 rounded-lg ${
+                          message.is_me
+                            ? 'border border-black'
+                            : 'border border-black'
+                        }`}
+                        style={message.is_me ? { backgroundColor: '#e3f2fd' } : { backgroundColor: '#f5f5f5' }}
+                      >
+                        {/* Message Header */}
+                        <div className="flex items-center justify-between mb-2">
+                          <UserActionMenu
+                            username={message.username}
+                            userSessionToken={message.sender_session_token}
+                            currentUserSessionToken={userSessionToken}
+                            accentColor="#4D89B0"
+                            className="font-semibold text-sm"
+                            style={message.is_me ? { color: '#4D89B0' } : { color: '#6b7280' }}
+                          />
+                          <span className="text-xs text-gray-500 ml-3">
+                            {new Date(message.created_at).toLocaleTimeString()}
+                          </span>
+                        </div>
+
+                        {/* Message Content */}
+                        <p className="text-gray-700">{message.content}</p>
+                      </div>
+                    </div>
+                  )
                 ))}
 
                 {/* Auto-scroll anchor */}
@@ -353,24 +384,6 @@ export default function RandomChatPage() {
           )}
         </div>
       </main>
-
-      {/* Chat Ended Banner */}
-      {chatEndedMessage && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-red-500 text-white px-6 py-4 shadow-lg">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">⚠️</span>
-              <span className="font-semibold text-lg">Chat Ended: {chatEndedMessage}</span>
-            </div>
-            <button
-              onClick={() => setChatEndedMessage('')}
-              className="text-white hover:text-red-100 font-bold text-xl"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

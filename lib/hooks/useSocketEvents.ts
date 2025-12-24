@@ -15,8 +15,7 @@ interface NewMessageData {
  * and syncs events with Zustand store
  */
 export function useSocketEvents(
-  currentUsername: string,
-  setChatEndedMessage: (message: string) => void
+  currentUsername: string
 ) {
   const {
     socket,
@@ -55,12 +54,8 @@ export function useSocketEvents(
     // Listen for when user leaves
     const handleUserLeft = (data: { session_id: number; username: string }) => {
       console.log('User left:', data);
-
-      if (data.session_id === randomChatSessionId) {
-        // Partner left, mark as ended but keep chat visible
-        setChatEndedMessage(`${data.username} left the chat`);
-        setRandomChatStatus('ended');
-      }
+      // For random chats, we rely on 'session_ended' event instead
+      // This avoids duplicate notifications when someone disconnects
     };
 
     // Listen for new messages
@@ -85,7 +80,15 @@ export function useSocketEvents(
       console.log('Session ended:', data);
 
       if (data.session_id === randomChatSessionId) {
-        setChatEndedMessage(data.reason);
+        // Add system message to chat
+        addRandomChatMessage({
+          id: Date.now(), // Use timestamp as temporary ID for system messages
+          content: data.reason,
+          username: '',
+          is_me: false,
+          created_at: new Date().toISOString(),
+          isSystem: true,
+        });
         setRandomChatStatus('ended'); // Mark as ended but keep messages visible
       }
     };
