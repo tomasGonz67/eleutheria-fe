@@ -1,11 +1,13 @@
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Cinzel, Libre_Baskerville } from 'next/font/google';
 import { useRouter } from 'next/router';
 import FloatingChats from '@/components/FloatingChats';
 import MessageRequestNotifications from '@/components/MessageRequestNotifications';
 import { useChatStore } from '@/store/chatStore';
+import { getAllChatSessions } from '@/lib/services/chat';
+import { getCurrentUser } from '@/lib/services/session';
 
 const cinzel = Cinzel({
   subsets: ['latin'],
@@ -23,6 +25,60 @@ export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const isHomePage = router.pathname === '/';
   const { socket, addMessageRequest, addPlannedChat } = useChatStore();
+  const [mySessionToken, setMySessionToken] = useState<string | null>(null);
+
+  // Get current user's session token
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await getCurrentUser();
+        setMySessionToken(response.user.session_token);
+      } catch (error) {
+        // User not authenticated
+        console.log('User not authenticated');
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
+
+  // Restore active planned chats on page load
+  useEffect(() => {
+    if (isHomePage || !mySessionToken) return;
+
+    const restoreChats = async () => {
+      try {
+        // Fetch all chat sessions
+        const { sessions } = await getAllChatSessions();
+
+        // Filter for active planned chats
+        const activePlannedChats = sessions.filter(
+          (session: any) => session.type === 'planned' && session.status === 'active'
+        );
+
+        console.log('active');
+
+        // Restore each chat to the store
+        activePlannedChats.forEach((session: any) => {
+          // Determine partner username (the one that's not me)
+          const isUser1 = session.user1_session_token === mySessionToken;
+          const partnerUsername = isUser1 ? session.user2_username : session.user1_username;
+
+          addPlannedChat({
+            id: session.id,
+            inviteCode: session.id.toString(),
+            partnerUsername: partnerUsername,
+            isMinimized: false,
+            unreadCount: 0,
+          });
+        });
+      } catch (error) {
+        console.error('Error restoring chats:', error);
+      }
+    };
+
+    restoreChats();
+  }, [isHomePage, mySessionToken, addPlannedChat]);
 
   // Listen for message requests and chat acceptance on all pages except home
   useEffect(() => {

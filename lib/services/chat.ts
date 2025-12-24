@@ -2,6 +2,14 @@ import { clientApi } from '../api';
 import { ChatSessionResponse, CreateChatMessageRequest, ChatMessageResponse } from '../types';
 
 /**
+ * Get all chat sessions for the current user (requires authentication)
+ */
+export async function getAllChatSessions(): Promise<{ sessions: any[] }> {
+  const { data } = await clientApi.get('/api/chat/sessions');
+  return data;
+}
+
+/**
  * Match with a random user for 1-on-1 chat (requires authentication)
  */
 export async function matchRandom(): Promise<ChatSessionResponse> {
@@ -31,15 +39,16 @@ export async function acceptChatRequest(sessionId: number): Promise<ChatSessionR
  * Reject a planned chat request (requires authentication, only invitee can reject)
  */
 export async function rejectChatRequest(sessionId: number): Promise<{ success: boolean; message: string }> {
-  const { data } = await clientApi.post(`/api/chat/${sessionId}/reject`);
+  const { data } = await clientApi.delete(`/api/chat/${sessionId}/reject`);
   return data;
 }
 
 /**
- * Cancel a planned chat request (requires authentication, only requester can cancel)
+ * Cancel a waiting chat session (requires authentication, only user who initiated can cancel)
+ * Works for both random chat search and planned chat requests
  */
-export async function cancelChatRequest(sessionId: number): Promise<{ success: boolean; message: string }> {
-  const { data } = await clientApi.post(`/api/chat/${sessionId}/cancel`);
+export async function cancelChatSession(sessionId: number): Promise<{ success: boolean; message: string }> {
+  const { data } = await clientApi.delete(`/api/chat/${sessionId}/cancel`);
   return data;
 }
 
@@ -52,9 +61,19 @@ export async function createChatMessage(sessionId: number, request: CreateChatMe
 }
 
 /**
- * End or delete a chat session (requires authentication)
+ * End an active chat session (requires authentication)
+ * Updates status to 'ended', preserves chat history
  */
 export async function endChatSession(sessionId: number): Promise<{ success: boolean; message: string }> {
-  const { data } = await clientApi.delete(`/api/chat/sessions/${sessionId}`);
+  const { data } = await clientApi.put(`/api/chat/${sessionId}/end`);
+  return data;
+}
+
+/**
+ * Delete a chat session completely (requires authentication)
+ * Removes session from database
+ */
+export async function deleteChatSession(sessionId: number): Promise<{ success: boolean; message: string }> {
+  const { data } = await clientApi.delete(`/api/chat/${sessionId}`);
   return data;
 }

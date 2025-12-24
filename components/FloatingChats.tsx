@@ -1,7 +1,117 @@
+import { useEffect, useState, useRef } from 'react';
 import { useChatStore } from '@/store/chatStore';
+import { clientApi } from '@/lib/api';
+
+interface Message {
+  id: number;
+  sender_username: string;
+  content: string;
+  created_at: string;
+  sender_session_token: string;
+}
 
 export default function FloatingChats() {
-  const { plannedChats, toggleMinimize, removePlannedChat } = useChatStore();
+  const { plannedChats, toggleMinimize, removePlannedChat, socket } = useChatStore();
+  const [messages, setMessages] = useState<Record<number, Message[]>>({});
+  const [inputValues, setInputValues] = useState<Record<number, string>>({});
+  const messagesEndRef = useRef<Record<number, HTMLDivElement | null>>({});
+
+  // Fetch message history
+  const fetchMessages = async (sessionId: number) => {
+    try {
+      const response = await clientApi.get(`/api/chat/${sessionId}/messages`);
+      setMessages((prev) => ({
+        ...prev,
+        [sessionId]: response.data.messages,
+      }));
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  // Send message
+  const sendMessage = async (sessionId: number) => {
+    const content = inputValues[sessionId]?.trim();
+    if (!content) return;
+
+    try {
+      await clientApi.post(`/api/chat/${sessionId}/messages`, { content });
+      setInputValues((prev) => ({ ...prev, [sessionId]: '' }));
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      alert(error.response?.data?.error || 'Failed to send message');
+    }
+  };
+
+  // End chat session
+  const endChat = async (sessionId: number) => {
+    try {
+      await clientApi.put(`/api/chat/${sessionId}/end`);
+      removePlannedChat(sessionId);
+    } catch (error: any) {
+      console.error('Error ending chat:', error);
+      alert(error.response?.data?.error || 'Failed to end chat');
+    }
+  };
+
+  // Join Socket.io room and fetch messages when chat opens
+  useEffect(() => {
+    if (!socket) return;
+
+    plannedChats.forEach((chat) => {
+      // Join Socket.io room for this session
+      socket.emit('join_session', { session_id: chat.id });
+
+      // Fetch message history
+      fetchMessages(chat.id);
+    });
+
+    // Listen for new messages
+    const handleNewMessage = (data: any) => {
+      const sessionId = data.chat_session_id;
+      setMessages((prev) => ({
+        ...prev,
+        [sessionId]: [
+          ...(prev[sessionId] || []),
+          {
+            id: data.id,
+            sender_username: data.sender_username,
+            content: data.content,
+            created_at: data.created_at,
+            sender_session_token: data.sender_session_token,
+          },
+        ],
+      }));
+    };
+
+    // Listen for session ended
+    const handleSessionEnded = (data: { session_id: number; reason: string }) => {
+      console.log('Session ended:', data);
+      removePlannedChat(data.session_id);
+    };
+
+    socket.on('new_message', handleNewMessage);
+    socket.on('session_ended', handleSessionEnded);
+
+    return () => {
+      socket.off('new_message', handleNewMessage);
+      socket.off('session_ended', handleSessionEnded);
+      // Leave rooms when unmounting
+      plannedChats.forEach((chat) => {
+        socket.emit('leave_session', { session_id: chat.id });
+      });
+    };
+  }, [socket, plannedChats.length]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    Object.keys(messages).forEach((sessionId) => {
+      const ref = messagesEndRef.current[Number(sessionId)];
+      if (ref) {
+        ref.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  }, [messages]);
 
   if (plannedChats.length === 0) {
     return null; // Don't render anything if no chats
@@ -48,7 +158,7 @@ export default function FloatingChats() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  removePlannedChat(chat.id);
+                  endChat(chat.id);
                 }}
                 className="text-white hover:text-gray-200 text-2xl"
               >
@@ -59,13 +169,60 @@ export default function FloatingChats() {
 
           {/* Chat Body - Only show when not minimized */}
           {!chat.isMinimized && (
-            <div className="p-4">
-              <div className="text-center text-gray-500 text-sm">
-                <p>Chat with {chat.partnerUsername || 'partner'}</p>
-                <p className="text-xs mt-2">Invite Code: {chat.inviteCode}</p>
-                <p className="text-xs text-gray-400 mt-4">
-                  Real-time messaging coming soon...
-                </p>
+            <div className="flex flex-col h-[400px]">
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                {(messages[chat.id] || []).map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex ${
+                      msg.sender_username === chat.partnerUsername
+                        ? 'justify-start'
+                        : 'justify-end'
+                    }`}
+                  >
+                    <div
+                      className={`max-w-[70%] rounded-lg px-3 py-2 ${
+                        msg.sender_username === chat.partnerUsername
+                          ? 'bg-gray-200 text-gray-800'
+                          : 'bg-blue-500 text-white'
+                      }`}
+                    >
+                      <p className="text-sm break-words">{msg.content}</p>
+                    </div>
+                  </div>
+                ))}
+                <div ref={(el) => (messagesEndRef.current[chat.id] = el)} />
+              </div>
+
+              {/* Input */}
+              <div className="border-t border-gray-200 p-4">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    sendMessage(chat.id);
+                  }}
+                  className="flex gap-3 items-center"
+                >
+                  <input
+                    type="text"
+                    value={inputValues[chat.id] || ''}
+                    onChange={(e) =>
+                      setInputValues((prev) => ({
+                        ...prev,
+                        [chat.id]: e.target.value,
+                      }))
+                    }
+                    placeholder="Type a message..."
+                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm text-gray-900 placeholder-gray-500"
+                  />
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm font-semibold"
+                  >
+                    Send
+                  </button>
+                </form>
               </div>
             </div>
           )}
