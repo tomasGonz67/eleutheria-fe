@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { clientApi } from '@/lib/api';
 import { useChatStore } from '@/store/chatStore';
+import { isSocketConnected } from '@/lib/socket';
 
 interface UserActionMenuProps {
   username: string;
@@ -33,6 +34,13 @@ export default function UserActionMenu({
       console.log('🔍 Checking online status for:', username, userSessionToken);
       setIsOnline(null); // Reset to checking state
 
+      // Check if socket is actually connected
+      if (!isSocketConnected()) {
+        console.error('Cannot check online status: Socket not connected');
+        setIsOnline(false); // Default to offline if socket not connected
+        return;
+      }
+
       // Listen for response
       const handleOnlineStatus = (data: { uuid: string; isOnline: boolean }) => {
         console.log('📡 Received online status:', data);
@@ -43,8 +51,13 @@ export default function UserActionMenu({
 
       socket.on('user_online_status', handleOnlineStatus);
 
-      // Request online status
-      socket.emit('check_user_online', { uuid: userSessionToken });
+      try {
+        // Request online status
+        socket.emit('check_user_online', { uuid: userSessionToken });
+      } catch (error) {
+        console.error('Error checking user online status:', error);
+        setIsOnline(false);
+      }
 
       return () => {
         socket.off('user_online_status', handleOnlineStatus);
@@ -72,6 +85,13 @@ export default function UserActionMenu({
   const handleSendMessage = async () => {
     if (!userSessionToken) {
       alert('Cannot send message request - user session not found');
+      setIsOpen(false);
+      return;
+    }
+
+    // Check socket connection before sending request
+    if (!isSocketConnected()) {
+      alert('Connection lost. Please refresh the page and try again.');
       setIsOpen(false);
       return;
     }

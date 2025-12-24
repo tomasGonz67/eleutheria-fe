@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import { clientApi } from '@/lib/api';
+import { isSocketConnected } from '@/lib/socket';
 
 interface Message {
   id: number;
@@ -14,7 +15,9 @@ export default function FloatingChats() {
   const { plannedChats, toggleMinimize, removePlannedChat, socket } = useChatStore();
   const [messages, setMessages] = useState<Record<number, Message[]>>({});
   const [inputValues, setInputValues] = useState<Record<number, string>>({});
+  const [chatEndedNotification, setChatEndedNotification] = useState<{ sessionId: number; reason: string } | null>(null);
   const messagesEndRef = useRef<Record<number, HTMLDivElement | null>>({});
+  const endedByMeRef = useRef<Set<number>>(new Set()); // Track sessions we ended
 
   // Fetch message history
   const fetchMessages = async (sessionId: number) => {
@@ -34,6 +37,12 @@ export default function FloatingChats() {
     const content = inputValues[sessionId]?.trim();
     if (!content) return;
 
+    // Check socket connection
+    if (!isSocketConnected()) {
+      alert('Connection lost. Please refresh the page to reconnect.');
+      return;
+    }
+
     try {
       await clientApi.post(`/api/chat/${sessionId}/messages`, { content });
       setInputValues((prev) => ({ ...prev, [sessionId]: '' }));
@@ -45,12 +54,23 @@ export default function FloatingChats() {
 
   // End chat session
   const endChat = async (sessionId: number) => {
+    // Check socket connection
+    if (!isSocketConnected()) {
+      alert('Connection lost. Please refresh the page to reconnect.');
+      return;
+    }
+
     try {
+      // Mark that WE ended this session (don't show banner for our own action)
+      endedByMeRef.current.add(sessionId);
+
       await clientApi.put(`/api/chat/${sessionId}/end`);
       removePlannedChat(sessionId);
     } catch (error: any) {
       console.error('Error ending chat:', error);
       alert(error.response?.data?.error || 'Failed to end chat');
+      // Remove from set if request failed
+      endedByMeRef.current.delete(sessionId);
     }
   };
 
@@ -58,12 +78,21 @@ export default function FloatingChats() {
   useEffect(() => {
     if (!socket) return;
 
-    plannedChats.forEach((chat) => {
-      // Join Socket.io room for this session
-      socket.emit('join_session', { session_id: chat.id });
+    if (!isSocketConnected()) {
+      console.error('Cannot join chat sessions: Socket not connected');
+      return;
+    }
 
-      // Fetch message history
-      fetchMessages(chat.id);
+    plannedChats.forEach((chat) => {
+      try {
+        // Join Socket.io room for this session
+        socket.emit('join_session', { session_id: chat.id });
+
+        // Fetch message history
+        fetchMessages(chat.id);
+      } catch (error) {
+        console.error(`Error joining session ${chat.id}:`, error);
+      }
     });
 
     // Listen for new messages
@@ -87,6 +116,23 @@ export default function FloatingChats() {
     // Listen for session ended
     const handleSessionEnded = (data: { session_id: number; reason: string }) => {
       console.log('Session ended:', data);
+
+      // Check if WE were the one who ended this chat
+      const endedByMe = endedByMeRef.current.has(data.session_id);
+
+      if (endedByMe) {
+        // We ended it, so just clean up - no banner needed
+        console.log('Session ended by me - no notification shown');
+        endedByMeRef.current.delete(data.session_id);
+      } else {
+        // Partner ended it, show notification banner
+        setChatEndedNotification({
+          sessionId: data.session_id,
+          reason: data.reason,
+        });
+      }
+
+      // Remove chat from UI
       removePlannedChat(data.session_id);
     };
 
@@ -113,13 +159,12 @@ export default function FloatingChats() {
     });
   }, [messages]);
 
-  if (plannedChats.length === 0) {
-    return null; // Don't render anything if no chats
-  }
-
   return (
-    <div className="fixed bottom-4 right-4 flex items-end gap-3 z-40">
-      {plannedChats.map((chat) => (
+    <>
+      {/* Floating Chat Windows */}
+      {plannedChats.length > 0 && (
+        <div className="fixed bottom-4 right-4 flex items-end gap-3 z-40">
+          {plannedChats.map((chat) => (
         <div
           key={chat.id}
           className="bg-white rounded-lg shadow-xl border-2"
@@ -228,6 +273,26 @@ export default function FloatingChats() {
           )}
         </div>
       ))}
-    </div>
+        </div>
+      )}
+
+      {/* Chat Ended Banner */}
+      {chatEndedNotification && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-red-500 text-white px-6 py-4 shadow-lg">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">⚠️</span>
+              <span className="font-semibold text-lg">Chat Ended: {chatEndedNotification.reason}</span>
+            </div>
+            <button
+              onClick={() => setChatEndedNotification(null)}
+              className="px-4 py-2 bg-white text-red-600 rounded-lg hover:bg-gray-100 transition font-semibold"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

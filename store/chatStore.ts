@@ -88,9 +88,26 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   // Socket.io actions
   initializeSocket: () => {
     const socket = getSocket();
+
+    // Set up connection state listeners
+    socket.on('connect', () => {
+      console.log('✅ Socket connected - updating store state');
+      set({ isConnected: true });
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ Socket disconnected - updating store state');
+      set({ isConnected: false });
+    });
+
+    socket.on('reconnect', () => {
+      console.log('🔄 Socket reconnected - updating store state');
+      set({ isConnected: true });
+    });
+
     connectSocket();
 
-    set({ socket, isConnected: true });
+    set({ socket, isConnected: socket.connected });
   },
 
   cleanupSocket: () => {
