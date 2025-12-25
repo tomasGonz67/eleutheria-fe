@@ -6,6 +6,7 @@ import { API_ENDPOINTS } from '@/config/api';
 import { endChatSession, cancelChatSession } from '@/lib/services/chat';
 import { useChatStore } from '@/store/chatStore';
 import { useSocketEvents } from '@/lib/hooks/useSocketEvents';
+import { isSocketConnected, connectSocket } from '@/lib/socket';
 import UserActionMenu from '@/components/UserActionMenu';
 
 export default function RandomChatPage() {
@@ -15,6 +16,7 @@ export default function RandomChatPage() {
   const [userSessionToken, setUserSessionToken] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);
+  const [isConnecting, setIsConnecting] = useState(false);
   const cleanupCalled = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -33,8 +35,9 @@ export default function RandomChatPage() {
     leaveChatSession,
   } = useChatStore();
 
-  // Keep a ref to the current status to avoid stale closures in cleanup
+  // Keep refs to avoid stale closures in cleanup
   const statusRef = useRef(randomChatStatus);
+  const sessionIdRef = useRef(randomChatSessionId);
 
   // Get current user's username on mount
   useEffect(() => {
@@ -65,10 +68,11 @@ export default function RandomChatPage() {
   // Initialize Socket.io event listeners
   useSocketEvents(currentUsername);
 
-  // Keep statusRef in sync with current status
+  // Keep refs in sync with current values
   useEffect(() => {
     statusRef.current = randomChatStatus;
-  }, [randomChatStatus]);
+    sessionIdRef.current = randomChatSessionId;
+  }, [randomChatStatus, randomChatSessionId]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -80,15 +84,16 @@ export default function RandomChatPage() {
   // Auto-cleanup session on unmount or navigation
   useEffect(() => {
     const cleanup = async () => {
-      if (randomChatSessionId && !cleanupCalled.current) {
+      const currentSessionId = sessionIdRef.current;
+      if (currentSessionId && !cleanupCalled.current) {
         cleanupCalled.current = true;
-        console.log('🧹 Cleaning up chat session:', randomChatSessionId);
+        console.log('🧹 Cleaning up chat session:', currentSessionId);
         try {
           // If waiting, cancel the search. If active/ended, end the session
           if (statusRef.current === 'waiting') {
-            await cancelChatSession(randomChatSessionId);
+            await cancelChatSession(currentSessionId);
           } else {
-            await endChatSession(randomChatSessionId);
+            await endChatSession(currentSessionId);
           }
           clearRandomChat();
         } catch (err) {
@@ -104,14 +109,15 @@ export default function RandomChatPage() {
 
     // Cleanup on page refresh or close (more reliable for browser events)
     const handleBeforeUnload = () => {
-      if (randomChatSessionId && !cleanupCalled.current) {
+      const currentSessionId = sessionIdRef.current;
+      if (currentSessionId && !cleanupCalled.current) {
         cleanupCalled.current = true;
         // Use fetch with keepalive - browser will complete request even after page closes
         // If waiting, cancel the search. If active/ended, end the session
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://10.0.0.110:3000';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://10.0.0.239:3000';
         const endpoint = statusRef.current === 'waiting'
-          ? `/api/chat/${randomChatSessionId}/cancel`
-          : `/api/chat/${randomChatSessionId}/end`;
+          ? `/api/chat/${currentSessionId}/cancel`
+          : `/api/chat/${currentSessionId}/end`;
         const method = statusRef.current === 'waiting' ? 'DELETE' : 'PUT';
 
         fetch(`${baseUrl}${endpoint}`, {
@@ -131,10 +137,38 @@ export default function RandomChatPage() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       cleanup();
     };
-  }, [randomChatSessionId, router.events]);
+  }, [router.events]);
 
   const handleFindChat = async () => {
     setError('');
+
+    // Check if socket is connected
+    if (!isSocketConnected()) {
+      console.log('Socket not connected, attempting to connect...');
+      setIsConnecting(true);
+
+      // Try to connect
+      connectSocket();
+
+      // Wait up to 3 seconds for connection
+      const maxWaitTime = 3000;
+      const checkInterval = 100;
+      let elapsed = 0;
+
+      while (elapsed < maxWaitTime && !isSocketConnected()) {
+        await new Promise(resolve => setTimeout(resolve, checkInterval));
+        elapsed += checkInterval;
+      }
+
+      setIsConnecting(false);
+
+      // If still not connected after waiting, show error
+      if (!isSocketConnected()) {
+        setError('You are currently not connected. Please refresh the page and try again.');
+        return;
+      }
+    }
+
     try {
       const response = await clientApi.post(API_ENDPOINTS.matchRandom());
 
@@ -236,12 +270,13 @@ export default function RandomChatPage() {
               </p>
               <button
                 onClick={handleFindChat}
-                className="px-8 py-3 text-white rounded-lg transition font-semibold text-lg"
-                style={{ backgroundColor: '#4D89B0' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d6e8f'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4D89B0'}
+                disabled={isConnecting}
+                className="px-8 py-3 text-white rounded-lg transition font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: isConnecting ? '#6b7280' : '#4D89B0' }}
+                onMouseEnter={(e) => !isConnecting && (e.currentTarget.style.backgroundColor = '#3d6e8f')}
+                onMouseLeave={(e) => !isConnecting && (e.currentTarget.style.backgroundColor = '#4D89B0')}
               >
-                Start Random Chat
+                {isConnecting ? 'Connecting...' : 'Start Random Chat'}
               </button>
             </div>
           )}

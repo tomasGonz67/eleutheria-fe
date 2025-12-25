@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://10.0.0.110:3000';
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://10.0.0.239:3000';
 
 let socket: Socket | null = null;
 
