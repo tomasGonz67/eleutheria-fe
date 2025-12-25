@@ -5,7 +5,7 @@ import Header from '@/components/Header';
 import { clientApi } from '@/lib/api';
 import { createChatroomMessage, updateChatroom, deleteChatroom } from '@/lib/services/chatrooms';
 import { useChatStore } from '@/store/chatStore';
-import { joinChatroom, leaveChatroom } from '@/lib/socket';
+import { joinChatroom, leaveChatroom, isSocketConnected, connectSocket } from '@/lib/socket';
 import UserActionMenu from '@/components/UserActionMenu';
 
 interface Message {
@@ -62,8 +62,35 @@ export default function ChatroomMessagesPage() {
 
     const chatroomId = Number(id);
 
-    // Join the chatroom
-    joinChatroom(chatroomId);
+    // Ensure socket is connected before joining chatroom
+    const joinChatroomWhenConnected = async () => {
+      // If not connected, try to connect
+      if (!isSocketConnected()) {
+        console.log('Socket not connected, attempting to connect...');
+        connectSocket();
+
+        // Wait up to 3 seconds for connection
+        const maxWaitTime = 3000;
+        const checkInterval = 100;
+        let elapsed = 0;
+
+        while (elapsed < maxWaitTime && !isSocketConnected()) {
+          await new Promise(resolve => setTimeout(resolve, checkInterval));
+          elapsed += checkInterval;
+        }
+
+        // If still not connected after waiting, show error
+        if (!isSocketConnected()) {
+          setError('Unable to connect. Please refresh the page and try again.');
+          return;
+        }
+      }
+
+      // Join the chatroom
+      joinChatroom(chatroomId);
+    };
+
+    joinChatroomWhenConnected();
 
     // Listen for new messages
     const handleNewMessage = (data: any) => {

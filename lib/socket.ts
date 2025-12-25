@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://10.0.0.239:3000';
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'http://10.0.0.109:3000';
 
 let socket: Socket | null = null;
 
@@ -33,6 +33,7 @@ export function getSocket(): Socket {
       reconnectionDelay: 1000, // Wait 1s before reconnecting
       reconnectionDelayMax: 5000, // Max 5s between attempts
       reconnectionAttempts: 5, // Try 5 times
+      timeout: 10000, // Connection timeout: 10s
     });
 
     // Basic connection handlers
