@@ -41,10 +41,9 @@ export default function PrivateChatPage() {
   const [newMessage, setNewMessage] = useState('');
   const [mySessionToken, setMySessionToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);
 
-  const { socket } = useChatStore();
+  const { socket, showNotification } = useChatStore();
 
   // Fetch session and user data
   useEffect(() => {
@@ -63,8 +62,8 @@ export default function PrivateChatPage() {
         const currentSession = sessions.find((s: ChatSession) => s.id === sessionId);
 
         if (!currentSession) {
-          setError('Chat session not found');
-          setLoading(false);
+          showNotification('error', 'Chat session not found');
+          router.push('/private-chats');
           return;
         }
 
@@ -75,7 +74,8 @@ export default function PrivateChatPage() {
         setMessages(messagesResponse.data.messages);
       } catch (error) {
         console.error('Error fetching chat:', error);
-        setError('Failed to load chat');
+        showNotification('error', 'Failed to load chat');
+        router.push('/private-chats');
       } finally {
         setLoading(false);
       }
@@ -111,7 +111,7 @@ export default function PrivateChatPage() {
     const handleSessionEnded = (data: { session_id: number; reason: string }) => {
       if (data.session_id === sessionId) {
         setSession((prev) => prev ? { ...prev, status: 'ended' } : null);
-        alert(`Chat ended: ${data.reason}`);
+        showNotification('error', `Chat Ended: ${data.reason}`);
       }
     };
 
@@ -132,7 +132,7 @@ export default function PrivateChatPage() {
 
     // Check socket connection
     if (!isSocketConnected()) {
-      alert('Connection lost. Please refresh the page to reconnect.');
+      showNotification('error', 'Connection lost. Please refresh the page to reconnect.');
       return;
     }
 
@@ -141,7 +141,7 @@ export default function PrivateChatPage() {
       setNewMessage('');
     } catch (error: any) {
       console.error('Error sending message:', error);
-      alert(error.response?.data?.error || 'Failed to send message');
+      showNotification('error', error.response?.data?.error || 'Failed to send message');
     }
   };
 
@@ -153,7 +153,7 @@ export default function PrivateChatPage() {
       setSession((prev) => prev ? { ...prev, status: 'ended' } : null);
     } catch (error: any) {
       console.error('Error ending chat:', error);
-      alert(error.response?.data?.error || 'Failed to end chat');
+      showNotification('error', error.response?.data?.error || 'Failed to end chat');
     }
   };
 
@@ -168,23 +168,9 @@ export default function PrivateChatPage() {
     );
   }
 
-  if (error || !session) {
-    return (
-      <div className="min-h-screen bg-marble-100">
-        <Header currentPage="private-chats" />
-        <main className="max-w-4xl mx-auto px-6 py-8">
-          <div className="text-center py-12">
-            <p className="text-red-600 mb-4">{error || 'Chat not found'}</p>
-            <button
-              onClick={() => router.push('/private-chats')}
-              className="px-4 py-2 bg-aegean-600 text-white rounded-lg hover:bg-aegean-700"
-            >
-              Back to Private Chats
-            </button>
-          </div>
-        </main>
-      </div>
-    );
+  if (!session) {
+    // This should not happen as we redirect in the useEffect
+    return null;
   }
 
   const isUser1 = session.user1_session_token === mySessionToken;

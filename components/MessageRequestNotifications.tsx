@@ -17,6 +17,9 @@ export default function MessageRequestNotifications() {
     } catch (error: any) {
       console.error('Error accepting chat request:', error);
       alert(error.response?.data?.error || 'Failed to accept chat request');
+
+      // Remove notification even on error (e.g., if expired)
+      removeMessageRequest(sessionId);
     }
   };
 
@@ -27,6 +30,9 @@ export default function MessageRequestNotifications() {
     } catch (error: any) {
       console.error('Error rejecting chat request:', error);
       alert(error.response?.data?.error || 'Failed to reject chat request');
+
+      // Remove notification even on error (e.g., if expired)
+      removeMessageRequest(sessionId);
     }
   };
 

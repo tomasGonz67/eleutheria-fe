@@ -13,11 +13,11 @@ interface Message {
 }
 
 export default function FloatingChats() {
-  const { plannedChats, toggleMinimize, removePlannedChat, socket } = useChatStore();
+  const { plannedChats, toggleMinimize, removePlannedChat, socket, showNotification } = useChatStore();
   const [messages, setMessages] = useState<Record<number, Message[]>>({});
   const [inputValues, setInputValues] = useState<Record<number, string>>({});
-  const [chatEndedNotification, setChatEndedNotification] = useState<{ sessionId: number; reason: string } | null>(null);
   const [currentUserSessionToken, setCurrentUserSessionToken] = useState<string | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null); // Track which dropdown is open
   const messagesEndRef = useRef<Record<number, HTMLDivElement | null>>({});
   const endedByMeRef = useRef<Set<number>>(new Set()); // Track sessions we ended
 
@@ -55,7 +55,7 @@ export default function FloatingChats() {
 
     // Check socket connection
     if (!isSocketConnected()) {
-      alert('Connection lost. Please refresh the page to reconnect.');
+      showNotification('error', 'Connection lost. Please refresh the page to reconnect.');
       return;
     }
 
@@ -64,15 +64,17 @@ export default function FloatingChats() {
       setInputValues((prev) => ({ ...prev, [sessionId]: '' }));
     } catch (error: any) {
       console.error('Error sending message:', error);
-      alert(error.response?.data?.error || 'Failed to send message');
+      showNotification('error', error.response?.data?.error || 'Failed to send message');
     }
   };
 
   // End chat session
   const endChat = async (sessionId: number) => {
+    if (!confirm('Are you sure you want to end this chat?')) return;
+
     // Check socket connection
     if (!isSocketConnected()) {
-      alert('Connection lost. Please refresh the page to reconnect.');
+      showNotification('error', 'Connection lost. Please refresh the page to reconnect.');
       return;
     }
 
@@ -84,7 +86,7 @@ export default function FloatingChats() {
       removePlannedChat(sessionId);
     } catch (error: any) {
       console.error('Error ending chat:', error);
-      alert(error.response?.data?.error || 'Failed to end chat');
+      showNotification('error', error.response?.data?.error || 'Failed to end chat');
       // Remove from set if request failed
       endedByMeRef.current.delete(sessionId);
     }
@@ -142,10 +144,7 @@ export default function FloatingChats() {
         endedByMeRef.current.delete(data.session_id);
       } else {
         // Partner ended it, show notification banner
-        setChatEndedNotification({
-          sessionId: data.session_id,
-          reason: data.reason,
-        });
+        showNotification('error', `Chat Ended: ${data.reason}`, true, 8000);
       }
 
       // Remove chat from UI
@@ -175,6 +174,21 @@ export default function FloatingChats() {
     });
   }, [messages]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setOpenDropdown(null);
+    };
+
+    if (openDropdown !== null) {
+      document.addEventListener('click', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [openDropdown]);
+
   return (
     <>
       {/* Floating Chat Windows */}
@@ -192,29 +206,74 @@ export default function FloatingChats() {
         >
           {/* Chat Header */}
           <div
-            className="p-3 border-b border-gray-200 flex items-center justify-between cursor-pointer"
+            onClick={() => {
+              if (chat.isMinimized) {
+                toggleMinimize(chat.id);
+              }
+            }}
+            className={`p-3 border-b border-gray-200 flex items-center justify-between ${chat.isMinimized ? 'cursor-pointer' : ''}`}
             style={{ backgroundColor: '#1e40af' }}
-            onClick={() => toggleMinimize(chat.id)}
           >
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-white text-sm">
-                {chat.partnerUsername || chat.inviteCode}
-              </span>
+            <div className="flex items-center gap-2 relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!chat.isMinimized) {
+                    setOpenDropdown(openDropdown === chat.id ? null : chat.id);
+                  }
+                }}
+                className="flex items-center gap-1 text-white hover:text-gray-200"
+              >
+                <span className="font-semibold text-sm">
+                  {chat.partnerUsername || chat.inviteCode}
+                </span>
+                {!chat.isMinimized && <span className="text-xs">▼</span>}
+              </button>
               {chat.unreadCount > 0 && (
                 <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
                   {chat.unreadCount}
                 </span>
+              )}
+
+              {/* Dropdown Menu */}
+              {openDropdown === chat.id && (
+                <div className="absolute top-full left-0 mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg min-w-[140px] z-50">
+                  {chat.status !== 'ended' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdown(null);
+                        endChat(chat.id);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm font-semibold text-red-600 hover:bg-gray-50 transition"
+                    >
+                      End Chat
+                    </button>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenDropdown(null);
+                      // Report functionality to be implemented
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm font-semibold text-orange-600 hover:bg-gray-50 transition"
+                  >
+                    Report
+                  </button>
+                </div>
               )}
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
+                  setOpenDropdown(null);
                   toggleMinimize(chat.id);
                 }}
                 className="text-white hover:text-gray-200 text-xl"
+                title={chat.isMinimized ? "Expand" : "Minimize"}
               >
-                {chat.isMinimized ? '▲' : '▼'}
+                {chat.isMinimized ? '+' : '−'}
               </button>
               <button
                 onClick={(e) => {
@@ -222,6 +281,7 @@ export default function FloatingChats() {
                   removePlannedChat(chat.id);
                 }}
                 className="text-white hover:text-gray-200 text-2xl"
+                title="Close"
               >
                 ✕
               </button>
@@ -295,24 +355,6 @@ export default function FloatingChats() {
           )}
         </div>
       ))}
-        </div>
-      )}
-
-      {/* Chat Ended Banner */}
-      {chatEndedNotification && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-red-500 text-white px-6 py-4 shadow-lg">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">⚠️</span>
-              <span className="font-semibold text-lg">Chat Ended: {chatEndedNotification.reason}</span>
-            </div>
-            <button
-              onClick={() => setChatEndedNotification(null)}
-              className="px-4 py-2 bg-white text-red-600 rounded-lg hover:bg-gray-100 transition font-semibold"
-            >
-              Dismiss
-            </button>
-          </div>
         </div>
       )}
     </>

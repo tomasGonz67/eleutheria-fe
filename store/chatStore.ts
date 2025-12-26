@@ -28,6 +28,14 @@ interface MessageRequest {
   created_at: string;
 }
 
+interface Notification {
+  id: string;
+  type: 'error' | 'success' | 'info';
+  message: string;
+  autoDismiss?: boolean;
+  autoDismissDelay?: number;
+}
+
 interface ChatStore {
   // Socket.io
   socket: Socket | null;
@@ -44,6 +52,9 @@ interface ChatStore {
 
   // Message requests state
   messageRequests: MessageRequest[];
+
+  // Notifications state
+  notification: Notification | null;
 
   // Socket.io actions
   initializeSocket: () => void;
@@ -68,6 +79,10 @@ interface ChatStore {
   // Message request actions
   addMessageRequest: (request: MessageRequest) => void;
   removeMessageRequest: (sessionId: number) => void;
+
+  // Notification actions
+  showNotification: (type: 'error' | 'success' | 'info', message: string, autoDismiss?: boolean, autoDismissDelay?: number) => void;
+  dismissNotification: () => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -86,6 +101,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   // Message requests initial state
   messageRequests: [],
+
+  // Notifications initial state
+  notification: null,
 
   // Socket.io actions
   initializeSocket: () => {
@@ -192,4 +210,19 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     set((state) => ({
       messageRequests: state.messageRequests.filter((req) => req.session_id !== sessionId),
     })),
+
+  // Notification actions
+  showNotification: (type, message, autoDismiss = false, autoDismissDelay = 5000) =>
+    set({
+      notification: {
+        id: Date.now().toString(),
+        type,
+        message,
+        autoDismiss,
+        autoDismissDelay,
+      },
+    }),
+
+  dismissNotification: () =>
+    set({ notification: null }),
 }));

@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import { getAllChatSessions } from '@/lib/services/chat';
 import { getCurrentUser } from '@/lib/services/session';
 import UserActionMenu from '@/components/UserActionMenu';
+import { useChatStore } from '@/store/chatStore';
 
 interface ChatSession {
   id: number;
@@ -19,9 +20,28 @@ interface ChatSession {
 
 export default function PrivateChatsPage() {
   const router = useRouter();
+  const { plannedChats, showNotification } = useChatStore();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [mySessionToken, setMySessionToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [, setTick] = useState(0); // Force re-render every second for countdown
+  const [cancellingIds, setCancellingIds] = useState<Set<number>>(new Set()); // Track sessions being cancelled
+
+  // Calculate time remaining for a waiting session (5 seconds expiration)
+  const getTimeRemaining = (createdAt: string): number => {
+    const created = new Date(createdAt).getTime();
+    const now = Date.now();
+    const expiresAt = created + 5000; // 5 seconds
+    const remaining = expiresAt - now;
+    return Math.max(0, Math.floor(remaining / 1000));
+  };
+
+  // Format seconds as MM:SS
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,6 +70,55 @@ export default function PrivateChatsPage() {
 
     fetchData();
   }, []);
+
+  // Update countdown every second and cancel expired sessions
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      setTick((prev) => prev + 1);
+
+      // Check for expired waiting sessions and cancel them
+      for (const session of sessions) {
+        if (session.status === 'waiting' && !cancellingIds.has(session.id)) {
+          const timeRemaining = getTimeRemaining(session.created_at);
+          // Wait 1 extra second to ensure backend also sees it as expired
+          if (timeRemaining === 0) {
+            // Mark as cancelling to prevent duplicate calls
+            setCancellingIds((prev) => new Set(prev).add(session.id));
+
+            // Call cancel API
+            try {
+              const { clientApi } = await import('@/lib/api');
+              await clientApi.delete(`/api/chat/${session.id}/cancel`);
+
+              // Refresh the sessions list
+              const { sessions: allSessions } = await getAllChatSessions();
+              const plannedSessions = allSessions.filter(
+                (s: ChatSession) => s.type === 'planned'
+              );
+              setSessions(plannedSessions);
+
+              // Remove from cancelling set
+              setCancellingIds((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(session.id);
+                return newSet;
+              });
+            } catch (error) {
+              console.error('Error cancelling expired chat request:', error);
+              // Remove from cancelling set on error
+              setCancellingIds((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(session.id);
+                return newSet;
+              });
+            }
+          }
+        }
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [sessions, cancellingIds]);
 
   const openChat = (sessionId: number) => {
     router.push(`/private-chats/${sessionId}`);
@@ -91,9 +160,16 @@ export default function PrivateChatsPage() {
         (session: ChatSession) => session.type === 'planned'
       );
       setSessions(plannedSessions);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error accepting chat request:', error);
-      alert('Failed to accept chat request');
+      showNotification('error', error.response?.data?.error || 'Failed to accept chat request');
+
+      // Refresh the sessions list to remove expired/invalid requests
+      const { sessions: allSessions } = await getAllChatSessions();
+      const plannedSessions = allSessions.filter(
+        (session: ChatSession) => session.type === 'planned'
+      );
+      setSessions(plannedSessions);
     }
   };
 
@@ -108,9 +184,35 @@ export default function PrivateChatsPage() {
         (session: ChatSession) => session.type === 'planned'
       );
       setSessions(plannedSessions);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error rejecting chat request:', error);
-      alert('Failed to reject chat request');
+      showNotification('error', error.response?.data?.error || 'Failed to reject chat request');
+
+      // Refresh the sessions list to remove expired/invalid requests
+      const { sessions: allSessions } = await getAllChatSessions();
+      const plannedSessions = allSessions.filter(
+        (session: ChatSession) => session.type === 'planned'
+      );
+      setSessions(plannedSessions);
+    }
+  };
+
+  const handleEndChat = async (sessionId: number) => {
+    if (!confirm('Are you sure you want to end this chat?')) return;
+
+    try {
+      const { clientApi } = await import('@/lib/api');
+      await clientApi.put(`/api/chat/${sessionId}/end`);
+
+      // Refresh the sessions list
+      const { sessions: allSessions } = await getAllChatSessions();
+      const plannedSessions = allSessions.filter(
+        (session: ChatSession) => session.type === 'planned'
+      );
+      setSessions(plannedSessions);
+    } catch (error: any) {
+      console.error('Error ending chat:', error);
+      showNotification('error', error.response?.data?.error || 'Failed to end chat');
     }
   };
 
@@ -201,42 +303,73 @@ export default function PrivateChatsPage() {
                       </div>
                       <div>
                         {session.status === 'active' && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openChatAsFloater(session);
-                            }}
-                            className="px-6 py-2 bg-aegean-600 text-white rounded-lg hover:bg-aegean-700 transition font-semibold"
-                          >
-                            Open Chat
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openChatAsFloater(session);
+                              }}
+                              className="px-6 py-2 bg-aegean-600 text-white rounded-lg hover:bg-aegean-700 transition font-semibold"
+                            >
+                              {plannedChats.find((chat) => chat.id === session.id) ? 'Close Chat Window' : 'Open Chat Window'}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEndChat(session.id);
+                              }}
+                              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+                            >
+                              End Chat
+                            </button>
+                          </div>
                         )}
                         {session.status === 'waiting' && (
                           <div>
                             {isUser1 ? (
-                              <div className="text-sm text-gray-500 italic">
-                                Waiting for acceptance
+                              <div className="flex flex-col items-end gap-1">
+                                <div className="text-sm text-gray-500 italic">
+                                  Waiting for acceptance
+                                </div>
+                                {(() => {
+                                  const timeRemaining = getTimeRemaining(session.created_at);
+                                  return (
+                                    <div className={`text-xs font-semibold ${timeRemaining <= 3 ? 'text-red-600' : 'text-gray-600'}`}>
+                                      Expires in {formatTime(timeRemaining)}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             ) : (
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleAcceptRequest(session.id);
-                                  }}
-                                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
-                                >
-                                  Accept
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRejectRequest(session.id);
-                                  }}
-                                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
-                                >
-                                  Reject
-                                </button>
+                              <div className="flex flex-col items-end gap-2">
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleAcceptRequest(session.id);
+                                    }}
+                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
+                                  >
+                                    Accept
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRejectRequest(session.id);
+                                    }}
+                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+                                  >
+                                    Reject
+                                  </button>
+                                </div>
+                                {(() => {
+                                  const timeRemaining = getTimeRemaining(session.created_at);
+                                  return (
+                                    <div className={`text-xs font-semibold ${timeRemaining <= 3 ? 'text-red-600' : 'text-gray-600'}`}>
+                                      Expires in {formatTime(timeRemaining)}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             )}
                           </div>
@@ -249,7 +382,7 @@ export default function PrivateChatsPage() {
                             }}
                             className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-semibold"
                           >
-                            Open Chat
+                            {plannedChats.find((chat) => chat.id === session.id) ? 'Close Chat Window' : 'Open Chat Window'}
                           </button>
                         )}
                       </div>

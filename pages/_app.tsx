@@ -5,6 +5,7 @@ import { Cinzel, Libre_Baskerville } from 'next/font/google';
 import { useRouter } from 'next/router';
 import FloatingChats from '@/components/FloatingChats';
 import MessageRequestNotifications from '@/components/MessageRequestNotifications';
+import NotificationBanner from '@/components/NotificationBanner';
 import { useChatStore } from '@/store/chatStore';
 import { getAllChatSessions } from '@/lib/services/chat';
 import { getCurrentUser } from '@/lib/services/session';
@@ -24,8 +25,21 @@ const libreBaskerville = Libre_Baskerville({
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const isHomePage = router.pathname === '/';
-  const { socket, initializeSocket, addMessageRequest, addPlannedChat } = useChatStore();
+  const { socket, initializeSocket, addMessageRequest, addPlannedChat, notification, dismissNotification } = useChatStore();
   const [mySessionToken, setMySessionToken] = useState<string | null>(null);
+
+  // Dismiss notification when route changes
+  useEffect(() => {
+    const handleRouteChange = () => {
+      dismissNotification();
+    };
+
+    router.events.on('routeChangeStart', handleRouteChange);
+
+    return () => {
+      router.events.off('routeChangeStart', handleRouteChange);
+    };
+  }, [router.events, dismissNotification]);
 
   // Initialize socket connection on all pages except home
   useEffect(() => {
@@ -130,6 +144,16 @@ export default function App({ Component, pageProps }: AppProps) {
       {!isHomePage && <FloatingChats />}
       {/* Show message request notifications on all pages except home */}
       {!isHomePage && <MessageRequestNotifications />}
+      {/* Show global notification banner */}
+      {notification && (
+        <NotificationBanner
+          type={notification.type}
+          message={notification.message}
+          onDismiss={dismissNotification}
+          autoDismiss={notification.autoDismiss}
+          autoDismissDelay={notification.autoDismissDelay}
+        />
+      )}
     </div>
   );
 }
