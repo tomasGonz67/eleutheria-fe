@@ -1,8 +1,10 @@
+import { useState, useEffect } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import { clientApi } from '@/lib/api';
 
 export default function MessageRequestNotifications() {
-  const { messageRequests, removeMessageRequest } = useChatStore();
+  const { messageRequests, removeMessageRequest, socket } = useChatStore();
+  const [onlineStatus, setOnlineStatus] = useState<Record<string, boolean>>({});
 
   const handleAccept = async (sessionId: number) => {
     try {
@@ -28,11 +30,48 @@ export default function MessageRequestNotifications() {
     }
   };
 
-  if (messageRequests.length === 0) return null;
+  // Check online status for all requesters
+  useEffect(() => {
+    if (!socket) return;
+
+    // Check online status for each requester
+    messageRequests.forEach((request) => {
+      socket.emit('check_user_online', { uuid: request.requester_session_token });
+    });
+
+    // Listen for online status responses
+    const handleUserOnlineStatus = (data: { uuid: string; isOnline: boolean }) => {
+      setOnlineStatus((prev) => ({
+        ...prev,
+        [data.uuid]: data.isOnline,
+      }));
+    };
+
+    socket.on('user_online_status', handleUserOnlineStatus);
+
+    // Periodically recheck online status (every 10 seconds)
+    const interval = setInterval(() => {
+      messageRequests.forEach((request) => {
+        socket.emit('check_user_online', { uuid: request.requester_session_token });
+      });
+    }, 10000);
+
+    return () => {
+      socket.off('user_online_status', handleUserOnlineStatus);
+      clearInterval(interval);
+    };
+  }, [socket, messageRequests]);
+
+  // Filter to only show requests from online users
+  const onlineRequests = messageRequests.filter(
+    (request) => onlineStatus[request.requester_session_token] === true
+  );
+
+  if (onlineRequests.length === 0) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
-      {messageRequests.map((request) => (
+      {onlineRequests.map((request) => (
         <div
           key={request.session_id}
           className="bg-blue-600 text-white rounded-lg shadow-lg p-4 min-w-[280px] flex items-center justify-between"

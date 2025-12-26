@@ -8,6 +8,7 @@ interface PlannedChat {
   partnerUsername?: string;
   isMinimized: boolean;
   unreadCount: number;
+  status?: 'active' | 'ended';
 }
 
 interface Message {

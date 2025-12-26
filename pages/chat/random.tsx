@@ -66,7 +66,7 @@ export default function RandomChatPage() {
   }, [socket, initializeSocket]);
 
   // Initialize Socket.io event listeners
-  useSocketEvents(currentUsername);
+  useSocketEvents(currentUsername, userSessionToken);
 
   // Keep refs in sync with current values
   useEffect(() => {
@@ -114,7 +114,7 @@ export default function RandomChatPage() {
         cleanupCalled.current = true;
         // Use fetch with keepalive - browser will complete request even after page closes
         // If waiting, cancel the search. If active/ended, end the session
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://10.0.0.109:3000';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
         const endpoint = statusRef.current === 'waiting'
           ? `/api/chat/${currentSessionId}/cancel`
           : `/api/chat/${currentSessionId}/end`;

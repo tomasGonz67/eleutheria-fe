@@ -15,7 +15,8 @@ interface NewMessageData {
  * and syncs events with Zustand store
  */
 export function useSocketEvents(
-  currentUsername: string
+  currentUsername: string,
+  currentUserSessionToken: string | null
 ) {
   const {
     socket,
@@ -68,7 +69,7 @@ export function useSocketEvents(
           id: data.id,
           content: data.content,
           username: data.sender_username,
-          is_me: data.sender_username === currentUsername,
+          is_me: data.sender_session_token === currentUserSessionToken,
           sender_session_token: data.sender_session_token,
           created_at: data.created_at,
         });

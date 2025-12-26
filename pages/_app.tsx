@@ -50,68 +50,6 @@ export default function App({ Component, pageProps }: AppProps) {
     fetchCurrentUser();
   }, []);
 
-  // Restore pending message requests on socket connection/reconnection
-  useEffect(() => {
-    if (!socket || isHomePage || !mySessionToken) return;
-
-    const restorePendingRequests = async () => {
-      try {
-        console.log('🔍 Checking for pending message requests...');
-
-        // Fetch all chat sessions
-        const { sessions } = await getAllChatSessions();
-
-        // Filter for pending requests where current user is the RECIPIENT
-        // user1 = requester (sender), user2 = recipient (receiver)
-        const pendingRequests = sessions.filter(
-          (session: any) =>
-            session.type === 'planned' &&
-            session.status === 'waiting' &&
-            session.user2_session_token === mySessionToken
-        );
-
-        console.log(`📬 Found ${pendingRequests.length} pending message request(s)`);
-
-        // Add each pending request to the store
-        pendingRequests.forEach((session: any) => {
-          addMessageRequest({
-            session_id: session.id,
-            requester_username: session.user1_username, // user1 is the requester
-            requester_session_token: session.user1_session_token,
-            created_at: session.created_at,
-          });
-        });
-      } catch (error) {
-        console.error('Error restoring pending requests:', error);
-      }
-    };
-
-    // Restore on initial connection
-    const handleConnect = () => {
-      console.log('✅ Socket connected - checking for pending requests...');
-      restorePendingRequests();
-    };
-
-    // Restore on reconnection
-    const handleReconnect = () => {
-      console.log('🔄 Socket reconnected - checking for pending requests...');
-      restorePendingRequests();
-    };
-
-    // If already connected when this effect runs, check immediately
-    if (socket.connected) {
-      restorePendingRequests();
-    }
-
-    socket.on('connect', handleConnect);
-    socket.on('reconnect', handleReconnect);
-
-    return () => {
-      socket.off('connect', handleConnect);
-      socket.off('reconnect', handleReconnect);
-    };
-  }, [socket, isHomePage, mySessionToken, addMessageRequest]);
-
   // Restore active planned chats on page load
   useEffect(() => {
     if (isHomePage || !mySessionToken) return;

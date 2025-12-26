@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
+import ChatMessageList from '@/components/chat/ChatMessageList';
+import ChatInput from '@/components/chat/ChatInput';
+import UserActionMenu from '@/components/UserActionMenu';
 import { clientApi } from '@/lib/api';
 import { createChatroomMessage, updateChatroom, deleteChatroom } from '@/lib/services/chatrooms';
 import { useChatStore } from '@/store/chatStore';
 import { joinChatroom, leaveChatroom, isSocketConnected, connectSocket } from '@/lib/socket';
-import UserActionMenu from '@/components/UserActionMenu';
 
 interface Message {
   id: number;
@@ -42,8 +44,6 @@ export default function ChatroomMessagesPage() {
   const [activeUsers, setActiveUsers] = useState<string[]>([]);
   const [autoScroll, setAutoScroll] = useState(true);
   const [isActiveUsersModalOpen, setIsActiveUsersModalOpen] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messageInputRef = useRef<HTMLInputElement>(null);
 
   // Get Socket.io from Zustand store
   const { socket, initializeSocket, cleanupSocket } = useChatStore();
@@ -165,19 +165,6 @@ export default function ChatroomMessagesPage() {
     fetchData();
   }, [id]);
 
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
-    if (autoScroll) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, autoScroll]);
-
-  // Auto-focus on message input when page loads
-  useEffect(() => {
-    if (chatroom && !isLoading) {
-      messageInputRef.current?.focus();
-    }
-  }, [chatroom, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -342,97 +329,26 @@ export default function ChatroomMessagesPage() {
             {/* Chat Area */}
             <div className="border border-black rounded-lg">
               {/* Messages */}
-              <div className="p-6 space-y-4 min-h-[500px] max-h-[600px] overflow-y-auto">
-                {messages.map((message) => {
-                  const isOwnMessage = message.sender_session_token === userSessionToken;
-
-                  return (
-                    <div
-                      key={message.id}
-                      className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[70%] p-4 rounded-lg ${
-                          isOwnMessage
-                            ? 'bg-gray-300'
-                            : 'bg-gray-100'
-                        }`}
-                      >
-                        {/* Message Header */}
-                        <div className="flex items-center justify-between mb-2 gap-3">
-                          <UserActionMenu
-                            username={message.username}
-                            userSessionToken={message.sender_session_token}
-                            currentUserSessionToken={userSessionToken}
-                            accentColor="#4D89B0"
-                            className="font-semibold text-gray-800 text-sm"
-                          />
-                          <span className="text-xs text-gray-500 whitespace-nowrap">
-                            {new Date(message.created_at).toLocaleTimeString()}
-                          </span>
-                        </div>
-
-                        {/* Message Content */}
-                        <p className="text-gray-700 break-words">{message.content}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Empty State */}
-                {messages.length === 0 && (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500">No messages yet. Start the conversation!</p>
-                  </div>
-                )}
-
-                {/* Auto-scroll anchor */}
-                <div ref={messagesEndRef} />
-              </div>
+              <ChatMessageList
+                messages={messages}
+                currentUserSessionToken={userSessionToken}
+                accentColor="#4D89B0"
+                autoScroll={autoScroll}
+                emptyStateMessage="No messages yet. Start the conversation!"
+              />
 
               {/* Send Message Form */}
-              <form onSubmit={handleSubmit} className="p-4 border-t border-black">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={autoScroll}
-                      onChange={(e) => setAutoScroll(e.target.checked)}
-                      className="w-4 h-4 cursor-pointer"
-                    />
-                    <span>Auto-scroll to new messages</span>
-                  </label>
-                </div>
-                <div className="flex gap-3">
-                  <input
-                    ref={messageInputRef}
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type a message..."
-                    disabled={isSending}
-                    className="flex-1 px-4 py-2 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none disabled:bg-gray-100"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!newMessage.trim() || isSending}
-                    className="px-6 py-2 text-white rounded-lg transition font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: isSending || !newMessage.trim() ? '#9ca3af' : '#4D89B0' }}
-                    onMouseEnter={(e) => {
-                      if (!isSending && newMessage.trim()) {
-                        e.currentTarget.style.backgroundColor = '#3d6e8f';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSending && newMessage.trim()) {
-                        e.currentTarget.style.backgroundColor = '#4D89B0';
-                      }
-                    }}
-                  >
-                    {isSending ? 'Sending...' : 'Send'}
-                  </button>
-                </div>
-              </form>
+              <ChatInput
+                value={newMessage}
+                onChange={setNewMessage}
+                onSubmit={handleSubmit}
+                disabled={isSending}
+                placeholder={isSending ? 'Sending...' : 'Type a message...'}
+                autoScroll={autoScroll}
+                onAutoScrollChange={setAutoScroll}
+                showAutoScroll={true}
+                accentColor="#4D89B0"
+              />
             </div>
           </div>
         )}

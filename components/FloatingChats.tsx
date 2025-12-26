@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import { clientApi } from '@/lib/api';
 import { isSocketConnected } from '@/lib/socket';
+import { getCurrentUser } from '@/lib/services/session';
 
 interface Message {
   id: number;
@@ -16,8 +17,23 @@ export default function FloatingChats() {
   const [messages, setMessages] = useState<Record<number, Message[]>>({});
   const [inputValues, setInputValues] = useState<Record<number, string>>({});
   const [chatEndedNotification, setChatEndedNotification] = useState<{ sessionId: number; reason: string } | null>(null);
+  const [currentUserSessionToken, setCurrentUserSessionToken] = useState<string | null>(null);
   const messagesEndRef = useRef<Record<number, HTMLDivElement | null>>({});
   const endedByMeRef = useRef<Set<number>>(new Set()); // Track sessions we ended
+
+  // Get current user's session token
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await getCurrentUser();
+        setCurrentUserSessionToken(response.user.session_token);
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   // Fetch message history
   const fetchMessages = async (sessionId: number) => {
@@ -169,7 +185,7 @@ export default function FloatingChats() {
           key={chat.id}
           className="bg-white rounded-lg shadow-xl border-2"
           style={{
-            borderColor: '#AA633F',
+            borderColor: '#1e40af',
             width: chat.isMinimized ? '280px' : '320px',
             maxHeight: chat.isMinimized ? '50px' : '450px'
           }}
@@ -177,7 +193,7 @@ export default function FloatingChats() {
           {/* Chat Header */}
           <div
             className="p-3 border-b border-gray-200 flex items-center justify-between cursor-pointer"
-            style={{ backgroundColor: '#AA633F' }}
+            style={{ backgroundColor: '#1e40af' }}
             onClick={() => toggleMinimize(chat.id)}
           >
             <div className="flex items-center gap-2">
@@ -203,7 +219,7 @@ export default function FloatingChats() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  endChat(chat.id);
+                  removePlannedChat(chat.id);
                 }}
                 className="text-white hover:text-gray-200 text-2xl"
               >
@@ -221,14 +237,14 @@ export default function FloatingChats() {
                   <div
                     key={msg.id}
                     className={`flex ${
-                      msg.sender_username === chat.partnerUsername
+                      msg.sender_session_token !== currentUserSessionToken
                         ? 'justify-start'
                         : 'justify-end'
                     }`}
                   >
                     <div
                       className={`max-w-[70%] rounded-lg px-3 py-2 ${
-                        msg.sender_username === chat.partnerUsername
+                        msg.sender_session_token !== currentUserSessionToken
                           ? 'bg-gray-200 text-gray-800'
                           : 'bg-blue-500 text-white'
                       }`}
@@ -242,32 +258,38 @@ export default function FloatingChats() {
 
               {/* Input */}
               <div className="border-t border-gray-200 p-4">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    sendMessage(chat.id);
-                  }}
-                  className="flex gap-3 items-center"
-                >
-                  <input
-                    type="text"
-                    value={inputValues[chat.id] || ''}
-                    onChange={(e) =>
-                      setInputValues((prev) => ({
-                        ...prev,
-                        [chat.id]: e.target.value,
-                      }))
-                    }
-                    placeholder="Type a message..."
-                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm text-gray-900 placeholder-gray-500"
-                  />
-                  <button
-                    type="submit"
-                    className="px-5 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm font-semibold"
+                {chat.status === 'ended' ? (
+                  <div className="text-center text-gray-500 text-sm italic py-2">
+                    This chat has ended. You can view the message history above.
+                  </div>
+                ) : (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      sendMessage(chat.id);
+                    }}
+                    className="flex gap-3 items-center"
                   >
-                    Send
-                  </button>
-                </form>
+                    <input
+                      type="text"
+                      value={inputValues[chat.id] || ''}
+                      onChange={(e) =>
+                        setInputValues((prev) => ({
+                          ...prev,
+                          [chat.id]: e.target.value,
+                        }))
+                      }
+                      placeholder="Type a message..."
+                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm text-gray-900 placeholder-gray-500"
+                    />
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm font-semibold"
+                    >
+                      Send
+                    </button>
+                  </form>
+                )}
               </div>
             </div>
           )}

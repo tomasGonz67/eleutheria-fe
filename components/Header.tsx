@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 interface HeaderProps {
-  currentPage?: 'feed' | 'forums' | 'random-chat' | 'chatrooms';
+  currentPage?: 'feed' | 'forums' | 'random-chat' | 'chatrooms' | 'private-chats';
 }
 
 export default function Header({ currentPage }: HeaderProps) {
@@ -16,9 +16,12 @@ export default function Header({ currentPage }: HeaderProps) {
             href="/feed"
             className={
               currentPage === 'feed'
-                ? 'text-aegean-600 font-semibold'
-                : 'text-gray-600 hover:text-aegean-600'
+                ? 'font-semibold'
+                : 'text-gray-600'
             }
+            style={currentPage === 'feed' ? { color: '#AA633F' } : {}}
+            onMouseEnter={(e) => e.currentTarget.style.color = '#AA633F'}
+            onMouseLeave={(e) => currentPage !== 'feed' ? e.currentTarget.style.color = '#6b7280' : null}
           >
             Feed
           </Link>
@@ -26,9 +29,12 @@ export default function Header({ currentPage }: HeaderProps) {
             href="/forums"
             className={
               currentPage === 'forums'
-                ? 'text-aegean-600 font-semibold'
-                : 'text-gray-600 hover:text-aegean-600'
+                ? 'font-semibold'
+                : 'text-gray-600'
             }
+            style={currentPage === 'forums' ? { color: '#AA633F' } : {}}
+            onMouseEnter={(e) => e.currentTarget.style.color = '#AA633F'}
+            onMouseLeave={(e) => currentPage !== 'forums' ? e.currentTarget.style.color = '#6b7280' : null}
           >
             Forums
           </Link>
@@ -36,12 +42,9 @@ export default function Header({ currentPage }: HeaderProps) {
             href="/chat/random"
             className={
               currentPage === 'random-chat'
-                ? 'font-semibold'
-                : 'text-gray-600'
+                ? 'text-aegean-600 font-semibold'
+                : 'text-gray-600 hover:text-aegean-600'
             }
-            style={currentPage === 'random-chat' ? { color: '#AA633F' } : {}}
-            onMouseEnter={(e) => e.currentTarget.style.color = '#AA633F'}
-            onMouseLeave={(e) => currentPage !== 'random-chat' ? e.currentTarget.style.color = '#6b7280' : null}
           >
             Random Chat
           </Link>
@@ -49,14 +52,21 @@ export default function Header({ currentPage }: HeaderProps) {
             href="/chatrooms"
             className={
               currentPage === 'chatrooms'
-                ? 'font-semibold'
-                : 'text-gray-600'
+                ? 'text-aegean-600 font-semibold'
+                : 'text-gray-600 hover:text-aegean-600'
             }
-            style={currentPage === 'chatrooms' ? { color: '#AA633F' } : {}}
-            onMouseEnter={(e) => e.currentTarget.style.color = '#AA633F'}
-            onMouseLeave={(e) => currentPage !== 'chatrooms' ? e.currentTarget.style.color = '#6b7280' : null}
           >
             Chatrooms
+          </Link>
+          <Link
+            href="/private-chats"
+            className={
+              currentPage === 'private-chats'
+                ? 'text-aegean-600 font-semibold'
+                : 'text-gray-600 hover:text-aegean-600'
+            }
+          >
+            Private Chats
           </Link>
         </nav>
       </div>
