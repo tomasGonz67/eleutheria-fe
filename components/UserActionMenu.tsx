@@ -106,7 +106,8 @@ export default function UserActionMenu({
       setIsOpen(false);
     } catch (error: any) {
       console.error('Error sending message request:', error);
-      alert(error.response?.data?.error || 'Failed to send message request');
+      const errorMessage = error.response?.data?.error || 'Failed to send message request';
+      alert(errorMessage);
       setIsOpen(false);
     }
   };
