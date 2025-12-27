@@ -48,6 +48,7 @@ export default function PrivateChatPage() {
   // Clear unread count when viewing this chat page
   useEffect(() => {
     if (sessionId) {
+      // Clear local unread counts
       clearChatUnread(sessionId);
       clearUnread(sessionId);
     }

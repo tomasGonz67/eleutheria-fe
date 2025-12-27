@@ -114,8 +114,12 @@ export default function App({ Component, pageProps }: AppProps) {
     };
 
     // Listen for new messages to track unread counts
-    const handleNewMessage = (data: any) => {
+    const handleNewMessage = async (data: any) => {
       const sessionId = data.chat_session_id;
+      const isMyMessage = data.sender_session_token === mySessionToken;
+
+      // Don't increment for my own messages
+      if (isMyMessage) return;
 
       // Check if this chat is opened as a floater
       const floaterChat = plannedChats.find((chat) => chat.id === sessionId);

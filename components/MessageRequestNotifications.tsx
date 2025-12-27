@@ -3,7 +3,7 @@ import { useChatStore } from '@/store/chatStore';
 import { clientApi } from '@/lib/api';
 
 export default function MessageRequestNotifications() {
-  const { messageRequests, removeMessageRequest, socket } = useChatStore();
+  const { messageRequests, removeMessageRequest, socket, showNotification } = useChatStore();
   const [onlineStatus, setOnlineStatus] = useState<Record<string, boolean>>({});
 
   const handleAccept = async (sessionId: number) => {
@@ -16,7 +16,7 @@ export default function MessageRequestNotifications() {
       console.log('Chat request accepted:', sessionId);
     } catch (error: any) {
       console.error('Error accepting chat request:', error);
-      alert(error.response?.data?.error || 'Failed to accept chat request');
+      showNotification('error', error.response?.data?.error || 'Failed to accept chat request');
 
       // Remove notification even on error (e.g., if expired)
       removeMessageRequest(sessionId);
@@ -29,7 +29,7 @@ export default function MessageRequestNotifications() {
       removeMessageRequest(sessionId);
     } catch (error: any) {
       console.error('Error rejecting chat request:', error);
-      alert(error.response?.data?.error || 'Failed to reject chat request');
+      showNotification('error', error.response?.data?.error || 'Failed to reject chat request');
 
       // Remove notification even on error (e.g., if expired)
       removeMessageRequest(sessionId);

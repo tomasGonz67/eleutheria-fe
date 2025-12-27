@@ -23,7 +23,7 @@ export default function UserActionMenu({
   const [isOpen, setIsOpen] = useState(false);
   const [isOnline, setIsOnline] = useState<boolean | null>(null); // null = checking, true/false = result
   const menuRef = useRef<HTMLDivElement>(null);
-  const { socket } = useChatStore();
+  const { socket, showNotification } = useChatStore();
 
   // Check if this is the current user's own message by comparing session tokens
   const isOwnUser = userSessionToken && currentUserSessionToken && userSessionToken === currentUserSessionToken;
@@ -84,14 +84,14 @@ export default function UserActionMenu({
 
   const handleSendMessage = async () => {
     if (!userSessionToken) {
-      alert('Cannot send message request - user session not found');
+      showNotification('error', 'Cannot send message request - user session not found');
       setIsOpen(false);
       return;
     }
 
     // Check socket connection before sending request
     if (!isSocketConnected()) {
-      alert('Connection lost. Please refresh the page and try again.');
+      showNotification('error', 'Connection lost. Please refresh the page and try again.');
       setIsOpen(false);
       return;
     }
@@ -102,12 +102,12 @@ export default function UserActionMenu({
       });
 
       console.log('Message request sent:', response.data);
-      alert(`Message request sent to ${username}!`);
+      showNotification('success', `Message request sent to ${username}!`, true, 3000);
       setIsOpen(false);
     } catch (error: any) {
       console.error('Error sending message request:', error);
       const errorMessage = error.response?.data?.error || 'Failed to send message request';
-      alert(errorMessage);
+      showNotification('error', errorMessage);
       setIsOpen(false);
     }
   };

@@ -177,7 +177,8 @@ export default function FloatingChats() {
   // Clear unread count when floater is open and not minimized
   useEffect(() => {
     plannedChats.forEach((chat) => {
-      if (!chat.isMinimized) {
+      if (!chat.isMinimized && chat.unreadCount > 0) {
+        // Clear local unread counts
         clearChatUnread(chat.id);
         clearUnread(chat.id);
       }
