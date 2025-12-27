@@ -74,7 +74,13 @@ interface ChatStore {
   removePlannedChat: (id: number) => void;
   toggleMinimize: (id: number) => void;
   setUnreadCount: (id: number, count: number) => void;
+  incrementUnread: (id: number) => void;
   clearUnread: (id: number) => void;
+
+  // Track unread for chats that aren't in plannedChats (not opened as floaters)
+  chatUnreadCounts: Record<number, number>;
+  incrementChatUnread: (id: number) => void;
+  clearChatUnread: (id: number) => void;
 
   // Message request actions
   addMessageRequest: (request: MessageRequest) => void;
@@ -98,6 +104,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   // Planned chats initial state
   plannedChats: [],
+
+  // Chat unread counts (for chats not opened as floaters)
+  chatUnreadCounts: {},
 
   // Message requests initial state
   messageRequests: [],
@@ -193,12 +202,34 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       ),
     })),
 
+  incrementUnread: (id) =>
+    set((state) => ({
+      plannedChats: state.plannedChats.map((chat) =>
+        chat.id === id ? { ...chat, unreadCount: chat.unreadCount + 1 } : chat
+      ),
+    })),
+
   clearUnread: (id) =>
     set((state) => ({
       plannedChats: state.plannedChats.map((chat) =>
         chat.id === id ? { ...chat, unreadCount: 0 } : chat
       ),
     })),
+
+  // Chat unread actions (for non-floater chats)
+  incrementChatUnread: (id) =>
+    set((state) => ({
+      chatUnreadCounts: {
+        ...state.chatUnreadCounts,
+        [id]: (state.chatUnreadCounts[id] || 0) + 1,
+      },
+    })),
+
+  clearChatUnread: (id) =>
+    set((state) => {
+      const { [id]: _, ...rest } = state.chatUnreadCounts;
+      return { chatUnreadCounts: rest };
+    }),
 
   // Message request actions
   addMessageRequest: (request) =>

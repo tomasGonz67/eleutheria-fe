@@ -13,7 +13,7 @@ interface Message {
 }
 
 export default function FloatingChats() {
-  const { plannedChats, toggleMinimize, removePlannedChat, socket, showNotification } = useChatStore();
+  const { plannedChats, toggleMinimize, removePlannedChat, socket, showNotification, clearChatUnread, clearUnread } = useChatStore();
   const [messages, setMessages] = useState<Record<number, Message[]>>({});
   const [inputValues, setInputValues] = useState<Record<number, string>>({});
   const [currentUserSessionToken, setCurrentUserSessionToken] = useState<string | null>(null);
@@ -173,6 +173,16 @@ export default function FloatingChats() {
       }
     });
   }, [messages]);
+
+  // Clear unread count when floater is open and not minimized
+  useEffect(() => {
+    plannedChats.forEach((chat) => {
+      if (!chat.isMinimized) {
+        clearChatUnread(chat.id);
+        clearUnread(chat.id);
+      }
+    });
+  }, [plannedChats.map(c => `${c.id}-${c.isMinimized}`).join(','), clearChatUnread, clearUnread]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

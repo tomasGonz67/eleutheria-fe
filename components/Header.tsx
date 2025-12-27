@@ -1,10 +1,18 @@
 import Link from 'next/link';
+import { useChatStore } from '@/store/chatStore';
 
 interface HeaderProps {
   currentPage?: 'feed' | 'forums' | 'random-chat' | 'chatrooms' | 'private-chats';
 }
 
 export default function Header({ currentPage }: HeaderProps) {
+  const { messageRequests, plannedChats, chatUnreadCounts } = useChatStore();
+
+  // Calculate total notifications: pending requests + unread messages (from floaters and global)
+  const floaterUnreads = plannedChats.reduce((sum, chat) => sum + chat.unreadCount, 0);
+  const globalUnreads = Object.values(chatUnreadCounts).reduce((sum, count) => sum + count, 0);
+  const totalNotifications = messageRequests.length + floaterUnreads + globalUnreads;
+
   return (
     <header className="bg-marble-200 border-b-4 border-gold-600 shadow-sm">
       <div className="max-w-4xl mx-auto px-6 py-5 flex items-center justify-between">
@@ -66,7 +74,7 @@ export default function Header({ currentPage }: HeaderProps) {
                 : 'text-gray-600 hover:text-aegean-600'
             }
           >
-            Private Chats
+            Private Chats{totalNotifications > 0 && ` (${totalNotifications})`}
           </Link>
         </nav>
       </div>

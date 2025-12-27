@@ -25,7 +25,7 @@ const libreBaskerville = Libre_Baskerville({
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const isHomePage = router.pathname === '/';
-  const { socket, initializeSocket, addMessageRequest, addPlannedChat, notification, dismissNotification } = useChatStore();
+  const { socket, initializeSocket, addMessageRequest, addPlannedChat, notification, dismissNotification, incrementChatUnread, incrementUnread, plannedChats } = useChatStore();
   const [mySessionToken, setMySessionToken] = useState<string | null>(null);
 
   // Dismiss notification when route changes
@@ -64,43 +64,28 @@ export default function App({ Component, pageProps }: AppProps) {
     fetchCurrentUser();
   }, []);
 
-  // Restore active planned chats on page load
+  // Join Socket.io rooms for all active chats (for message notifications)
   useEffect(() => {
-    if (isHomePage || !mySessionToken) return;
+    if (isHomePage || !mySessionToken || !socket) return;
 
-    const restoreChats = async () => {
+    const joinAllChatRooms = async () => {
       try {
-        // Fetch all chat sessions
         const { sessions } = await getAllChatSessions();
-
-        // Filter for active planned chats
         const activePlannedChats = sessions.filter(
           (session: any) => session.type === 'planned' && session.status === 'active'
         );
 
-        console.log('active');
-
-        // Restore each chat to the store
+        // Join Socket.io rooms for all active chats (don't open floaters, just join for notifications)
         activePlannedChats.forEach((session: any) => {
-          // Determine partner username (the one that's not me)
-          const isUser1 = session.user1_session_token === mySessionToken;
-          const partnerUsername = isUser1 ? session.user2_username : session.user1_username;
-
-          addPlannedChat({
-            id: session.id,
-            inviteCode: session.id.toString(),
-            partnerUsername: partnerUsername,
-            isMinimized: false,
-            unreadCount: 0,
-          });
+          socket.emit('join_session', { session_id: session.id });
         });
       } catch (error) {
-        console.error('Error restoring chats:', error);
+        console.error('Error joining chat rooms:', error);
       }
     };
 
-    restoreChats();
-  }, [isHomePage, mySessionToken, addPlannedChat]);
+    joinAllChatRooms();
+  }, [isHomePage, mySessionToken, socket]);
 
   // Listen for message requests and chat acceptance on all pages except home
   useEffect(() => {
@@ -128,14 +113,34 @@ export default function App({ Component, pageProps }: AppProps) {
       });
     };
 
+    // Listen for new messages to track unread counts
+    const handleNewMessage = (data: any) => {
+      const sessionId = data.chat_session_id;
+
+      // Check if this chat is opened as a floater
+      const floaterChat = plannedChats.find((chat) => chat.id === sessionId);
+
+      if (floaterChat) {
+        // Chat is open as floater - only increment if minimized
+        if (floaterChat.isMinimized) {
+          incrementUnread(sessionId);
+        }
+      } else {
+        // Chat is not open as floater - increment global unread count
+        incrementChatUnread(sessionId);
+      }
+    };
+
     socket.on('new_message_request', handleNewMessageRequest);
     socket.on('chat_request_accepted', handleChatRequestAccepted);
+    socket.on('new_message', handleNewMessage);
 
     return () => {
       socket.off('new_message_request', handleNewMessageRequest);
       socket.off('chat_request_accepted', handleChatRequestAccepted);
+      socket.off('new_message', handleNewMessage);
     };
-  }, [socket, isHomePage, addMessageRequest, addPlannedChat]);
+  }, [socket, isHomePage, addMessageRequest, addPlannedChat, incrementChatUnread, incrementUnread, plannedChats]);
 
   return (
     <div className={`${cinzel.variable} ${libreBaskerville.variable}`}>

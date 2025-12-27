@@ -20,7 +20,7 @@ interface ChatSession {
 
 export default function PrivateChatsPage() {
   const router = useRouter();
-  const { plannedChats, showNotification } = useChatStore();
+  const { plannedChats, showNotification, chatUnreadCounts } = useChatStore();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [mySessionToken, setMySessionToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -125,7 +125,7 @@ export default function PrivateChatsPage() {
   };
 
   const openChatAsFloater = (session: ChatSession) => {
-    const { addPlannedChat, removePlannedChat, plannedChats } = require('@/store/chatStore').useChatStore.getState();
+    const { addPlannedChat, removePlannedChat, plannedChats, clearChatUnread } = require('@/store/chatStore').useChatStore.getState();
 
     // Check if this chat is already open as a floater
     const existingChat = plannedChats.find((chat: any) => chat.id === session.id);
@@ -134,9 +134,12 @@ export default function PrivateChatsPage() {
       // If already open, close it
       removePlannedChat(session.id);
     } else {
-      // If not open, add it
+      // If not open, add it and clear unread count
       const isUser1 = session.user1_session_token === mySessionToken;
       const partnerUsername = isUser1 ? session.user2_username : session.user1_username;
+
+      // Clear unread count when opening as floater
+      clearChatUnread(session.id);
 
       addPlannedChat({
         id: session.id,
@@ -271,11 +274,20 @@ export default function PrivateChatsPage() {
                 const partnerUsername = isUser1 ? session.user2_username : session.user1_username;
                 const partnerSessionToken = isUser1 ? session.user2_session_token : session.user1_session_token;
 
+                // Get unread count (from floater if open, otherwise from global count)
+                const floaterChat = plannedChats.find((chat) => chat.id === session.id);
+                const unreadCount = floaterChat
+                  ? floaterChat.unreadCount
+                  : (chatUnreadCounts[session.id] || 0);
+                const hasUnread = unreadCount > 0;
+
                 return (
                   <div
                     key={session.id}
                     onClick={() => openChat(session.id)}
-                    className="border-2 border-gray-200 rounded-lg p-6 hover:border-aegean-400 transition-colors cursor-pointer"
+                    className={`border-2 rounded-lg p-6 hover:border-aegean-400 transition-colors cursor-pointer ${
+                      hasUnread ? 'bg-blue-50 border-aegean-300' : 'border-gray-200'
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -289,6 +301,11 @@ export default function PrivateChatsPage() {
                             style={{ color: '#4D89B0' }}
                           />
                           {getStatusBadge(session.status)}
+                          {hasUnread && (
+                            <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
+                              {unreadCount}
+                            </span>
+                          )}
                         </div>
                         <p className="text-sm text-gray-500">
                           Started {new Date(session.created_at).toLocaleDateString()} at{' '}

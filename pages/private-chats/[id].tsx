@@ -43,7 +43,15 @@ export default function PrivateChatPage() {
   const [loading, setLoading] = useState(true);
   const [autoScroll, setAutoScroll] = useState(true);
 
-  const { socket, showNotification } = useChatStore();
+  const { socket, showNotification, clearChatUnread, clearUnread } = useChatStore();
+
+  // Clear unread count when viewing this chat page
+  useEffect(() => {
+    if (sessionId) {
+      clearChatUnread(sessionId);
+      clearUnread(sessionId);
+    }
+  }, [sessionId, clearChatUnread, clearUnread]);
 
   // Fetch session and user data
   useEffect(() => {
