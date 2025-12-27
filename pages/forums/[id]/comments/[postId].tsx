@@ -621,13 +621,13 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
                 <div className="p-4 bg-gray-100 rounded-lg border border-gray-300 mb-2">
                   <p className="text-gray-700">{postContent}</p>
                 </div>
-                <p className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600">
                   by <UserActionMenu
                     username={postUsername}
                     accentColor="#AA633F"
                     className="text-sm text-gray-600"
                   />
-                </p>
+                </div>
               </div>
             ) : (
               <h1 className="text-2xl font-bold mb-4 text-gray-800">Comments for Post #{postId}</h1>

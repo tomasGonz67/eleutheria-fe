@@ -302,14 +302,14 @@ export default function RandomChatPage() {
               {/* Chat Header */}
               <div className="p-4 border-b border-black flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-800">
+                  <div className="text-lg font-semibold text-gray-800">
                     Chatting with: <UserActionMenu
                       username={randomChatPartner || 'Anonymous'}
                       accentColor="#4D89B0"
                       className="font-semibold"
                       style={{ color: '#4D89B0' }}
                     />
-                  </h2>
+                  </div>
                   <p className="text-sm text-gray-500">Random 1-on-1 Chat</p>
                 </div>
                 <div className="flex gap-2">

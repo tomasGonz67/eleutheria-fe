@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -5,17 +7,33 @@ interface PaginationProps {
   color?: string;
 }
 
-export default function Pagination({ 
-  currentPage, 
-  totalPages, 
-  onPageChange, 
-  color = '#AA633F' 
+export default function Pagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+  color = '#AA633F'
 }: PaginationProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect screen size on client only
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+
+    // Set initial value
+    checkMobile();
+
+    // Update on resize
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Generate smart pagination with ellipsis
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
     const showPages = 10; // Maximum pages to show at once
-    
+
     if (totalPages <= showPages) {
       // Show all pages if total is small
       for (let i = 1; i <= totalPages; i++) {
@@ -24,7 +42,6 @@ export default function Pagination({
     } else {
       // Smart pagination with ellipsis
       // Use fewer siblings on mobile (1), more on desktop (3)
-      const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
       const leftSiblings = isMobile ? 1 : 3;
       const rightSiblings = isMobile ? 1 : 3;
       
