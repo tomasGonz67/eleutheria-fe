@@ -10,6 +10,13 @@ export default function MessageRequestNotifications() {
     try {
       await clientApi.put(`/api/chat/${sessionId}/accept`);
 
+      // Mark session as read (clear notification)
+      try {
+        await clientApi.put(`/api/chat/${sessionId}/mark-read`);
+      } catch (error) {
+        console.error('Error marking session as read:', error);
+      }
+
       // Remove notification (chat window will open via Socket.io for both users)
       removeMessageRequest(sessionId);
 
@@ -26,6 +33,14 @@ export default function MessageRequestNotifications() {
   const handleReject = async (sessionId: number) => {
     try {
       await clientApi.delete(`/api/chat/${sessionId}/reject`);
+
+      // Mark session as read (clear notification)
+      try {
+        await clientApi.put(`/api/chat/${sessionId}/mark-read`);
+      } catch (error) {
+        console.error('Error marking session as read:', error);
+      }
+
       removeMessageRequest(sessionId);
     } catch (error: any) {
       console.error('Error rejecting chat request:', error);

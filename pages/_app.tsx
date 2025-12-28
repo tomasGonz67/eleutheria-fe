@@ -7,7 +7,6 @@ import FloatingChats from '@/components/FloatingChats';
 import MessageRequestNotifications from '@/components/MessageRequestNotifications';
 import NotificationBanner from '@/components/NotificationBanner';
 import { useChatStore } from '@/store/chatStore';
-import { getAllChatSessions } from '@/lib/services/chat';
 import { getCurrentUser } from '@/lib/services/session';
 
 const cinzel = Cinzel({
@@ -25,7 +24,7 @@ const libreBaskerville = Libre_Baskerville({
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const isHomePage = router.pathname === '/';
-  const { socket, initializeSocket, addMessageRequest, addPlannedChat, notification, dismissNotification, incrementChatUnread, incrementUnread, plannedChats } = useChatStore();
+  const { socket, initializeSocket, addMessageRequest, addPlannedChat, notification, dismissNotification, plannedChats } = useChatStore();
   const [mySessionToken, setMySessionToken] = useState<string | null>(null);
 
   // Dismiss notification when route changes
@@ -64,28 +63,31 @@ export default function App({ Component, pageProps }: AppProps) {
     fetchCurrentUser();
   }, []);
 
-  // Join Socket.io rooms for all active chats (for message notifications)
+  // Rejoin sessions when socket connects/reconnects (only for open UI)
   useEffect(() => {
-    if (isHomePage || !mySessionToken || !socket) return;
+    if (!socket || isHomePage) return;
 
-    const joinAllChatRooms = async () => {
-      try {
-        const { sessions } = await getAllChatSessions();
-        const activePlannedChats = sessions.filter(
-          (session: any) => session.type === 'planned' && session.status === 'active'
-        );
+    const handleConnect = () => {
+      // Rejoin all open floaters
+      plannedChats.forEach((chat) => {
+        socket.emit('join_session', { session_id: chat.id });
+      });
 
-        // Join Socket.io rooms for all active chats (don't open floaters, just join for notifications)
-        activePlannedChats.forEach((session: any) => {
-          socket.emit('join_session', { session_id: session.id });
-        });
-      } catch (error) {
-        console.error('Error joining chat rooms:', error);
+      // If on a chat page, rejoin that session too
+      if (router.pathname === '/private-chats/[id]') {
+        const sessionId = parseInt(router.query.id as string);
+        if (sessionId) {
+          socket.emit('join_session', { session_id: sessionId });
+        }
       }
     };
 
-    joinAllChatRooms();
-  }, [isHomePage, mySessionToken, socket]);
+    socket.on('connect', handleConnect);
+
+    return () => {
+      socket.off('connect', handleConnect);
+    };
+  }, [socket, isHomePage, plannedChats, router.pathname, router.query.id]);
 
   // Listen for message requests and chat acceptance on all pages except home
   useEffect(() => {
@@ -109,42 +111,17 @@ export default function App({ Component, pageProps }: AppProps) {
         inviteCode: data.session_id.toString(),
         partnerUsername: data.partner_username,
         isMinimized: false,
-        unreadCount: 0,
       });
-    };
-
-    // Listen for new messages to track unread counts
-    const handleNewMessage = async (data: any) => {
-      const sessionId = data.chat_session_id;
-      const isMyMessage = data.sender_session_token === mySessionToken;
-
-      // Don't increment for my own messages
-      if (isMyMessage) return;
-
-      // Check if this chat is opened as a floater
-      const floaterChat = plannedChats.find((chat) => chat.id === sessionId);
-
-      if (floaterChat) {
-        // Chat is open as floater - only increment if minimized
-        if (floaterChat.isMinimized) {
-          incrementUnread(sessionId);
-        }
-      } else {
-        // Chat is not open as floater - increment global unread count
-        incrementChatUnread(sessionId);
-      }
     };
 
     socket.on('new_message_request', handleNewMessageRequest);
     socket.on('chat_request_accepted', handleChatRequestAccepted);
-    socket.on('new_message', handleNewMessage);
 
     return () => {
       socket.off('new_message_request', handleNewMessageRequest);
       socket.off('chat_request_accepted', handleChatRequestAccepted);
-      socket.off('new_message', handleNewMessage);
     };
-  }, [socket, isHomePage, addMessageRequest, addPlannedChat, incrementChatUnread, incrementUnread, plannedChats]);
+  }, [socket, isHomePage, addMessageRequest, addPlannedChat]);
 
   return (
     <div className={`${cinzel.variable} ${libreBaskerville.variable}`}>

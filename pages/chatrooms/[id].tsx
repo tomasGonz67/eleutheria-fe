@@ -112,13 +112,21 @@ export default function ChatroomMessagesPage() {
       }
     };
 
+    // Handle reconnection - rejoin chatroom if socket reconnects
+    const handleReconnect = () => {
+      console.log('🔄 Socket reconnected, rejoining chatroom...');
+      joinChatroom(chatroomId);
+    };
+
     socket.on('new_chatroom_message', handleNewMessage);
     socket.on('chatroom_users_updated', handleUsersUpdated);
+    socket.on('reconnect', handleReconnect);
 
     // Cleanup on unmount or when ID changes
     return () => {
       socket.off('new_chatroom_message', handleNewMessage);
       socket.off('chatroom_users_updated', handleUsersUpdated);
+      socket.off('reconnect', handleReconnect);
       leaveChatroom(chatroomId);
     };
   }, [socket, id]);

@@ -43,16 +43,17 @@ export default function PrivateChatPage() {
   const [loading, setLoading] = useState(true);
   const [autoScroll, setAutoScroll] = useState(true);
 
-  const { socket, showNotification, clearChatUnread, clearUnread } = useChatStore();
+  const { socket, showNotification, plannedChats, removePlannedChat } = useChatStore();
 
-  // Clear unread count when viewing this chat page
+  // Close floater if it exists for this session
   useEffect(() => {
     if (sessionId) {
-      // Clear local unread counts
-      clearChatUnread(sessionId);
-      clearUnread(sessionId);
+      const floaterChat = plannedChats.find((chat) => chat.id === sessionId);
+      if (floaterChat) {
+        removePlannedChat(sessionId);
+      }
     }
-  }, [sessionId, clearChatUnread, clearUnread]);
+  }, [sessionId, plannedChats, removePlannedChat]);
 
   // Fetch session and user data
   useEffect(() => {
@@ -81,6 +82,13 @@ export default function PrivateChatPage() {
         // Fetch messages
         const messagesResponse = await clientApi.get(`/api/chat/${sessionId}/messages`);
         setMessages(messagesResponse.data.messages);
+
+        // Mark session as read (clear notification)
+        try {
+          await clientApi.put(`/api/chat/${sessionId}/mark-read`);
+        } catch (error) {
+          console.error('Error marking session as read:', error);
+        }
       } catch (error) {
         console.error('Error fetching chat:', error);
         showNotification('error', 'Failed to load chat');

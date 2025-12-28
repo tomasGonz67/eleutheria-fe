@@ -20,7 +20,7 @@ interface ChatSession {
 
 export default function PrivateChatsPage() {
   const router = useRouter();
-  const { plannedChats, showNotification, chatUnreadCounts } = useChatStore();
+  const { plannedChats, showNotification } = useChatStore();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [mySessionToken, setMySessionToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -125,7 +125,7 @@ export default function PrivateChatsPage() {
   };
 
   const openChatAsFloater = (session: ChatSession) => {
-    const { addPlannedChat, removePlannedChat, plannedChats, clearChatUnread } = require('@/store/chatStore').useChatStore.getState();
+    const { addPlannedChat, removePlannedChat, plannedChats } = require('@/store/chatStore').useChatStore.getState();
 
     // Check if this chat is already open as a floater
     const existingChat = plannedChats.find((chat: any) => chat.id === session.id);
@@ -134,19 +134,15 @@ export default function PrivateChatsPage() {
       // If already open, close it
       removePlannedChat(session.id);
     } else {
-      // If not open, add it and clear unread count
+      // Open it as a floater
       const isUser1 = session.user1_session_token === mySessionToken;
       const partnerUsername = isUser1 ? session.user2_username : session.user1_username;
-
-      // Clear unread count when opening as floater
-      clearChatUnread(session.id);
 
       addPlannedChat({
         id: session.id,
         inviteCode: `chat-${session.id}`,
         partnerUsername: partnerUsername,
         isMinimized: false,
-        unreadCount: 0,
         status: session.status as 'active' | 'ended',
       });
     }
@@ -156,6 +152,13 @@ export default function PrivateChatsPage() {
     try {
       const { clientApi } = await import('@/lib/api');
       await clientApi.put(`/api/chat/${sessionId}/accept`);
+
+      // Mark session as read (clear notification)
+      try {
+        await clientApi.put(`/api/chat/${sessionId}/mark-read`);
+      } catch (error) {
+        console.error('Error marking session as read:', error);
+      }
 
       // Refresh the sessions list
       const { sessions: allSessions } = await getAllChatSessions();
@@ -180,6 +183,13 @@ export default function PrivateChatsPage() {
     try {
       const { clientApi } = await import('@/lib/api');
       await clientApi.delete(`/api/chat/${sessionId}/reject`);
+
+      // Mark session as read (clear notification)
+      try {
+        await clientApi.put(`/api/chat/${sessionId}/mark-read`);
+      } catch (error) {
+        console.error('Error marking session as read:', error);
+      }
 
       // Refresh the sessions list
       const { sessions: allSessions } = await getAllChatSessions();
@@ -274,20 +284,11 @@ export default function PrivateChatsPage() {
                 const partnerUsername = isUser1 ? session.user2_username : session.user1_username;
                 const partnerSessionToken = isUser1 ? session.user2_session_token : session.user1_session_token;
 
-                // Get unread count (from floater if open, otherwise from global count)
-                const floaterChat = plannedChats.find((chat) => chat.id === session.id);
-                const unreadCount = floaterChat
-                  ? floaterChat.unreadCount
-                  : (chatUnreadCounts[session.id] || 0);
-                const hasUnread = unreadCount > 0;
-
                 return (
                   <div
                     key={session.id}
                     onClick={() => openChat(session.id)}
-                    className={`border-2 rounded-lg p-6 hover:border-aegean-400 transition-colors cursor-pointer ${
-                      hasUnread ? 'bg-blue-50 border-aegean-300' : 'border-gray-200'
-                    }`}
+                    className="border-2 border-gray-200 rounded-lg p-6 hover:border-aegean-400 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -301,11 +302,6 @@ export default function PrivateChatsPage() {
                             style={{ color: '#4D89B0' }}
                           />
                           {getStatusBadge(session.status)}
-                          {hasUnread && (
-                            <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
-                              {unreadCount}
-                            </span>
-                          )}
                         </div>
                         <p className="text-sm text-gray-500">
                           Started {new Date(session.created_at).toLocaleDateString()} at{' '}

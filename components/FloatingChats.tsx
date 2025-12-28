@@ -13,7 +13,7 @@ interface Message {
 }
 
 export default function FloatingChats() {
-  const { plannedChats, toggleMinimize, removePlannedChat, socket, showNotification, clearChatUnread, clearUnread } = useChatStore();
+  const { plannedChats, toggleMinimize, removePlannedChat, socket, showNotification } = useChatStore();
   const [messages, setMessages] = useState<Record<number, Message[]>>({});
   const [inputValues, setInputValues] = useState<Record<number, string>>({});
   const [currentUserSessionToken, setCurrentUserSessionToken] = useState<string | null>(null);
@@ -108,6 +108,11 @@ export default function FloatingChats() {
 
         // Fetch message history
         fetchMessages(chat.id);
+
+        // Mark session as read (clear notification)
+        clientApi.put(`/api/chat/${chat.id}/mark-read`).catch((error) => {
+          console.error('Error marking session as read:', error);
+        });
       } catch (error) {
         console.error(`Error joining session ${chat.id}:`, error);
       }
@@ -174,17 +179,6 @@ export default function FloatingChats() {
     });
   }, [messages]);
 
-  // Clear unread count when floater is open and not minimized
-  useEffect(() => {
-    plannedChats.forEach((chat) => {
-      if (!chat.isMinimized && chat.unreadCount > 0) {
-        // Clear local unread counts
-        clearChatUnread(chat.id);
-        clearUnread(chat.id);
-      }
-    });
-  }, [plannedChats.map(c => `${c.id}-${c.isMinimized}`).join(','), clearChatUnread, clearUnread]);
-
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = () => {
@@ -240,11 +234,6 @@ export default function FloatingChats() {
                 </span>
                 {!chat.isMinimized && <span className="text-xs">▼</span>}
               </button>
-              {chat.unreadCount > 0 && (
-                <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                  {chat.unreadCount}
-                </span>
-              )}
 
               {/* Dropdown Menu */}
               {openDropdown === chat.id && (

@@ -1,17 +1,50 @@
 import Link from 'next/link';
 import { useChatStore } from '@/store/chatStore';
+import { useState, useEffect } from 'react';
+import { getCurrentUser } from '@/lib/services/session';
 
 interface HeaderProps {
   currentPage?: 'feed' | 'forums' | 'random-chat' | 'chatrooms' | 'private-chats';
 }
 
 export default function Header({ currentPage }: HeaderProps) {
-  const { messageRequests, plannedChats, chatUnreadCounts } = useChatStore();
+  const { socket } = useChatStore();
+  const [notificationCount, setNotificationCount] = useState(0);
 
-  // Calculate total notifications: pending requests + unread messages (from floaters and global)
-  const floaterUnreads = plannedChats.reduce((sum, chat) => sum + chat.unreadCount, 0);
-  const globalUnreads = Object.values(chatUnreadCounts).reduce((sum, count) => sum + count, 0);
-  const totalNotifications = messageRequests.length + floaterUnreads + globalUnreads;
+  // Fetch notification count from API
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await getCurrentUser();
+        setNotificationCount(response.user.notifications || 0);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
+
+  // Listen for real-time notification count updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNotificationUpdate = async (data: { action: string }) => {
+      if (data.action === 'increment') {
+        setNotificationCount((prev) => prev + 1);
+      } else if (data.action === 'decrement') {
+        setNotificationCount((prev) => Math.max(0, prev - 1));
+      }
+    };
+
+    socket.on('notification_count_updated', handleNotificationUpdate);
+
+    return () => {
+      socket.off('notification_count_updated', handleNotificationUpdate);
+    };
+  }, [socket]);
+
+  const totalNotifications = notificationCount;
 
   return (
     <header className="bg-marble-200 border-b-4 border-gold-600 shadow-sm">
