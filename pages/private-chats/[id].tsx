@@ -13,7 +13,7 @@ import { isSocketConnected } from '@/lib/socket';
 
 interface Message {
   id: number;
-  sender_username: string;
+  username: string;
   content: string;
   created_at: string;
   sender_session_token: string;
@@ -81,7 +81,12 @@ export default function PrivateChatPage() {
 
         // Fetch messages
         const messagesResponse = await clientApi.get(`/api/chat/${sessionId}/messages`);
-        setMessages(messagesResponse.data.messages);
+        // Map sender_username to username for ChatMessageList component
+        const mappedMessages = messagesResponse.data.messages.map((msg: any) => ({
+          ...msg,
+          username: msg.sender_username,
+        }));
+        setMessages(mappedMessages);
 
         // Mark session as read (clear notification)
         try {
@@ -115,7 +120,7 @@ export default function PrivateChatPage() {
           ...prev,
           {
             id: data.id,
-            sender_username: data.sender_username,
+            username: data.sender_username,
             content: data.content,
             created_at: data.created_at,
             sender_session_token: data.sender_session_token,

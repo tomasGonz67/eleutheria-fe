@@ -32,14 +32,15 @@ export default function MessageRequestNotifications() {
 
   const handleReject = async (sessionId: number) => {
     try {
-      await clientApi.delete(`/api/chat/${sessionId}/reject`);
-
-      // Mark session as read (clear notification)
+      // Mark session as read FIRST (before deleting session)
       try {
         await clientApi.put(`/api/chat/${sessionId}/mark-read`);
       } catch (error) {
         console.error('Error marking session as read:', error);
       }
+
+      // Then delete the session
+      await clientApi.delete(`/api/chat/${sessionId}/reject`);
 
       removeMessageRequest(sessionId);
     } catch (error: any) {

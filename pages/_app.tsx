@@ -111,6 +111,7 @@ export default function App({ Component, pageProps }: AppProps) {
         inviteCode: data.session_id.toString(),
         partnerUsername: data.partner_username,
         isMinimized: false,
+        unreadCount: 0,
       });
     };
 

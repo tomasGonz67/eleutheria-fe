@@ -88,7 +88,7 @@ export default function PrivateChatsPage() {
             // Call cancel API
             try {
               const { clientApi } = await import('@/lib/api');
-              await clientApi.delete(`/api/chat/${session.id}/cancel`);
+              //await clientApi.delete(`/api/chat/${session.id}/cancel`);
 
               // Refresh the sessions list
               const { sessions: allSessions } = await getAllChatSessions();
@@ -143,6 +143,7 @@ export default function PrivateChatsPage() {
         inviteCode: `chat-${session.id}`,
         partnerUsername: partnerUsername,
         isMinimized: false,
+        unreadCount: 0,
         status: session.status as 'active' | 'ended',
       });
     }
@@ -182,14 +183,16 @@ export default function PrivateChatsPage() {
   const handleRejectRequest = async (sessionId: number) => {
     try {
       const { clientApi } = await import('@/lib/api');
-      await clientApi.delete(`/api/chat/${sessionId}/reject`);
 
-      // Mark session as read (clear notification)
+      // Mark session as read FIRST (before deleting session)
       try {
         await clientApi.put(`/api/chat/${sessionId}/mark-read`);
       } catch (error) {
         console.error('Error marking session as read:', error);
       }
+
+      // Then delete the session
+      await clientApi.delete(`/api/chat/${sessionId}/reject`);
 
       // Refresh the sessions list
       const { sessions: allSessions } = await getAllChatSessions();
