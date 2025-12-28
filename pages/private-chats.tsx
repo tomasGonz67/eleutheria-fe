@@ -20,12 +20,11 @@ interface ChatSession {
 
 export default function PrivateChatsPage() {
   const router = useRouter();
-  const { plannedChats, showNotification } = useChatStore();
+  const { plannedChats, showNotification, socket } = useChatStore();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [mySessionToken, setMySessionToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [, setTick] = useState(0); // Force re-render every second for countdown
-  const [cancellingIds, setCancellingIds] = useState<Set<number>>(new Set()); // Track sessions being cancelled
 
   // Calculate time remaining for a waiting session (5 seconds expiration)
   const getTimeRemaining = (createdAt: string): number => {
@@ -71,54 +70,78 @@ export default function PrivateChatsPage() {
     fetchData();
   }, []);
 
-  // Update countdown every second and cancel expired sessions
+  // Update countdown every second for UI display
   useEffect(() => {
-    const interval = setInterval(async () => {
+    const interval = setInterval(() => {
       setTick((prev) => prev + 1);
-
-      // Check for expired waiting sessions and cancel them
-      for (const session of sessions) {
-        if (session.status === 'waiting' && !cancellingIds.has(session.id)) {
-          const timeRemaining = getTimeRemaining(session.created_at);
-          // Wait 1 extra second to ensure backend also sees it as expired
-          if (timeRemaining === 0) {
-            // Mark as cancelling to prevent duplicate calls
-            setCancellingIds((prev) => new Set(prev).add(session.id));
-
-            // Call cancel API
-            try {
-              const { clientApi } = await import('@/lib/api');
-              //await clientApi.delete(`/api/chat/${session.id}/cancel`);
-
-              // Refresh the sessions list
-              const { sessions: allSessions } = await getAllChatSessions();
-              const plannedSessions = allSessions.filter(
-                (s: ChatSession) => s.type === 'planned'
-              );
-              setSessions(plannedSessions);
-
-              // Remove from cancelling set
-              setCancellingIds((prev) => {
-                const newSet = new Set(prev);
-                newSet.delete(session.id);
-                return newSet;
-              });
-            } catch (error) {
-              console.error('Error cancelling expired chat request:', error);
-              // Remove from cancelling set on error
-              setCancellingIds((prev) => {
-                const newSet = new Set(prev);
-                newSet.delete(session.id);
-                return newSet;
-              });
-            }
-          }
-        }
-      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [sessions, cancellingIds]);
+  }, []);
+
+  // Check for expired sessions every second and trigger cleanup
+  useEffect(() => {
+    if (!socket || sessions.length === 0) return;
+
+    const interval = setInterval(() => {
+      sessions.forEach((session) => {
+        if (session.status === 'waiting') {
+          const timeRemaining = getTimeRemaining(session.created_at);
+
+          // If countdown hit 0, trigger expiration via Socket.io
+          if (timeRemaining === 0) {
+            console.log(`⏰ Session ${session.id} expired - triggering cleanup`);
+            socket.emit('expire_session', { session_id: session.id });
+          }
+        }
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [socket, sessions]);
+
+  // Listen for real-time session updates from backend
+  useEffect(() => {
+    if (!socket) return;
+
+    const refetchSessions = async () => {
+      try {
+        // Refetch all chat sessions
+        const { sessions: allSessions } = await getAllChatSessions();
+        const plannedSessions = allSessions.filter(
+          (session: ChatSession) => session.type === 'planned'
+        );
+        setSessions(plannedSessions);
+      } catch (error) {
+        console.error('Error refetching sessions:', error);
+      }
+    };
+
+    const handleSessionExpired = async () => {
+      console.log('🔔 Session expired - refetching sessions');
+      await refetchSessions();
+    };
+
+    const handleNewMessageRequest = async (data: any) => {
+      console.log('🔔 New message request received - refetching sessions');
+      await refetchSessions();
+    };
+
+    const handleChatRequestAccepted = async (data: any) => {
+      console.log('🔔 Chat request accepted - refetching sessions');
+      await refetchSessions();
+    };
+
+    socket.on('session_expired', handleSessionExpired);
+    socket.on('new_message_request', handleNewMessageRequest);
+    socket.on('chat_request_accepted', handleChatRequestAccepted);
+
+    return () => {
+      socket.off('session_expired', handleSessionExpired);
+      socket.off('new_message_request', handleNewMessageRequest);
+      socket.off('chat_request_accepted', handleChatRequestAccepted);
+    };
+  }, [socket]);
 
   const openChat = (sessionId: number) => {
     router.push(`/private-chats/${sessionId}`);
