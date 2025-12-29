@@ -43,7 +43,6 @@ export default function App({ Component, pageProps }: AppProps) {
   // Initialize socket connection on all pages except home
   useEffect(() => {
     if (!isHomePage && !socket) {
-      console.log('🔌 Initializing Socket.IO connection...');
       initializeSocket();
     }
   }, [isHomePage, socket, initializeSocket]);
@@ -56,7 +55,6 @@ export default function App({ Component, pageProps }: AppProps) {
         setMySessionToken(response.user.session_token);
       } catch (error) {
         // User not authenticated
-        console.log('User not authenticated');
       }
     };
 
@@ -94,7 +92,6 @@ export default function App({ Component, pageProps }: AppProps) {
     if (!socket || isHomePage) return;
 
     const handleNewMessageRequest = (data: any) => {
-      console.log('🔔 NEW MESSAGE REQUEST RECEIVED:', data);
       addMessageRequest({
         session_id: data.session_id,
         requester_username: data.requester_username,
@@ -104,7 +101,6 @@ export default function App({ Component, pageProps }: AppProps) {
     };
 
     const handleChatRequestAccepted = (data: any) => {
-      console.log('✅ CHAT REQUEST ACCEPTED:', data);
       // Open floating chat window for both users
       addPlannedChat({
         id: data.session_id,

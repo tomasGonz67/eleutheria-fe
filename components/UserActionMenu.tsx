@@ -31,19 +31,16 @@ export default function UserActionMenu({
   // Check online status when menu opens
   useEffect(() => {
     if (isOpen && socket && userSessionToken && !isOwnUser) {
-      console.log('🔍 Checking online status for:', username, userSessionToken);
       setIsOnline(null); // Reset to checking state
 
       // Check if socket is actually connected
       if (!isSocketConnected()) {
-        console.error('Cannot check online status: Socket not connected');
         setIsOnline(false); // Default to offline if socket not connected
         return;
       }
 
       // Listen for response
       const handleOnlineStatus = (data: { uuid: string; isOnline: boolean }) => {
-        console.log('📡 Received online status:', data);
         if (data.uuid === userSessionToken) {
           setIsOnline(data.isOnline);
         }
@@ -55,7 +52,6 @@ export default function UserActionMenu({
         // Request online status
         socket.emit('check_user_online', { uuid: userSessionToken });
       } catch (error) {
-        console.error('Error checking user online status:', error);
         setIsOnline(false);
       }
 
@@ -101,11 +97,9 @@ export default function UserActionMenu({
         recipientId: userSessionToken
       });
 
-      console.log('Message request sent:', response.data);
       showNotification('success', `Message request sent to ${username}!`, true, 3000);
       setIsOpen(false);
     } catch (error: any) {
-      console.error('Error sending message request:', error);
       const errorMessage = error.response?.data?.error || 'Failed to send message request';
       showNotification('error', errorMessage);
       setIsOpen(false);
@@ -114,13 +108,11 @@ export default function UserActionMenu({
 
   const handleReport = () => {
     // TODO: Implement report functionality
-    console.log('Report user:', username);
     setIsOpen(false);
   };
 
   const handleToggleMessageRequests = () => {
     // TODO: Implement toggle message requests functionality
-    console.log('Toggle message requests');
     setIsOpen(false);
   };
 

@@ -120,17 +120,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
     // Set up connection state listeners
     socket.on('connect', () => {
-      console.log('✅ Socket connected - updating store state');
       set({ isConnected: true });
     });
 
     socket.on('disconnect', () => {
-      console.log('❌ Socket disconnected - updating store state');
       set({ isConnected: false });
     });
 
     socket.on('reconnect', () => {
-      console.log('🔄 Socket reconnected - updating store state');
       set({ isConnected: true });
     });
 
@@ -186,8 +183,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   toggleMinimize: (id) =>
     set((state) => {
-      console.log('Toggling chat with ID:', id);
-      console.log('Current chats:', state.plannedChats.map(c => ({ id: c.id, isMinimized: c.isMinimized })));
       return {
         plannedChats: state.plannedChats.map((chat) =>
           chat.id === id ? { ...chat, isMinimized: !chat.isMinimized } : chat

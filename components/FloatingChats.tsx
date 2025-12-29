@@ -138,14 +138,11 @@ export default function FloatingChats() {
 
     // Listen for session ended
     const handleSessionEnded = (data: { session_id: number; reason: string }) => {
-      console.log('Session ended:', data);
-
       // Check if WE were the one who ended this chat
       const endedByMe = endedByMeRef.current.has(data.session_id);
 
       if (endedByMe) {
         // We ended it, so just clean up - no banner needed
-        console.log('Session ended by me - no notification shown');
         endedByMeRef.current.delete(data.session_id);
       } else {
         // Partner ended it, show notification banner

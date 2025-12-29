@@ -38,11 +38,10 @@ export function getSocket(): Socket {
 
     // Basic connection handlers
     socket.on('connect', () => {
-      console.log('✅ Socket.IO connected:', socket?.id);
+      // Socket connected
     });
 
     socket.on('disconnect', (reason) => {
-      console.log('❌ Socket.IO disconnected:', reason);
       if (reason === 'io server disconnect') {
         // Server disconnected us - try to reconnect manually
         socket?.connect();
@@ -50,23 +49,23 @@ export function getSocket(): Socket {
     });
 
     socket.on('reconnect', (attemptNumber) => {
-      console.log('🔄 Socket.IO reconnected after', attemptNumber, 'attempts');
+      // Socket reconnected
     });
 
     socket.on('reconnect_attempt', (attemptNumber) => {
-      console.log('🔄 Socket.IO reconnection attempt', attemptNumber);
+      // Socket reconnection attempt
     });
 
     socket.on('reconnect_error', (error) => {
-      console.error('❌ Socket.IO reconnection error:', error.message);
+      // Socket reconnection error
     });
 
     socket.on('reconnect_failed', () => {
-      console.error('❌ Socket.IO reconnection failed after all attempts');
+      // Socket reconnection failed
     });
 
     socket.on('connect_error', (error) => {
-      console.error('❌ Socket.IO connection error:', error.message);
+      // Socket connection error
     });
   }
 

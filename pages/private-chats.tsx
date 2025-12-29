@@ -61,7 +61,7 @@ export default function PrivateChatsPage() {
 
         setSessions(plannedSessions);
       } catch (error) {
-        console.error('Error fetching private chats:', error);
+        // Error fetching private chats
       } finally {
         setLoading(false);
       }
@@ -90,7 +90,6 @@ export default function PrivateChatsPage() {
 
           // If countdown hit 0, trigger expiration via Socket.io
           if (timeRemaining === 0) {
-            console.log(`⏰ Session ${session.id} expired - triggering cleanup`);
             socket.emit('expire_session', { session_id: session.id });
           }
         }
@@ -113,22 +112,19 @@ export default function PrivateChatsPage() {
         );
         setSessions(plannedSessions);
       } catch (error) {
-        console.error('Error refetching sessions:', error);
+        // Error refetching sessions
       }
     };
 
     const handleSessionExpired = async () => {
-      console.log('🔔 Session expired - refetching sessions');
       await refetchSessions();
     };
 
     const handleNewMessageRequest = async (data: any) => {
-      console.log('🔔 New message request received - refetching sessions');
       await refetchSessions();
     };
 
     const handleChatRequestAccepted = async (data: any) => {
-      console.log('🔔 Chat request accepted - refetching sessions');
       // Update the session's created_at timestamp to reset the timer
       if (data.created_at && data.session_id) {
         setSessions((prevSessions) =>
@@ -206,7 +202,7 @@ export default function PrivateChatsPage() {
       try {
         await clientApi.put(`/api/chat/${sessionId}/mark-read`);
       } catch (error) {
-        console.error('Error marking session as read:', error);
+        // Error marking session as read
       }
 
       // Refresh the sessions list
@@ -216,7 +212,6 @@ export default function PrivateChatsPage() {
       );
       setSessions(plannedSessions);
     } catch (error: any) {
-      console.error('Error accepting chat request:', error);
       showNotification('error', error.response?.data?.error || 'Failed to accept chat request');
 
       // Refresh the sessions list to remove expired/invalid requests
@@ -236,7 +231,7 @@ export default function PrivateChatsPage() {
       try {
         await clientApi.put(`/api/chat/${sessionId}/mark-read`);
       } catch (error) {
-        console.error('Error marking session as read:', error);
+        // Error marking session as read
       }
 
       // Then delete the session
@@ -249,7 +244,6 @@ export default function PrivateChatsPage() {
       );
       setSessions(plannedSessions);
     } catch (error: any) {
-      console.error('Error rejecting chat request:', error);
       showNotification('error', error.response?.data?.error || 'Failed to reject chat request');
 
       // Refresh the sessions list to remove expired/invalid requests
@@ -275,7 +269,6 @@ export default function PrivateChatsPage() {
       );
       setSessions(plannedSessions);
     } catch (error: any) {
-      console.error('Error ending chat:', error);
       showNotification('error', error.response?.data?.error || 'Failed to end chat');
     }
   };

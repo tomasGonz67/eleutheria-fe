@@ -14,15 +14,12 @@ export default function MessageRequestNotifications() {
       try {
         await clientApi.put(`/api/chat/${sessionId}/mark-read`);
       } catch (error) {
-        console.error('Error marking session as read:', error);
+        // Error marking session as read
       }
 
       // Remove notification (chat window will open via Socket.io for both users)
       removeMessageRequest(sessionId);
-
-      console.log('Chat request accepted:', sessionId);
     } catch (error: any) {
-      console.error('Error accepting chat request:', error);
       showNotification('error', error.response?.data?.error || 'Failed to accept chat request');
 
       // Remove notification even on error (e.g., if expired)
@@ -36,7 +33,7 @@ export default function MessageRequestNotifications() {
       try {
         await clientApi.put(`/api/chat/${sessionId}/mark-read`);
       } catch (error) {
-        console.error('Error marking session as read:', error);
+        // Error marking session as read
       }
 
       // Then delete the session
@@ -44,7 +41,6 @@ export default function MessageRequestNotifications() {
 
       removeMessageRequest(sessionId);
     } catch (error: any) {
-      console.error('Error rejecting chat request:', error);
       showNotification('error', error.response?.data?.error || 'Failed to reject chat request');
 
       // Remove notification even on error (e.g., if expired)
