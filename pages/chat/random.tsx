@@ -14,6 +14,7 @@ export default function RandomChatPage() {
   const [newMessage, setNewMessage] = useState('');
   const [currentUsername, setCurrentUsername] = useState('');
   const [userSessionToken, setUserSessionToken] = useState<string | null>(null);
+  const [userDiscriminator, setUserDiscriminator] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -50,6 +51,9 @@ export default function RandomChatPage() {
         if (response.data?.user?.session_token) {
           setUserSessionToken(response.data.user.session_token);
         }
+        if (response.data?.user?.discriminator) {
+          setUserDiscriminator(response.data.user.discriminator);
+        }
       } catch (err) {
         console.error('Error fetching user:', err);
       }
@@ -66,7 +70,7 @@ export default function RandomChatPage() {
   }, [socket, initializeSocket]);
 
   // Initialize Socket.io event listeners
-  useSocketEvents(currentUsername, userSessionToken);
+  useSocketEvents(currentUsername, userDiscriminator);
 
   // Keep refs in sync with current values
   useEffect(() => {

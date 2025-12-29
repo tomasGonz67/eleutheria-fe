@@ -4,7 +4,7 @@ import { useChatStore } from '@/store/chatStore';
 interface NewMessageData {
   id: number;
   chat_session_id: number;
-  sender_session_token: string;
+  sender_discriminator: string;
   sender_username: string;
   content: string;
   created_at: string;
@@ -16,7 +16,7 @@ interface NewMessageData {
  */
 export function useSocketEvents(
   currentUsername: string,
-  currentUserSessionToken: string | null
+  currentUserDiscriminator: string | null
 ) {
   const {
     socket,
@@ -69,8 +69,8 @@ export function useSocketEvents(
           id: data.id,
           content: data.content,
           username: data.sender_username,
-          is_me: data.sender_session_token === currentUserSessionToken,
-          sender_session_token: data.sender_session_token,
+          is_me: data.sender_discriminator === currentUserDiscriminator,
+          sender_discriminator: data.sender_discriminator,
           created_at: data.created_at,
         });
       }

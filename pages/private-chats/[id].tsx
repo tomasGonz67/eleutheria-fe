@@ -16,7 +16,8 @@ interface Message {
   username: string;
   content: string;
   created_at: string;
-  sender_session_token: string;
+  sender_discriminator: string;
+  sender_session_token?: string;
 }
 
 interface ChatSession {
@@ -40,6 +41,7 @@ export default function PrivateChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [mySessionToken, setMySessionToken] = useState<string | null>(null);
+  const [myDiscriminator, setMyDiscriminator] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [autoScroll, setAutoScroll] = useState(true);
 
@@ -66,6 +68,7 @@ export default function PrivateChatPage() {
         // Get current user
         const userResponse = await getCurrentUser();
         setMySessionToken(userResponse.user.session_token);
+        setMyDiscriminator(userResponse.user.discriminator);
 
         // Get all sessions and find this one
         const { sessions } = await getAllChatSessions();
@@ -123,7 +126,7 @@ export default function PrivateChatPage() {
             username: data.sender_username,
             content: data.content,
             created_at: data.created_at,
-            sender_session_token: data.sender_session_token,
+            sender_discriminator: data.sender_discriminator,
           },
         ]);
       }
@@ -249,6 +252,7 @@ export default function PrivateChatPage() {
           <div className="border-t border-gray-200">
             <ChatMessageList
               messages={messages}
+              currentUserDiscriminator={myDiscriminator}
               currentUserSessionToken={mySessionToken}
               accentColor="#1e40af"
               autoScroll={autoScroll}

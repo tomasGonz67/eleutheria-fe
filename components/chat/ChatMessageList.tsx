@@ -5,13 +5,15 @@ interface Message {
   id: number;
   content: string;
   username: string;
-  sender_session_token: string;
+  sender_discriminator: string;
+  sender_session_token?: string;
   created_at: string;
 }
 
 interface ChatMessageListProps {
   messages: Message[];
-  currentUserSessionToken: string | null;
+  currentUserDiscriminator: string | null;
+  currentUserSessionToken?: string | null;
   accentColor?: string;
   autoScroll?: boolean;
   emptyStateMessage?: string;
@@ -19,6 +21,7 @@ interface ChatMessageListProps {
 
 export default function ChatMessageList({
   messages,
+  currentUserDiscriminator,
   currentUserSessionToken,
   accentColor = '#4D89B0',
   autoScroll = true,
@@ -36,7 +39,7 @@ export default function ChatMessageList({
   return (
     <div className="p-6 space-y-4 min-h-[500px] max-h-[600px] overflow-y-auto">
       {messages.map((message) => {
-        const isOwnMessage = message.sender_session_token === currentUserSessionToken;
+        const isOwnMessage = message.sender_discriminator === currentUserDiscriminator;
 
         return (
           <div

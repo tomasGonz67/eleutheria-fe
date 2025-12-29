@@ -16,7 +16,7 @@ interface Message {
   content: string;
   username: string;
   is_me: boolean;
-  sender_session_token?: string;
+  sender_discriminator?: string;
   created_at: string;
   isSystem?: boolean; // For system messages like "User left"
 }

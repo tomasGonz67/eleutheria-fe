@@ -2,6 +2,7 @@
 export interface AnonymousUser {
   session_token: string;
   username: string | null;
+  discriminator: string;
   ip: string;
   fingerprint: string;
   user_agent: string;
@@ -117,6 +118,7 @@ export interface ChatroomMessage {
   id: number;
   chatroom_id: number;
   sender_session_token: string;
+  sender_discriminator: string;
   content: string;
   snapshot_id: number;
   created_at: string;
@@ -155,6 +157,7 @@ export interface ChatMessage {
   id: number;
   chat_session_id: number;
   sender_session_token: string;
+  sender_discriminator: string;
   receiver_session_token: string;
   content: string;
   sender_snapshot_id: number;

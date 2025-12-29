@@ -14,7 +14,8 @@ interface Message {
   id: number;
   content: string;
   username: string;
-  sender_session_token: string;
+  sender_discriminator: string;
+  sender_session_token?: string;
   created_at: string;
 }
 
@@ -33,6 +34,7 @@ export default function ChatroomMessagesPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatroom, setChatroom] = useState<Chatroom | null>(null);
   const [userSessionToken, setUserSessionToken] = useState<string | null>(null);
+  const [userDiscriminator, setUserDiscriminator] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -99,7 +101,7 @@ export default function ChatroomMessagesPage() {
           id: data.id,
           content: data.content,
           username: data.username,
-          sender_session_token: data.sender_session_token,
+          sender_discriminator: data.sender_discriminator,
           created_at: data.created_at,
         }]);
       }
@@ -147,9 +149,12 @@ export default function ChatroomMessagesPage() {
           clientApi.get(`/api/chatrooms/${id}/messages`)
         ]);
 
-        // Get user session token
+        // Get user session token and discriminator
         if (userResponse.data?.user?.session_token) {
           setUserSessionToken(userResponse.data.user.session_token);
+        }
+        if (userResponse.data?.user?.discriminator) {
+          setUserDiscriminator(userResponse.data.user.discriminator);
         }
 
         // Find the specific chatroom by ID
@@ -339,6 +344,7 @@ export default function ChatroomMessagesPage() {
               {/* Messages */}
               <ChatMessageList
                 messages={messages}
+                currentUserDiscriminator={userDiscriminator}
                 currentUserSessionToken={userSessionToken}
                 accentColor="#4D89B0"
                 autoScroll={autoScroll}

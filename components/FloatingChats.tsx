@@ -9,24 +9,25 @@ interface Message {
   sender_username: string;
   content: string;
   created_at: string;
-  sender_session_token: string;
+  sender_discriminator: string;
+  sender_session_token?: string;
 }
 
 export default function FloatingChats() {
   const { plannedChats, toggleMinimize, removePlannedChat, socket, showNotification } = useChatStore();
   const [messages, setMessages] = useState<Record<number, Message[]>>({});
   const [inputValues, setInputValues] = useState<Record<number, string>>({});
-  const [currentUserSessionToken, setCurrentUserSessionToken] = useState<string | null>(null);
+  const [currentUserDiscriminator, setCurrentUserDiscriminator] = useState<string | null>(null);
   const [openDropdown, setOpenDropdown] = useState<number | null>(null); // Track which dropdown is open
   const messagesEndRef = useRef<Record<number, HTMLDivElement | null>>({});
   const endedByMeRef = useRef<Set<number>>(new Set()); // Track sessions we ended
 
-  // Get current user's session token
+  // Get current user's discriminator
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
         const response = await getCurrentUser();
-        setCurrentUserSessionToken(response.user.session_token);
+        setCurrentUserDiscriminator(response.user.discriminator);
       } catch (error) {
         console.error('Error fetching current user:', error);
       }
@@ -130,7 +131,7 @@ export default function FloatingChats() {
             sender_username: data.sender_username,
             content: data.content,
             created_at: data.created_at,
-            sender_session_token: data.sender_session_token,
+            sender_discriminator: data.sender_discriminator,
           },
         ],
       }));
@@ -294,14 +295,14 @@ export default function FloatingChats() {
                   <div
                     key={msg.id}
                     className={`flex ${
-                      msg.sender_session_token !== currentUserSessionToken
+                      msg.sender_discriminator !== currentUserDiscriminator
                         ? 'justify-start'
                         : 'justify-end'
                     }`}
                   >
                     <div
                       className={`max-w-[70%] rounded-lg px-3 py-2 ${
-                        msg.sender_session_token !== currentUserSessionToken
+                        msg.sender_discriminator !== currentUserDiscriminator
                           ? 'bg-gray-200 text-gray-800'
                           : 'bg-blue-500 text-white'
                       }`}
