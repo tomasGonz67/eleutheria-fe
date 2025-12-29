@@ -26,11 +26,11 @@ export default function PrivateChatsPage() {
   const [loading, setLoading] = useState(true);
   const [, setTick] = useState(0); // Force re-render every second for countdown
 
-  // Calculate time remaining for a waiting session (5 seconds expiration)
+  // Calculate time remaining for a waiting session (10 seconds expiration)
   const getTimeRemaining = (createdAt: string): number => {
     const created = new Date(createdAt).getTime();
     const now = Date.now();
-    const expiresAt = created + 5000; // 5 seconds
+    const expiresAt = created + 10000; // 10 seconds
     const remaining = expiresAt - now;
     return Math.max(0, Math.floor(remaining / 1000));
   };
@@ -129,17 +129,42 @@ export default function PrivateChatsPage() {
 
     const handleChatRequestAccepted = async (data: any) => {
       console.log('🔔 Chat request accepted - refetching sessions');
+      // Update the session's created_at timestamp to reset the timer
+      if (data.created_at && data.session_id) {
+        setSessions((prevSessions) =>
+          prevSessions.map((session) =>
+            session.id === data.session_id
+              ? { ...session, status: 'active', created_at: data.created_at }
+              : session
+          )
+        );
+      }
       await refetchSessions();
+    };
+
+    const handleNewMessage = (data: any) => {
+      // Update the session's created_at timestamp to reset the timer
+      if (data.session_created_at) {
+        setSessions((prevSessions) =>
+          prevSessions.map((session) =>
+            session.id === data.chat_session_id
+              ? { ...session, created_at: data.session_created_at }
+              : session
+          )
+        );
+      }
     };
 
     socket.on('session_expired', handleSessionExpired);
     socket.on('new_message_request', handleNewMessageRequest);
     socket.on('chat_request_accepted', handleChatRequestAccepted);
+    socket.on('new_message', handleNewMessage);
 
     return () => {
       socket.off('session_expired', handleSessionExpired);
       socket.off('new_message_request', handleNewMessageRequest);
       socket.off('chat_request_accepted', handleChatRequestAccepted);
+      socket.off('new_message', handleNewMessage);
     };
   }, [socket]);
 
@@ -295,7 +320,7 @@ export default function PrivateChatsPage() {
             <div className="text-center py-12">
               <div className="text-gray-500">Loading your private chats...</div>
             </div>
-          ) : sessions.length === 0 ? (
+          ) : sessions.filter((session) => session.status === 'waiting' || session.status === 'active').length === 0 ? (
             <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
               <div className="text-6xl mb-4">💬</div>
               <h2 className="text-xl font-semibold text-gray-700 mb-2">No Private Chats Yet</h2>
@@ -305,7 +330,7 @@ export default function PrivateChatsPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {sessions.map((session) => {
+              {sessions.filter((session) => session.status === 'waiting' || session.status === 'active').map((session) => {
                 const isUser1 = session.user1_session_token === mySessionToken;
                 const partnerUsername = isUser1 ? session.user2_username : session.user1_username;
                 const partnerSessionToken = isUser1 ? session.user2_session_token : session.user1_session_token;
@@ -342,25 +367,35 @@ export default function PrivateChatsPage() {
                       </div>
                       <div>
                         {session.status === 'active' && (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openChatAsFloater(session);
-                              }}
-                              className="px-6 py-2 bg-aegean-600 text-white rounded-lg hover:bg-aegean-700 transition font-semibold"
-                            >
-                              {plannedChats.find((chat) => chat.id === session.id) ? 'Close Chat Window' : 'Open Chat Window'}
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEndChat(session.id);
-                              }}
-                              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
-                            >
-                              End Chat
-                            </button>
+                          <div className="flex flex-col items-end gap-2">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openChatAsFloater(session);
+                                }}
+                                className="px-6 py-2 bg-aegean-600 text-white rounded-lg hover:bg-aegean-700 transition font-semibold"
+                              >
+                                {plannedChats.find((chat) => chat.id === session.id) ? 'Close Chat Window' : 'Open Chat Window'}
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEndChat(session.id);
+                                }}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+                              >
+                                End Chat
+                              </button>
+                            </div>
+                            {(() => {
+                              const timeRemaining = getTimeRemaining(session.created_at);
+                              return (
+                                <div className={`text-xs font-semibold ${timeRemaining <= 3 ? 'text-red-600' : 'text-gray-600'}`}>
+                                  Inactivity timeout: {formatTime(timeRemaining)}
+                                </div>
+                              );
+                            })()}
                           </div>
                         )}
                         {session.status === 'waiting' && (
