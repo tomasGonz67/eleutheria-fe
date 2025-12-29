@@ -12,7 +12,8 @@ interface Post {
   id: number;
   content: string;
   username: string;
-  author_session_token: string;
+  author_discriminator: string;
+  is_my_post: boolean;
   created_at: string;
   parent_id: number | null;
   comment_count?: number;

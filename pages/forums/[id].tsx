@@ -10,7 +10,8 @@ interface Post {
   id: number;
   content: string;
   username: string;
-  author_session_token: string;
+  author_discriminator: string;
+  is_my_post: boolean;
   created_at: string;
   comment_count?: number;
 }
@@ -19,7 +20,7 @@ interface Forum {
   id: number;
   name: string;
   description: string;
-  creator_session_token: string | null;
+  creator_discriminator: string | null;
 }
 
 interface ForumPostsPageProps {
@@ -258,9 +259,29 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
 
     const postsData = await postsResponse.json();
-    
+
+    // DEBUG: Check for discriminators and UUIDs in posts
+    console.log('=== FORUM POSTS DATA CHECK ===');
+    if (postsData.posts && postsData.posts.length > 0) {
+      const firstPost = postsData.posts[0];
+      console.log('First post discriminator:', firstPost.author_discriminator);
+      console.log('First post has author_session_token?:', 'author_session_token' in firstPost);
+      console.log('First post has is_my_post?:', 'is_my_post' in firstPost);
+      if ('author_session_token' in firstPost) {
+        console.warn('⚠️  WARNING: UUID EXPOSURE - author_session_token found in post!');
+      }
+    }
+    if (postsData.forum) {
+      console.log('Forum creator_discriminator:', postsData.forum.creator_discriminator);
+      console.log('Forum has creator_session_token?:', 'creator_session_token' in postsData.forum);
+      if ('creator_session_token' in postsData.forum) {
+        console.warn('⚠️  WARNING: UUID EXPOSURE - creator_session_token found in forum!');
+      }
+    }
+    console.log('==============================');
+
     // Get forum from posts response (if backend includes it)
-    const forum = postsData.forum || { id: parseInt(id), name: 'Forum', description: '', creator_session_token: null };
+    const forum = postsData.forum || { id: parseInt(id), name: 'Forum', description: '', creator_discriminator: null };
 
     // Handle different response formats
     const posts = Array.isArray(postsData) ? postsData : (postsData.posts || []);
@@ -292,7 +313,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     console.error('Error fetching forum:', error);
     return {
       props: {
-        forum: { id: parseInt(id), name: 'Forum', description: '', creator_session_token: null },
+        forum: { id: parseInt(id), name: 'Forum', description: '', creator_discriminator: null },
         posts: [],
         username: 'Anonymous',
         userSessionToken: null,

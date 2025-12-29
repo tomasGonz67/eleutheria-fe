@@ -14,8 +14,8 @@ interface ChatSession {
   ended_at: string | null;
   user1_username: string;
   user2_username: string;
-  user1_session_token: string;
-  user2_session_token: string;
+  user1_discriminator: string;
+  user2_discriminator: string;
 }
 
 export default function PrivateChatsPage() {
@@ -23,6 +23,7 @@ export default function PrivateChatsPage() {
   const { plannedChats, showNotification, socket } = useChatStore();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [mySessionToken, setMySessionToken] = useState<string | null>(null);
+  const [myDiscriminator, setMyDiscriminator] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [, setTick] = useState(0); // Force re-render every second for countdown
 
@@ -50,9 +51,24 @@ export default function PrivateChatsPage() {
         // Get current user
         const userResponse = await getCurrentUser();
         setMySessionToken(userResponse.user.session_token);
+        setMyDiscriminator(userResponse.user.discriminator);
 
         // Get all chat sessions
         const { sessions: allSessions } = await getAllChatSessions();
+
+        // DEBUG: Check for discriminators and UUIDs in sessions
+        console.log('=== CHAT SESSIONS DATA CHECK ===');
+        if (allSessions && allSessions.length > 0) {
+          const firstSession = allSessions[0];
+          console.log('First session user1_discriminator:', firstSession.user1_discriminator);
+          console.log('First session user2_discriminator:', firstSession.user2_discriminator);
+          console.log('First session has user1_session_token?:', 'user1_session_token' in firstSession);
+          console.log('First session has user2_session_token?:', 'user2_session_token' in firstSession);
+          if ('user1_session_token' in firstSession || 'user2_session_token' in firstSession) {
+            console.warn('⚠️  WARNING: UUID EXPOSURE - session tokens found in chat session!');
+          }
+        }
+        console.log('================================');
 
         // Filter for planned chats only
         const plannedSessions = allSessions.filter(
@@ -179,7 +195,7 @@ export default function PrivateChatsPage() {
       removePlannedChat(session.id);
     } else {
       // Open it as a floater
-      const isUser1 = session.user1_session_token === mySessionToken;
+      const isUser1 = session.user1_discriminator === myDiscriminator;
       const partnerUsername = isUser1 ? session.user2_username : session.user1_username;
 
       addPlannedChat({
@@ -324,9 +340,9 @@ export default function PrivateChatsPage() {
           ) : (
             <div className="space-y-4">
               {sessions.filter((session) => session.status === 'waiting' || session.status === 'active').map((session) => {
-                const isUser1 = session.user1_session_token === mySessionToken;
+                const isUser1 = session.user1_discriminator === myDiscriminator;
                 const partnerUsername = isUser1 ? session.user2_username : session.user1_username;
-                const partnerSessionToken = isUser1 ? session.user2_session_token : session.user1_session_token;
+                const partnerDiscriminator = isUser1 ? session.user2_discriminator : session.user1_discriminator;
 
                 return (
                   <div
@@ -339,7 +355,7 @@ export default function PrivateChatsPage() {
                         <div className="flex items-center gap-3 mb-1">
                           <UserActionMenu
                             username={partnerUsername}
-                            userSessionToken={partnerSessionToken}
+                            discriminator={partnerDiscriminator}
                             currentUserSessionToken={mySessionToken}
                             accentColor="#4D89B0"
                             className="text-lg font-semibold"

@@ -17,7 +17,6 @@ interface Message {
   content: string;
   created_at: string;
   sender_discriminator: string;
-  sender_session_token?: string;
 }
 
 interface ChatSession {
@@ -28,8 +27,8 @@ interface ChatSession {
   ended_at: string | null;
   user1_username: string;
   user2_username: string;
-  user1_session_token: string;
-  user2_session_token: string;
+  user1_discriminator: string;
+  user2_discriminator: string;
 }
 
 export default function PrivateChatPage() {
@@ -84,6 +83,20 @@ export default function PrivateChatPage() {
 
         // Fetch messages
         const messagesResponse = await clientApi.get(`/api/chat/${sessionId}/messages`);
+
+        // DEBUG: Check for discriminators and UUIDs in messages
+        console.log('=== CHAT MESSAGES DATA CHECK ===');
+        if (messagesResponse.data.messages && messagesResponse.data.messages.length > 0) {
+          const firstMsg = messagesResponse.data.messages[0];
+          console.log('First message sender_discriminator:', firstMsg.sender_discriminator);
+          console.log('First message has sender_session_token?:', 'sender_session_token' in firstMsg);
+          console.log('First message has receiver_session_token?:', 'receiver_session_token' in firstMsg);
+          if ('sender_session_token' in firstMsg || 'receiver_session_token' in firstMsg) {
+            console.warn('⚠️  WARNING: UUID EXPOSURE - session tokens found in message!');
+          }
+        }
+        console.log('================================');
+
         // Map sender_username to username for ChatMessageList component
         const mappedMessages = messagesResponse.data.messages.map((msg: any) => ({
           ...msg,
@@ -198,9 +211,9 @@ export default function PrivateChatPage() {
     return null;
   }
 
-  const isUser1 = session.user1_session_token === mySessionToken;
+  const isUser1 = session.user1_discriminator === myDiscriminator;
   const partnerUsername = isUser1 ? session.user2_username : session.user1_username;
-  const partnerSessionToken = isUser1 ? session.user2_session_token : session.user1_session_token;
+  const partnerDiscriminator = isUser1 ? session.user2_discriminator : session.user1_discriminator;
 
   const getDisabledMessage = () => {
     if (session.status === 'ended') {
@@ -223,8 +236,7 @@ export default function PrivateChatPage() {
             title={
               <UserActionMenu
                 username={partnerUsername}
-                discriminator={null}
-                userSessionToken={partnerSessionToken}
+                discriminator={partnerDiscriminator}
                 currentUserSessionToken={mySessionToken}
                 accentColor="#1e40af"
                 className="text-xl font-semibold"

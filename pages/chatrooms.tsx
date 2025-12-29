@@ -13,7 +13,7 @@ interface Chatroom {
   name: string;
   description: string;
   created_at: string;
-  creator_session_token: string | null;
+  creator_discriminator: string | null;
 }
 
 interface ChatroomsPageProps {

@@ -6,7 +6,6 @@ interface Message {
   content: string;
   username: string;
   sender_discriminator: string;
-  sender_session_token?: string;
   created_at: string;
 }
 

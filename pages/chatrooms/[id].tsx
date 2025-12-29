@@ -15,7 +15,6 @@ interface Message {
   content: string;
   username: string;
   sender_discriminator: string;
-  sender_session_token?: string;
   created_at: string;
 }
 
@@ -23,7 +22,7 @@ interface Chatroom {
   id: number;
   name: string;
   description: string;
-  creator_session_token: string | null;
+  creator_discriminator: string | null;
 }
 
 export default function ChatroomMessagesPage() {

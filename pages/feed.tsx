@@ -7,7 +7,8 @@ interface Post {
   id: number;
   content: string;
   username: string;
-  author_session_token: string;
+  author_discriminator: string;
+  is_my_post: boolean;
   created_at: string;
   comment_count?: number;
 }

@@ -10,7 +10,6 @@ interface Message {
   content: string;
   created_at: string;
   sender_discriminator: string;
-  sender_session_token?: string;
 }
 
 export default function FloatingChats() {

@@ -63,7 +63,6 @@ export interface Snapshot {
 export interface Post {
   id: number;
   forum_id: number;
-  author_session_token: string;
   content: string;
   snapshot_id: number;
   created_at: string;
@@ -117,7 +116,6 @@ export interface UpdateChatroomRequest {
 export interface ChatroomMessage {
   id: number;
   chatroom_id: number;
-  sender_session_token: string;
   sender_discriminator: string;
   content: string;
   snapshot_id: number;
@@ -141,11 +139,14 @@ export interface CreateChatroomMessageRequest {
 // Chat Session Types
 export interface ChatSession {
   id: number;
-  user1_session_token: string;
-  user2_session_token: string | null;
+  user1_username: string;
+  user2_username: string;
+  user1_discriminator: string;
+  user2_discriminator: string | null;
   status: 'waiting' | 'active' | 'ended';
+  type: 'random' | 'planned';
   created_at: string;
-  matched_at: string | null;
+  matched_at?: string | null;
   ended_at: string | null;
 }
 
@@ -156,9 +157,7 @@ export interface ChatSessionResponse {
 export interface ChatMessage {
   id: number;
   chat_session_id: number;
-  sender_session_token: string;
   sender_discriminator: string;
-  receiver_session_token: string;
   content: string;
   sender_snapshot_id: number;
   receiver_snapshot_id: number;
