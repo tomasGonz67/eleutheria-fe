@@ -54,14 +54,14 @@ export default function MessageRequestNotifications() {
 
     // Check online status for each requester
     messageRequests.forEach((request) => {
-      socket.emit('check_user_online', { uuid: request.requester_session_token });
+      socket.emit('check_user_online', { discriminator: request.requester_discriminator });
     });
 
     // Listen for online status responses
-    const handleUserOnlineStatus = (data: { uuid: string; isOnline: boolean }) => {
+    const handleUserOnlineStatus = (data: { discriminator: string; isOnline: boolean }) => {
       setOnlineStatus((prev) => ({
         ...prev,
-        [data.uuid]: data.isOnline,
+        [data.discriminator]: data.isOnline,
       }));
     };
 
@@ -70,7 +70,7 @@ export default function MessageRequestNotifications() {
     // Periodically recheck online status (every 10 seconds)
     const interval = setInterval(() => {
       messageRequests.forEach((request) => {
-        socket.emit('check_user_online', { uuid: request.requester_session_token });
+        socket.emit('check_user_online', { discriminator: request.requester_discriminator });
       });
     }, 10000);
 
@@ -82,7 +82,7 @@ export default function MessageRequestNotifications() {
 
   // Filter to only show requests from online users
   const onlineRequests = messageRequests.filter(
-    (request) => onlineStatus[request.requester_session_token] === true
+    (request) => onlineStatus[request.requester_discriminator] === true
   );
 
   if (onlineRequests.length === 0) return null;

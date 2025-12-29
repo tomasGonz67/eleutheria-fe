@@ -309,6 +309,7 @@ export default function RandomChatPage() {
                   <div className="text-lg font-semibold text-gray-800">
                     Chatting with: <UserActionMenu
                       username={randomChatPartner || 'Anonymous'}
+                      discriminator={null}
                       accentColor="#4D89B0"
                       className="font-semibold"
                       style={{ color: '#4D89B0' }}
@@ -363,6 +364,7 @@ export default function RandomChatPage() {
                         <div className="flex items-center justify-between mb-2">
                           <UserActionMenu
                             username={message.username}
+                            discriminator={message.sender_discriminator}
                             userSessionToken={message.sender_session_token}
                             currentUserSessionToken={userSessionToken}
                             accentColor="#4D89B0"

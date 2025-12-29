@@ -223,6 +223,7 @@ export default function PrivateChatPage() {
             title={
               <UserActionMenu
                 username={partnerUsername}
+                discriminator={null}
                 userSessionToken={partnerSessionToken}
                 currentUserSessionToken={mySessionToken}
                 accentColor="#1e40af"

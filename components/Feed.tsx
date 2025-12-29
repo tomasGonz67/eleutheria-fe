@@ -10,9 +10,10 @@ interface Post {
   id: number;
   content: string;
   username: string;
-  author_session_token: string;
+  author_discriminator: string;
   created_at: string;
   comment_count?: number;
+  is_my_post: boolean;
 }
 
 interface FeedProps {
@@ -242,7 +243,8 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
                 <span className="font-semibold text-gray-800 px-3 py-1 bg-gray-100 rounded-md">
                   <UserActionMenu
                     username={post.username}
-                    userSessionToken={post.author_session_token}
+                    discriminator={post.author_discriminator}
+                    isOwnPost={post.is_my_post}
                     currentUserSessionToken={userSessionToken}
                     accentColor="#AA633F"
                     className="font-semibold text-gray-800"
@@ -305,7 +307,7 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
                     View Comments {post.comment_count !== undefined && `(${post.comment_count})`}
                   </button>
                   {/* Show Edit and Delete buttons only for current user's posts */}
-                  {userSessionToken && post.author_session_token === userSessionToken && (
+                  {post.is_my_post && (
                     <>
                       <p className="text-gray-500">|</p>
                       <button

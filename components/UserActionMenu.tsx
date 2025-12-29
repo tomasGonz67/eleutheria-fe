@@ -5,8 +5,10 @@ import { isSocketConnected } from '@/lib/socket';
 
 interface UserActionMenuProps {
   username: string;
+  discriminator?: string | null; // The discriminator of the user being clicked
   userSessionToken?: string | null; // The session token of the user being clicked
   currentUserSessionToken?: string | null; // The session token of the logged-in user
+  isOwnPost?: boolean; // Whether this is the current user's own post/message
   accentColor?: string;
   className?: string;
   style?: React.CSSProperties;
@@ -14,8 +16,10 @@ interface UserActionMenuProps {
 
 export default function UserActionMenu({
   username,
+  discriminator,
   userSessionToken,
   currentUserSessionToken,
+  isOwnPost = false,
   accentColor = '#4D89B0',
   className = '',
   style = {}
@@ -25,12 +29,13 @@ export default function UserActionMenu({
   const menuRef = useRef<HTMLDivElement>(null);
   const { socket, showNotification } = useChatStore();
 
-  // Check if this is the current user's own message by comparing session tokens
-  const isOwnUser = userSessionToken && currentUserSessionToken && userSessionToken === currentUserSessionToken;
+  // Check if this is the current user's own message
+  // Prefer isOwnPost prop, fallback to session token comparison for backward compatibility
+  const isOwnUser = isOwnPost || (userSessionToken && currentUserSessionToken && userSessionToken === currentUserSessionToken);
 
   // Check online status when menu opens
   useEffect(() => {
-    if (isOpen && socket && userSessionToken && !isOwnUser) {
+    if (isOpen && socket && discriminator && !isOwnUser) {
       setIsOnline(null); // Reset to checking state
 
       // Check if socket is actually connected
@@ -40,8 +45,8 @@ export default function UserActionMenu({
       }
 
       // Listen for response
-      const handleOnlineStatus = (data: { uuid: string; isOnline: boolean }) => {
-        if (data.uuid === userSessionToken) {
+      const handleOnlineStatus = (data: { discriminator: string; isOnline: boolean }) => {
+        if (data.discriminator === discriminator) {
           setIsOnline(data.isOnline);
         }
       };
@@ -49,8 +54,8 @@ export default function UserActionMenu({
       socket.on('user_online_status', handleOnlineStatus);
 
       try {
-        // Request online status
-        socket.emit('check_user_online', { uuid: userSessionToken });
+        // Request online status using discriminator
+        socket.emit('check_user_online', { discriminator });
       } catch (error) {
         setIsOnline(false);
       }
@@ -59,7 +64,7 @@ export default function UserActionMenu({
         socket.off('user_online_status', handleOnlineStatus);
       };
     }
-  }, [isOpen, socket, userSessionToken, username, isOwnUser]);
+  }, [isOpen, socket, discriminator, username, isOwnUser]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -79,8 +84,8 @@ export default function UserActionMenu({
   }, [isOpen]);
 
   const handleSendMessage = async () => {
-    if (!userSessionToken) {
-      showNotification('error', 'Cannot send message request - user session not found');
+    if (!discriminator) {
+      showNotification('error', 'Cannot send message request - user discriminator not found');
       setIsOpen(false);
       return;
     }
@@ -94,7 +99,7 @@ export default function UserActionMenu({
 
     try {
       const response = await clientApi.post('/api/chat/match/planned', {
-        recipientId: userSessionToken
+        recipientDiscriminator: discriminator
       });
 
       showNotification('success', `Message request sent to ${username}!`, true, 3000);
@@ -120,7 +125,10 @@ export default function UserActionMenu({
     <div ref={menuRef} className="relative inline-block">
       {/* Clickable Username */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          console.log('Clicked user discriminator:', discriminator);
+          setIsOpen(!isOpen);
+        }}
         className={`underline cursor-pointer ${className}`}
         style={style}
       >

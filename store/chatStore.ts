@@ -24,7 +24,7 @@ interface Message {
 interface MessageRequest {
   session_id: number;
   requester_username: string;
-  requester_session_token: string;
+  requester_discriminator: string;
   created_at: string;
 }
 

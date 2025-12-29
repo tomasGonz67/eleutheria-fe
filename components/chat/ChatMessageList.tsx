@@ -55,6 +55,7 @@ export default function ChatMessageList({
               <div className="flex items-center justify-between mb-2 gap-3">
                 <UserActionMenu
                   username={message.username}
+                  discriminator={message.sender_discriminator}
                   userSessionToken={message.sender_session_token}
                   currentUserSessionToken={currentUserSessionToken}
                   accentColor={accentColor}

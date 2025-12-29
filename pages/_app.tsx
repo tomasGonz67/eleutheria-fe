@@ -95,7 +95,7 @@ export default function App({ Component, pageProps }: AppProps) {
       addMessageRequest({
         session_id: data.session_id,
         requester_username: data.requester_username,
-        requester_session_token: data.requester_session_token,
+        requester_discriminator: data.requester_discriminator,
         created_at: data.created_at,
       });
     };
