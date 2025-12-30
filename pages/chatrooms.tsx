@@ -281,7 +281,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                     value={chatroomName}
                     onChange={(e) => setChatroomName(e.target.value)}
                     placeholder="e.g., General Chat"
-                    maxLength={100}
+                    maxLength={20}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
                   />
@@ -295,7 +295,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                     value={chatroomDescription}
                     onChange={(e) => setChatroomDescription(e.target.value)}
                     placeholder="e.g., A place for general discussion"
-                    maxLength={500}
+                    maxLength={200}
                     rows={4}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
@@ -376,7 +376,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                     value={chatroomName}
                     onChange={(e) => setChatroomName(e.target.value)}
                     placeholder="e.g., General Chat"
-                    maxLength={100}
+                    maxLength={20}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
                   />
@@ -390,7 +390,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                     value={chatroomDescription}
                     onChange={(e) => setChatroomDescription(e.target.value)}
                     placeholder="e.g., A place for general discussion"
-                    maxLength={500}
+                    maxLength={200}
                     rows={4}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"

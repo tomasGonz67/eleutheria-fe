@@ -263,7 +263,7 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
                     onChange={(e) => setEditContent(e.target.value)}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
                     rows={3}
-                    maxLength={300}
+                    maxLength={3000}
                     disabled={isSubmitting}
                   />
                   <div className="flex gap-2 mt-2">

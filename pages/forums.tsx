@@ -280,7 +280,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                     value={forumName}
                     onChange={(e) => setForumName(e.target.value)}
                     placeholder="e.g., Technology Discussion"
-                    maxLength={100}
+                    maxLength={20}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
                   />
@@ -294,7 +294,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                     value={forumDescription}
                     onChange={(e) => setForumDescription(e.target.value)}
                     placeholder="e.g., Talk about tech, gadgets, and software"
-                    maxLength={500}
+                    maxLength={200}
                     rows={4}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
@@ -375,7 +375,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                     value={forumName}
                     onChange={(e) => setForumName(e.target.value)}
                     placeholder="e.g., Technology Discussion"
-                    maxLength={100}
+                    maxLength={20}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
                   />
@@ -389,7 +389,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                     value={forumDescription}
                     onChange={(e) => setForumDescription(e.target.value)}
                     placeholder="e.g., Talk about tech, gadgets, and software"
-                    maxLength={500}
+                    maxLength={200}
                     rows={4}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
