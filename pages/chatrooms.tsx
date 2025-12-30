@@ -14,6 +14,7 @@ interface Chatroom {
   description: string;
   created_at: string;
   creator_discriminator: string | null;
+  is_my_chatroom: boolean;
 }
 
 interface ChatroomsPageProps {
@@ -34,14 +35,6 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
-  // Debug logging
-  console.log('User session token:', userSessionToken);
-  console.log('Chatrooms:', chatrooms.map(c => ({
-    id: c.id,
-    name: c.name,
-    creator: c.creator_session_token,
-    match: c.creator_session_token === userSessionToken
-  })));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,7 +194,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                     </Link>
 
                     {/* Show Edit and Delete buttons only for current user's chatrooms */}
-                    {userSessionToken && chatroom.creator_session_token === userSessionToken && (
+                    {chatroom.is_my_chatroom && (
                       <div className="flex items-center gap-3 ml-4">
                         <button
                           onClick={(e) => {

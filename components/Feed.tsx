@@ -206,7 +206,7 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
             placeholder="What's on your mind?"
             className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
             rows={3}
-            maxLength={300}
+            maxLength={3000}
             disabled={isSubmitting}
           />
           <div className="flex justify-end mt-3">

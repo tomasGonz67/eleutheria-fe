@@ -14,6 +14,7 @@ interface Forum {
   description: string;
   created_at: string;
   creator_discriminator: string | null;
+  is_my_forum: boolean;
 }
 
 interface ForumsPageProps {
@@ -192,7 +193,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                     </Link>
 
                     {/* Show Edit and Delete buttons only for current user's forums */}
-                    {userSessionToken && forum.creator_session_token === userSessionToken && (
+                    {forum.is_my_forum && (
                       <div className="flex items-center gap-3 ml-4">
                         <button
                           onClick={(e) => {

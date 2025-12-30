@@ -56,7 +56,7 @@ interface CommentItemProps {
   loadedReplies: Map<number, Post[]>;
   loadingReplies: Set<number>;
   parentUsername?: string;
-  parentSessionToken?: string;
+  parentDiscriminator?: string;
   onStartEdit: (comment: Post) => void;
   onCancelEdit: () => void;
   onSaveEdit: (commentId: number) => void;
@@ -84,7 +84,7 @@ function CommentItem({
   loadedReplies,
   loadingReplies,
   parentUsername,
-  parentSessionToken,
+  parentDiscriminator,
   onStartEdit,
   onCancelEdit,
   onSaveEdit,
@@ -117,7 +117,8 @@ function CommentItem({
             <span className="font-semibold text-gray-800 px-3 py-1 bg-gray-200 rounded-md">
               <UserActionMenu
                 username={comment.username}
-                userSessionToken={comment.author_session_token}
+                discriminator={comment.author_discriminator}
+                isOwnPost={comment.is_my_post}
                 currentUserSessionToken={userSessionToken}
                 accentColor="#AA633F"
                 className="font-semibold text-gray-800"
@@ -129,7 +130,7 @@ function CommentItem({
                 <span className="text-sm font-semibold text-gray-700">
                   <UserActionMenu
                     username={parentUsername}
-                    userSessionToken={parentSessionToken}
+                    discriminator={parentDiscriminator}
                     currentUserSessionToken={userSessionToken}
                     accentColor="#AA633F"
                     className="text-sm font-semibold text-gray-700"
@@ -151,7 +152,7 @@ function CommentItem({
               onChange={(e) => setEditContent(e.target.value)}
               className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
               rows={3}
-              maxLength={300}
+              maxLength={3000}
               disabled={isSubmitting}
             />
             <div className="flex gap-2 mt-2">
@@ -201,7 +202,7 @@ function CommentItem({
               Reply
             </button>
             {/* Show Edit and Delete buttons only for current user's comments */}
-            {userSessionToken && comment.author_session_token === userSessionToken && (
+            {comment.is_my_post && (
               <>
                 <p className="text-gray-500">|</p>
                 <button
@@ -236,7 +237,7 @@ function CommentItem({
               placeholder="Write your reply..."
               className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
               rows={3}
-              maxLength={300}
+              maxLength={3000}
               disabled={isSubmitting}
             />
             <div className="flex gap-2 mt-2">
@@ -280,7 +281,7 @@ function CommentItem({
               loadedReplies={loadedReplies}
               loadingReplies={loadingReplies}
               parentUsername={comment.username}
-              parentSessionToken={comment.author_session_token}
+              parentDiscriminator={comment.author_discriminator}
               onStartEdit={onStartEdit}
               onCancelEdit={onCancelEdit}
               onSaveEdit={onSaveEdit}
@@ -653,7 +654,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
                   placeholder="Write your reply..."
                   className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
                   rows={3}
-                  maxLength={300}
+                  maxLength={3000}
                   disabled={isSubmitting}
                 />
                 <div className="flex justify-end mt-3">

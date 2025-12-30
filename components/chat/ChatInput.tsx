@@ -60,6 +60,7 @@ export default function ChatInput({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           disabled={disabled}
+          maxLength={500}
           className="flex-1 px-4 py-2.5 border-2 border-gray-300 text-black rounded-lg focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
           style={{ borderColor: disabled ? '#d1d5db' : undefined }}
           onFocus={(e) => !disabled && (e.target.style.borderColor = accentColor)}

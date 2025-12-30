@@ -21,6 +21,7 @@ interface Forum {
   name: string;
   description: string;
   creator_discriminator: string | null;
+  is_my_forum: boolean;
 }
 
 interface ForumPostsPageProps {
@@ -116,7 +117,7 @@ export default function ForumPostsPage({ forum, posts, username, userSessionToke
               forumId={forum.id}
               username={username}
               userSessionToken={userSessionToken}
-              showForumActions={userSessionToken !== null && forum.creator_session_token === userSessionToken}
+              showForumActions={forum.is_my_forum}
               onEditForum={handleStartEdit}
               onDeleteForum={handleDelete}
               currentPage={currentPage}
@@ -281,7 +282,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     console.log('==============================');
 
     // Get forum from posts response (if backend includes it)
-    const forum = postsData.forum || { id: parseInt(id), name: 'Forum', description: '', creator_discriminator: null };
+    const forum = postsData.forum || { id: parseInt(id), name: 'Forum', description: '', creator_discriminator: null, is_my_forum: false };
 
     // Handle different response formats
     const posts = Array.isArray(postsData) ? postsData : (postsData.posts || []);
@@ -313,7 +314,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     console.error('Error fetching forum:', error);
     return {
       props: {
-        forum: { id: parseInt(id), name: 'Forum', description: '', creator_discriminator: null },
+        forum: { id: parseInt(id), name: 'Forum', description: '', creator_discriminator: null, is_my_forum: false },
         posts: [],
         username: 'Anonymous',
         userSessionToken: null,
