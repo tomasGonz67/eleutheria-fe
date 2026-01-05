@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Socket } from 'socket.io-client';
 import { getSocket, connectSocket, disconnectSocket, joinSession, leaveSession } from '@/lib/socket';
+import { Message, MessageRequest } from '@/lib/types';
 
 interface PlannedChat {
   id: number;
@@ -9,23 +10,6 @@ interface PlannedChat {
   isMinimized: boolean;
   unreadCount: number;
   status?: 'active' | 'ended';
-}
-
-interface Message {
-  id: number;
-  content: string;
-  username: string;
-  is_me: boolean;
-  sender_discriminator?: string;
-  created_at: string;
-  isSystem?: boolean; // For system messages like "User left"
-}
-
-interface MessageRequest {
-  session_id: number;
-  requester_username: string;
-  requester_discriminator: string;
-  created_at: string;
 }
 
 interface Notification {

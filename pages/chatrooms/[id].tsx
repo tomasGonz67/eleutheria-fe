@@ -9,21 +9,7 @@ import { clientApi } from '@/lib/api';
 import { createChatroomMessage, updateChatroom, deleteChatroom } from '@/lib/services/chatrooms';
 import { useChatStore } from '@/store/chatStore';
 import { joinChatroom, leaveChatroom, isSocketConnected, connectSocket } from '@/lib/socket';
-
-interface Message {
-  id: number;
-  content: string;
-  username: string;
-  sender_discriminator: string;
-  created_at: string;
-}
-
-interface Chatroom {
-  id: number;
-  name: string;
-  description: string;
-  creator_discriminator: string | null;
-}
+import { Message, ChatroomWithUsers } from '@/lib/types';
 
 export default function ChatroomMessagesPage() {
   const router = useRouter();
@@ -31,7 +17,7 @@ export default function ChatroomMessagesPage() {
 
   const [newMessage, setNewMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
-  const [chatroom, setChatroom] = useState<Chatroom | null>(null);
+  const [chatroom, setChatroom] = useState<ChatroomWithUsers | null>(null);
   const [userSessionToken, setUserSessionToken] = useState<string | null>(null);
   const [userDiscriminator, setUserDiscriminator] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,6 +88,7 @@ export default function ChatroomMessagesPage() {
           username: data.username,
           sender_discriminator: data.sender_discriminator,
           created_at: data.created_at,
+          is_me: data.sender_discriminator === userDiscriminator,
         }]);
       }
     };
@@ -159,7 +146,7 @@ export default function ChatroomMessagesPage() {
         // Find the specific chatroom by ID
         const chatroomsData = chatroomsResponse.data;
         const chatrooms = Array.isArray(chatroomsData) ? chatroomsData : (chatroomsData.chatrooms || []);
-        const foundChatroom = chatrooms.find((c: Chatroom) => c.id === Number(id));
+        const foundChatroom = chatrooms.find((c: ChatroomWithUsers) => c.id === Number(id));
 
         if (foundChatroom) {
           setChatroom(foundChatroom);
@@ -299,7 +286,7 @@ export default function ChatroomMessagesPage() {
                     )}
                   </div>
                   {/* Show Edit and Delete buttons only for current user's chatrooms */}
-                  {userSessionToken && chatroom?.creator_session_token === userSessionToken && (
+                  {userDiscriminator && chatroom?.creator_discriminator === userDiscriminator && (
                     <div className="flex items-center gap-3 ml-4">
                       <button
                         onClick={handleStartEdit}

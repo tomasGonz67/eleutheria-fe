@@ -8,6 +8,7 @@ export interface AnonymousUser {
   user_agent: string;
   created_at: string;
   last_active: string;
+  notifications?: number;
 }
 
 export interface SessionResponse {
@@ -178,4 +179,61 @@ export interface CreateChatMessageRequest {
 // Error Response
 export interface ErrorResponse {
   error: string;
+}
+
+// ============================================================================
+// VIEW MODELS (for components - different from API responses)
+// ============================================================================
+
+// Message for chat UI (includes is_me flag)
+export interface Message {
+  id: number;
+  content: string;
+  username: string; // Sender's username
+  is_me: boolean; // Whether this message is from the current user
+  sender_discriminator?: string; // Sender's discriminator
+  created_at: string;
+  isSystem?: boolean; // For system messages like "User left"
+}
+
+export interface MessageRequest {
+  session_id: number;
+  requester_username: string;
+  requester_discriminator: string;
+  created_at: string;
+}
+
+// FeedPost (for feed and forum posts with user info)
+export interface FeedPost {
+  id: number;
+  content: string;
+  username: string;
+  author_discriminator: string;
+  is_my_post: boolean;
+  created_at: string;
+  comment_count?: number;
+  parent_id?: number | null; // For comments/replies
+}
+
+// Forum with additional UI fields
+export interface ForumWithCounts extends Forum {
+  post_count?: number;
+  creator_username?: string;
+  creator_discriminator?: string;
+  is_my_forum?: boolean;
+}
+
+// Chatroom with additional UI fields
+export interface ChatroomWithUsers extends Chatroom {
+  creator_discriminator: string | null;
+  creator_username?: string;
+  user_count?: number;
+}
+
+// ChatSession with additional UI fields
+export interface ChatSessionWithUI extends ChatSession {
+  partner_username?: string;
+  partner_discriminator?: string;
+  invite_code?: string;
+  messages_count?: number;
 }

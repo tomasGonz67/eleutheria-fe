@@ -1,13 +1,15 @@
-export const API_BASE_URL = process.env.NODE_ENV === 'development'
-  ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000')
-  : (process.env.NEXT_PUBLIC_API_URL || 'https://api.eleutheria.com');
+// Detect if we're running on server (SSR) or client (browser)
+const isServer = typeof window === 'undefined';
+
+// Use SERVER_API_URL for SSR (Docker network), NEXT_PUBLIC_API_URL for browser
+export const API_BASE_URL = isServer
+  ? (process.env.SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000')
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000');
 
 export const API_ENDPOINTS = {
   // Posts
-  getPosts: (forumId: number, page: number = 1, limit: number = 20) => 
+  getPosts: (forumId: number, page: number = 1, limit: number = 20) =>
     `${API_BASE_URL}/api/forums/${forumId}/posts?page=${page}&limit=${limit}`,
-  getPost: (forumId: number, postId: number) => 
-    `${API_BASE_URL}/api/forums/${forumId}/posts/${postId}`,
   getComments: (forumId: number, parentId: number) =>
     `${API_BASE_URL}/api/forums/${forumId}/posts?parent_id=${parentId}`,
   searchPosts: (forumId: number, query: string, page: number = 1, limit: number = 20) =>
@@ -15,11 +17,9 @@ export const API_ENDPOINTS = {
   createPost: (forumId: number) => `${API_BASE_URL}/api/forums/${forumId}/posts`,
 
   // Forums
-  getForums: (page: number = 1, limit: number = 20) => 
+  getForums: (page: number = 1, limit: number = 20) =>
     `${API_BASE_URL}/api/forums?page=${page}&limit=${limit}`,
-  getForum: (forumId: number) => `${API_BASE_URL}/api/forums/${forumId}`,
-  createForum: () => `${API_BASE_URL}/api/forums`,
-  searchForums: (query: string, page: number = 1, limit: number = 20) => 
+  searchForums: (query: string, page: number = 1, limit: number = 20) =>
     `${API_BASE_URL}/api/forums/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`,
 
   // Chat

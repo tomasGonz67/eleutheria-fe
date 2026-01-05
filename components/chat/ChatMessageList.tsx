@@ -1,13 +1,6 @@
 import { useRef, useEffect } from 'react';
 import UserActionMenu from '@/components/UserActionMenu';
-
-interface Message {
-  id: number;
-  content: string;
-  username: string;
-  sender_discriminator: string;
-  created_at: string;
-}
+import { Message } from '@/lib/types';
 
 interface ChatMessageListProps {
   messages: Message[];
@@ -55,8 +48,7 @@ export default function ChatMessageList({
                 <UserActionMenu
                   username={message.username}
                   discriminator={message.sender_discriminator}
-                  userSessionToken={message.sender_session_token}
-                  currentUserSessionToken={currentUserSessionToken}
+                  isOwnPost={message.is_me}
                   accentColor={accentColor}
                   className="font-semibold text-gray-800 text-sm"
                 />

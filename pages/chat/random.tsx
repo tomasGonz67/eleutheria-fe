@@ -365,8 +365,7 @@ export default function RandomChatPage() {
                           <UserActionMenu
                             username={message.username}
                             discriminator={message.sender_discriminator}
-                            userSessionToken={message.sender_session_token}
-                            currentUserSessionToken={userSessionToken}
+                            isOwnPost={message.is_me}
                             accentColor="#4D89B0"
                             className="font-semibold text-sm"
                             style={message.is_me ? { color: '#4D89B0' } : { color: '#6b7280' }}

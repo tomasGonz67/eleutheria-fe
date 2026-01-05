@@ -5,16 +5,7 @@ import { createPost, updatePost, deletePost } from '@/lib/services/posts';
 import Pagination from './Pagination';
 import SearchBar from './SearchBar';
 import UserActionMenu from './UserActionMenu';
-
-interface Post {
-  id: number;
-  content: string;
-  username: string;
-  author_discriminator: string;
-  created_at: string;
-  comment_count?: number;
-  is_my_post: boolean;
-}
+import { FeedPost } from '@/lib/types';
 
 interface FeedProps {
   title?: string;
@@ -23,7 +14,7 @@ interface FeedProps {
     href: string;
     label: string;
   };
-  posts: Post[];
+  posts: FeedPost[];
   forumId?: number;
   username?: string;
   userSessionToken?: string | null;
@@ -64,7 +55,7 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
     }
   };
 
-  const handleStartEdit = (post: Post) => {
+  const handleStartEdit = (post: FeedPost) => {
     setEditingPostId(post.id);
     setEditContent(post.content);
   };
@@ -245,7 +236,6 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
                     username={post.username}
                     discriminator={post.author_discriminator}
                     isOwnPost={post.is_my_post}
-                    currentUserSessionToken={userSessionToken}
                     accentColor="#AA633F"
                     className="font-semibold text-gray-800"
                   />

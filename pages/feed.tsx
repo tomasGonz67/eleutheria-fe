@@ -2,19 +2,10 @@ import Header from '@/components/Header';
 import Feed from '@/components/Feed';
 import { API_ENDPOINTS } from '@/config/api';
 import { GetServerSideProps } from 'next';
-
-interface Post {
-  id: number;
-  content: string;
-  username: string;
-  author_discriminator: string;
-  is_my_post: boolean;
-  created_at: string;
-  comment_count?: number;
-}
+import { FeedPost } from '@/lib/types';
 
 interface FeedPageProps {
-  posts: Post[];
+  posts: FeedPost[];
   username: string;
   userSessionToken: string | null;
   currentPage: number;
@@ -53,9 +44,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const limit = 20; // Default limit
 
   try {
-    const API_URL = process.env.NODE_ENV === 'development'
-      ? 'http://localhost:3000'
-      : process.env.NEXT_PUBLIC_API_URL;
+    // Use SERVER_API_URL for SSR (direct backend access in container)
+    // Falls back to NEXT_PUBLIC_API_URL for local dev
+    const API_URL = process.env.SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
     // Fetch current user and posts in parallel
     const [userResponse, postsResponse] = await Promise.all([

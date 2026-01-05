@@ -10,26 +10,7 @@ import { getCurrentUser } from '@/lib/services/session';
 import { clientApi } from '@/lib/api';
 import { useChatStore } from '@/store/chatStore';
 import { isSocketConnected } from '@/lib/socket';
-
-interface Message {
-  id: number;
-  username: string;
-  content: string;
-  created_at: string;
-  sender_discriminator: string;
-}
-
-interface ChatSession {
-  id: number;
-  type: string;
-  status: string;
-  created_at: string;
-  ended_at: string | null;
-  user1_username: string;
-  user2_username: string;
-  user1_discriminator: string;
-  user2_discriminator: string;
-}
+import { Message, ChatSessionWithUI, ChatSession } from '@/lib/types';
 
 export default function PrivateChatPage() {
   const router = useRouter();
@@ -140,6 +121,7 @@ export default function PrivateChatPage() {
             content: data.content,
             created_at: data.created_at,
             sender_discriminator: data.sender_discriminator,
+            is_me: data.sender_discriminator === myDiscriminator,
           },
         ]);
       }
@@ -237,7 +219,6 @@ export default function PrivateChatPage() {
               <UserActionMenu
                 username={partnerUsername}
                 discriminator={partnerDiscriminator}
-                currentUserSessionToken={mySessionToken}
                 accentColor="#1e40af"
                 className="text-xl font-semibold"
               />

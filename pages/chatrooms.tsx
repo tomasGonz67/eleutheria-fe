@@ -446,9 +446,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const limit = 20; // Default limit
 
   try {
-    const API_URL = process.env.NODE_ENV === 'development'
-      ? 'http://localhost:3000'
-      : process.env.NEXT_PUBLIC_API_URL;
+    // Use SERVER_API_URL for SSR (direct backend access in container)
+    // Falls back to NEXT_PUBLIC_API_URL for local dev
+    const API_URL = process.env.SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
     // Determine which endpoint to call based on search query
     const chatroomsEndpoint = searchQuery 

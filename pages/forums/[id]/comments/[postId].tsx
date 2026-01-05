@@ -7,28 +7,12 @@ import { GetServerSideProps } from 'next';
 import { createPost, updatePost, deletePost } from '@/lib/services/posts';
 import { clientApi } from '@/lib/api';
 import UserActionMenu from '@/components/UserActionMenu';
-
-interface Post {
-  id: number;
-  content: string;
-  username: string;
-  author_discriminator: string;
-  is_my_post: boolean;
-  created_at: string;
-  parent_id: number | null;
-  comment_count?: number;
-}
-
-interface Forum {
-  id: number;
-  name: string;
-  description: string;
-}
+import { FeedPost, Forum } from '@/lib/types';
 
 interface PostCommentsPageProps {
   forum: Forum;
   postId: number;
-  comments: Post[];
+  comments: FeedPost[];
   username: string;
   userSessionToken: string | null;
   postContent?: string;
@@ -37,12 +21,12 @@ interface PostCommentsPageProps {
 }
 
 interface CommentsState {
-  topLevelComments: Post[];
+  topLevelComments: FeedPost[];
 }
 
 // Recursive Comment Component
 interface CommentItemProps {
-  comment: Post;
+  comment: FeedPost;
   depth: number;
   username: string;
   userSessionToken: string | null;
@@ -53,11 +37,11 @@ interface CommentItemProps {
   replyingToCommentId: number | null;
   commentReplyContent: string;
   expandedComments: Set<number>;
-  loadedReplies: Map<number, Post[]>;
+  loadedReplies: Map<number, FeedPost[]>;
   loadingReplies: Set<number>;
   parentUsername?: string;
   parentDiscriminator?: string;
-  onStartEdit: (comment: Post) => void;
+  onStartEdit: (comment: FeedPost) => void;
   onCancelEdit: () => void;
   onSaveEdit: (commentId: number) => void;
   onDelete: (commentId: number) => void;
@@ -119,7 +103,6 @@ function CommentItem({
                 username={comment.username}
                 discriminator={comment.author_discriminator}
                 isOwnPost={comment.is_my_post}
-                currentUserSessionToken={userSessionToken}
                 accentColor="#AA633F"
                 className="font-semibold text-gray-800"
               />
@@ -131,7 +114,6 @@ function CommentItem({
                   <UserActionMenu
                     username={parentUsername}
                     discriminator={parentDiscriminator}
-                    currentUserSessionToken={userSessionToken}
                     accentColor="#AA633F"
                     className="text-sm font-semibold text-gray-700"
                   />
@@ -311,9 +293,9 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
   const [commentReplyContent, setCommentReplyContent] = useState('');
   
   // State for comments and lazy-loaded nested replies
-  const [comments, setComments] = useState<Post[]>(initialComments);
+  const [comments, setComments] = useState<FeedPost[]>(initialComments);
   const [expandedComments, setExpandedComments] = useState<Set<number>>(new Set());
-  const [loadedReplies, setLoadedReplies] = useState<Map<number, Post[]>>(new Map());
+  const [loadedReplies, setLoadedReplies] = useState<Map<number, FeedPost[]>>(new Map());
   const [loadingReplies, setLoadingReplies] = useState<Set<number>>(new Set());
 
   const handleReplySubmit = async (e: React.FormEvent) => {
@@ -337,7 +319,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
       const updatedComments = Array.isArray(commentsResponse.data) ? commentsResponse.data : (commentsResponse.data.posts || []);
       
       // Sort by most recent first
-      updatedComments.sort((a: Post, b: Post) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      updatedComments.sort((a: FeedPost, b: FeedPost) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       
       setComments(updatedComments);
     } catch (err) {
@@ -348,7 +330,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
     }
   };
 
-  const handleStartEdit = (comment: Post) => {
+  const handleStartEdit = (comment: FeedPost) => {
     setEditingCommentId(comment.id);
     setEditContent(comment.content);
   };
@@ -368,7 +350,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
       await updatePost(forum.id, commentId, { content: editContent.trim() });
       
       // Update the comment in state
-      const updateCommentInList = (commentsList: Post[]): Post[] => {
+      const updateCommentInList = (commentsList: FeedPost[]): FeedPost[] => {
         return commentsList.map(c => 
           c.id === commentId ? { ...c, content: editContent.trim() } : c
         );
@@ -402,18 +384,18 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
 
     // Find the deleted comment's parent_id to update its count
     let deletedCommentParentId: number | null = null;
-    const findComment = (commentsList: Post[]): Post | undefined => {
+    const findComment = (commentsList: FeedPost[]): FeedPost | undefined => {
       return commentsList.find(c => c.id === commentId);
     };
     
     const deletedComment = findComment(comments);
     if (deletedComment) {
-      deletedCommentParentId = deletedComment.parent_id;
+      deletedCommentParentId = deletedComment.parent_id ?? null;
     } else {
       // Search in loaded replies
       loadedReplies.forEach((replies) => {
         const found = findComment(replies);
-        if (found) deletedCommentParentId = found.parent_id;
+        if (found) deletedCommentParentId = found.parent_id ?? null;
       });
     }
 
@@ -424,7 +406,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
       await deletePost(forum.id, commentId);
       
       // Remove the comment from state
-      const filterComments = (commentsList: Post[]): Post[] => {
+      const filterComments = (commentsList: FeedPost[]): FeedPost[] => {
         return commentsList.filter(c => c.id !== commentId);
       };
       
@@ -441,7 +423,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
       
       // Decrement comment_count for the parent comment
       if (deletedCommentParentId) {
-        const decrementCount = (commentsList: Post[]): Post[] => {
+        const decrementCount = (commentsList: FeedPost[]): FeedPost[] => {
           return commentsList.map(c => 
             c.id === deletedCommentParentId 
               ? { ...c, comment_count: Math.max((c.comment_count || 0) - 1, 0) } 
@@ -494,14 +476,14 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
       const replies = Array.isArray(repliesResponse.data) ? repliesResponse.data : (repliesResponse.data.posts || []);
       
       // Sort by most recent first
-      replies.sort((a: Post, b: Post) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      replies.sort((a: FeedPost, b: FeedPost) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       
       // Update loaded replies and expand the comment to show new reply
       setLoadedReplies(prev => new Map(prev).set(parentCommentId, replies));
       setExpandedComments(prev => new Set(prev).add(parentCommentId));
       
       // Update comment_count for the parent comment
-      const updateCommentCount = (commentsList: Post[]): Post[] => {
+      const updateCommentCount = (commentsList: FeedPost[]): FeedPost[] => {
         return commentsList.map(c => 
           c.id === parentCommentId 
             ? { ...c, comment_count: (c.comment_count || 0) + 1 } 
@@ -540,7 +522,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
       const replies = Array.isArray(response.data) ? response.data : (response.data.posts || []);
       
       // Sort replies by most recent first
-      replies.sort((a: Post, b: Post) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      replies.sort((a: FeedPost, b: FeedPost) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       
       console.log('✅ Loaded replies for comment', commentId, ':', replies.length, 'replies');
       
@@ -736,9 +718,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const postUsername = context.query.post_username as string;
 
   try {
-    const API_URL = process.env.NODE_ENV === 'development'
-      ? 'http://localhost:3000'
-      : process.env.NEXT_PUBLIC_API_URL;
+    // Use SERVER_API_URL for SSR (direct backend access in container)
+    // Falls back to NEXT_PUBLIC_API_URL for local dev
+    const API_URL = process.env.SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
     const commentsUrl = `${API_URL}/api/forums/${forumId}/posts?parent_id=${postId}`;
     
@@ -768,7 +750,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const comments = Array.isArray(commentsData) ? commentsData : (commentsData.posts || []);
     
     // Sort comments by most recent first
-    comments.sort((a: Post, b: Post) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    comments.sort((a: FeedPost, b: FeedPost) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     
     // Get forum from comments response (if backend includes it), otherwise use fallback
     const forum = commentsData.forum || { id: parseInt(forumId), name: 'Forum', description: '' };

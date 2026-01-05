@@ -6,8 +6,6 @@ import { isSocketConnected } from '@/lib/socket';
 interface UserActionMenuProps {
   username: string;
   discriminator?: string | null; // The discriminator of the user being clicked
-  userSessionToken?: string | null; // The session token of the user being clicked
-  currentUserSessionToken?: string | null; // The session token of the logged-in user
   isOwnPost?: boolean; // Whether this is the current user's own post/message
   accentColor?: string;
   className?: string;
@@ -17,8 +15,6 @@ interface UserActionMenuProps {
 export default function UserActionMenu({
   username,
   discriminator,
-  userSessionToken,
-  currentUserSessionToken,
   isOwnPost = false,
   accentColor = '#4D89B0',
   className = '',
@@ -30,8 +26,7 @@ export default function UserActionMenu({
   const { socket, showNotification } = useChatStore();
 
   // Check if this is the current user's own message
-  // Prefer isOwnPost prop, fallback to session token comparison for backward compatibility
-  const isOwnUser = isOwnPost || (userSessionToken && currentUserSessionToken && userSessionToken === currentUserSessionToken);
+  const isOwnUser = isOwnPost;
 
   // Check online status when menu opens
   useEffect(() => {

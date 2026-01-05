@@ -56,20 +56,6 @@ export default function PrivateChatsPage() {
         // Get all chat sessions
         const { sessions: allSessions } = await getAllChatSessions();
 
-        // DEBUG: Check for discriminators and UUIDs in sessions
-        console.log('=== CHAT SESSIONS DATA CHECK ===');
-        if (allSessions && allSessions.length > 0) {
-          const firstSession = allSessions[0];
-          console.log('First session user1_discriminator:', firstSession.user1_discriminator);
-          console.log('First session user2_discriminator:', firstSession.user2_discriminator);
-          console.log('First session has user1_session_token?:', 'user1_session_token' in firstSession);
-          console.log('First session has user2_session_token?:', 'user2_session_token' in firstSession);
-          if ('user1_session_token' in firstSession || 'user2_session_token' in firstSession) {
-            console.warn('⚠️  WARNING: UUID EXPOSURE - session tokens found in chat session!');
-          }
-        }
-        console.log('================================');
-
         // Filter for planned chats only
         const plannedSessions = allSessions.filter(
           (session: ChatSession) => session.type === 'planned'
@@ -356,7 +342,6 @@ export default function PrivateChatsPage() {
                           <UserActionMenu
                             username={partnerUsername}
                             discriminator={partnerDiscriminator}
-                            currentUserSessionToken={mySessionToken}
                             accentColor="#4D89B0"
                             className="text-lg font-semibold"
                             style={{ color: '#4D89B0' }}

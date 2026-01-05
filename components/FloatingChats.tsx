@@ -3,14 +3,7 @@ import { useChatStore } from '@/store/chatStore';
 import { clientApi } from '@/lib/api';
 import { isSocketConnected } from '@/lib/socket';
 import { getCurrentUser } from '@/lib/services/session';
-
-interface Message {
-  id: number;
-  sender_username: string;
-  content: string;
-  created_at: string;
-  sender_discriminator: string;
-}
+import { Message } from '@/lib/types';
 
 export default function FloatingChats() {
   const { plannedChats, toggleMinimize, removePlannedChat, socket, showNotification } = useChatStore();
@@ -127,10 +120,11 @@ export default function FloatingChats() {
           ...(prev[sessionId] || []),
           {
             id: data.id,
-            sender_username: data.sender_username,
+            username: data.sender_username,
             content: data.content,
             created_at: data.created_at,
             sender_discriminator: data.sender_discriminator,
+            is_me: data.sender_discriminator === currentUserDiscriminator,
           },
         ],
       }));
@@ -310,7 +304,7 @@ export default function FloatingChats() {
                     </div>
                   </div>
                 ))}
-                <div ref={(el) => (messagesEndRef.current[chat.id] = el)} />
+                <div ref={(el) => { messagesEndRef.current[chat.id] = el; }} />
               </div>
 
               {/* Input */}

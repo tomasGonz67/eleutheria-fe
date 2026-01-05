@@ -5,28 +5,11 @@ import Feed from '@/components/Feed';
 import { API_ENDPOINTS } from '@/config/api';
 import { GetServerSideProps } from 'next';
 import { updateForum, deleteForum } from '@/lib/services/forums';
-
-interface Post {
-  id: number;
-  content: string;
-  username: string;
-  author_discriminator: string;
-  is_my_post: boolean;
-  created_at: string;
-  comment_count?: number;
-}
-
-interface Forum {
-  id: number;
-  name: string;
-  description: string;
-  creator_discriminator: string | null;
-  is_my_forum: boolean;
-}
+import { FeedPost, ForumWithCounts } from '@/lib/types';
 
 interface ForumPostsPageProps {
-  forum: Forum;
-  posts: Post[];
+  forum: ForumWithCounts;
+  posts: FeedPost[];
   username: string;
   userSessionToken: string | null;
   currentPage: number;
@@ -232,9 +215,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const limit = 20; // Default limit
 
   try {
-    const API_URL = process.env.NODE_ENV === 'development'
-      ? 'http://localhost:3000'
-      : process.env.NEXT_PUBLIC_API_URL;
+    // Use SERVER_API_URL for SSR (direct backend access in container)
+    // Falls back to NEXT_PUBLIC_API_URL for local dev
+    const API_URL = process.env.SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
     // Determine which endpoint to call based on search query
     const postsEndpoint = searchQuery
