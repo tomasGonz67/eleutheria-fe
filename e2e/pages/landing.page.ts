@@ -8,6 +8,11 @@ export class LandingPage {
   readonly randomChatButton: Locator;
   readonly browseChatroomsButton: Locator;
 
+  // Loading and error states
+  readonly loadingSpinner: Locator;
+  readonly errorMessage: Locator;
+  readonly errorAlert: Locator;
+
   constructor(page: Page) {
     this.page = page;
     this.usernameInput = page.locator('input[placeholder="Enter username (optional)"]');
@@ -15,6 +20,11 @@ export class LandingPage {
     this.browseForumsButton = page.getByRole('button', { name: 'Browse Forums' });
     this.randomChatButton = page.getByRole('button', { name: 'Random Chat' });
     this.browseChatroomsButton = page.getByRole('button', { name: 'Browse Chatrooms' });
+
+    // Loading and error locators
+    this.loadingSpinner = page.locator('[data-testid="loading-spinner"], .animate-spin');
+    this.errorMessage = page.locator('[data-testid="error-message"], .text-red-500, .text-red-600');
+    this.errorAlert = page.locator('[role="alert"]');
   }
 
   async goto() {
@@ -23,6 +33,10 @@ export class LandingPage {
 
   async setUsername(username: string) {
     await this.usernameInput.fill(username);
+  }
+
+  async clearUsername() {
+    await this.usernameInput.clear();
   }
 
   async navigateToFeed() {
@@ -43,5 +57,23 @@ export class LandingPage {
   async navigateToChatrooms() {
     await this.browseChatroomsButton.click();
     await this.page.waitForURL(/\/chatrooms/);
+  }
+
+  async isLoading(): Promise<boolean> {
+    return this.loadingSpinner.isVisible();
+  }
+
+  async hasError(): Promise<boolean> {
+    return this.errorMessage.isVisible() || this.errorAlert.isVisible();
+  }
+
+  async getErrorText(): Promise<string> {
+    if (await this.errorMessage.isVisible()) {
+      return this.errorMessage.textContent() || '';
+    }
+    if (await this.errorAlert.isVisible()) {
+      return this.errorAlert.textContent() || '';
+    }
+    return '';
   }
 }

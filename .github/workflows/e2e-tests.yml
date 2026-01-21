@@ -6,127 +6,36 @@ on:
   pull_request:
     branches: [main, develop]
 
-env:
-  DB_USER: eleutheria_user
-  DB_PASSWORD: eleutheria_password
-  DB_NAME: eleutheria_db
-
 jobs:
   e2e-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: ${{ env.DB_USER }}
-          POSTGRES_PASSWORD: ${{ env.DB_PASSWORD }}
-          POSTGRES_DB: ${{ env.DB_NAME }}
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    timeout-minutes: 15
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          path: eleutheria-fe
+      - uses: actions/checkout@v4
 
-      - name: Checkout backend
-        uses: actions/checkout@v4
-        with:
-          repository: tomasGonz67/Eleutheria-be
-          path: eleutheria-be
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
-      - name: Install backend dependencies
-        working-directory: ./eleutheria-be
-        run: npm ci
-
-      - name: Install frontend dependencies
-        working-directory: ./eleutheria-fe
+      - name: Install dependencies
         run: npm ci
 
       - name: Install Playwright browsers
-        working-directory: ./eleutheria-fe
         run: npx playwright install --with-deps chromium
 
-      - name: Run database migrations
-        working-directory: ./eleutheria-be
+      - name: Run E2E tests
+        run: npx playwright test
         env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_USER: ${{ env.DB_USER }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
-          DB_NAME: ${{ env.DB_NAME }}
-        run: npm run migrate
-
-      - name: Seed database
-        working-directory: ./eleutheria-be
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_USER: ${{ env.DB_USER }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
-          DB_NAME: ${{ env.DB_NAME }}
-        run: |
-          npm run seed:forums || true
-          npm run seed:chatrooms || true
-
-      - name: Start backend server
-        working-directory: ./eleutheria-be
-        env:
-          PORT: 3000
-          NODE_ENV: test
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_USER: ${{ env.DB_USER }}
-          DB_PASSWORD: ${{ env.DB_PASSWORD }}
-          DB_NAME: ${{ env.DB_NAME }}
-          FRONTEND_URL: http://localhost:3001
-        run: |
-          npm start &
-          npx wait-on http://localhost:3000/api-docs --timeout 60000
-
-      - name: Build frontend
-        working-directory: ./eleutheria-fe
-        env:
-          NEXT_PUBLIC_API_URL: http://localhost:3000
-          SERVER_API_URL: http://localhost:3000
-        run: npm run build
-
-      - name: Start frontend server
-        working-directory: ./eleutheria-fe
-        env:
-          NEXT_PUBLIC_API_URL: http://localhost:3000
-          SERVER_API_URL: http://localhost:3000
-          PORT: 3001
-        run: |
-          npm start -- -p 3001 &
-          npx wait-on http://localhost:3001 --timeout 60000
-
-      - name: Run Playwright tests
-        working-directory: ./eleutheria-fe
-        env:
-          FRONTEND_URL: http://localhost:3001
           CI: true
-        run: npx playwright test --reporter=html
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
-          path: eleutheria-fe/playwright-report/
+          path: playwright-report/
           retention-days: 30
 
       - name: Upload test screenshots
@@ -134,5 +43,5 @@ jobs:
         if: failure()
         with:
           name: test-screenshots
-          path: eleutheria-fe/test-results/
+          path: test-results/
           retention-days: 7
