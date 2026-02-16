@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Pagination from '@/components/Pagination';
@@ -11,6 +12,7 @@ import { createForum, updateForum, deleteForum } from '@/lib/services/forums';
 interface Forum {
   id: number;
   name: string;
+  slug: string;
   description: string;
   created_at: string;
   creator_discriminator: string | null;
@@ -144,6 +146,9 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
 
   return (
     <div className="min-h-screen bg-marble-100">
+      <Head>
+        <title>Forums | Eleutheria</title>
+      </Head>
       <Header currentPage="forums" />
 
       {/* Main Content */}
@@ -185,7 +190,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                   style={{ borderColor: '#AA633F' }}
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <Link href={`/forums/${forum.id}`} className="flex-1">
+                    <Link href={`/forums/${forum.slug}`} className="flex-1">
                       <div>
                         <h2 className="text-xl font-semibold mb-2 text-gray-800">{forum.name}</h2>
                         <p className="text-gray-600">{forum.description}</p>
@@ -280,7 +285,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                     value={forumName}
                     onChange={(e) => setForumName(e.target.value)}
                     placeholder="e.g., Technology Discussion"
-                    maxLength={20}
+                    maxLength={35}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
                   />
@@ -294,10 +299,16 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                     value={forumDescription}
                     onChange={(e) => setForumDescription(e.target.value)}
                     placeholder="e.g., Talk about tech, gadgets, and software"
-                    maxLength={200}
+                    maxLength={500}
                     rows={4}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        e.currentTarget.closest('form')?.requestSubmit();
+                      }
+                    }}
                   />
                 </div>
 
@@ -375,7 +386,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                     value={forumName}
                     onChange={(e) => setForumName(e.target.value)}
                     placeholder="e.g., Technology Discussion"
-                    maxLength={20}
+                    maxLength={35}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
                   />
@@ -389,10 +400,16 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                     value={forumDescription}
                     onChange={(e) => setForumDescription(e.target.value)}
                     placeholder="e.g., Talk about tech, gadgets, and software"
-                    maxLength={200}
+                    maxLength={500}
                     rows={4}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        e.currentTarget.closest('form')?.requestSubmit();
+                      }
+                    }}
                   />
                 </div>
 

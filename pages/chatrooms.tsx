@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import SearchBar from '@/components/SearchBar';
@@ -7,10 +8,12 @@ import Pagination from '@/components/Pagination';
 import { API_ENDPOINTS } from '@/config/api';
 import { GetServerSideProps } from 'next';
 import { createChatroom, updateChatroom, deleteChatroom } from '@/lib/services/chatrooms';
+import { getErrorMessage } from '@/lib/api';
 
 interface Chatroom {
   id: number;
   name: string;
+  slug: string;
   description: string;
   created_at: string;
   creator_discriminator: string | null;
@@ -60,9 +63,9 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
 
       // Refresh the page to show the new chatroom
       router.replace(router.asPath);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error creating chatroom:', err);
-      setFormError('Failed to create chatroom. Please try again.');
+      setFormError(getErrorMessage(err, 'Failed to create chatroom. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -101,9 +104,9 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
 
       // Refresh the page to show the updated chatroom
       router.replace(router.asPath);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating chatroom:', err);
-      setFormError('Failed to update chatroom. Please try again.');
+      setFormError(getErrorMessage(err, 'Failed to update chatroom. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -118,9 +121,9 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
       await deleteChatroom(chatroom.id);
       // Refresh the page to show the updated list
       router.replace(router.asPath);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting chatroom:', err);
-      alert('Failed to delete chatroom. Please try again.');
+      alert(getErrorMessage(err, 'Failed to delete chatroom. Please try again.'));
     }
   };
 
@@ -145,6 +148,9 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
 
   return (
     <div className="min-h-screen bg-marble-100">
+      <Head>
+        <title>Chatrooms | Eleutheria</title>
+      </Head>
       <Header currentPage="chatrooms" />
 
       {/* Main Content */}
@@ -186,7 +192,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                   style={{ borderColor: '#4D89B0' }}
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <Link href={`/chatrooms/${chatroom.id}`} className="flex-1">
+                    <Link href={`/chatrooms/${chatroom.slug}`} className="flex-1">
                       <div>
                         <h2 className="text-xl font-semibold mb-2 text-gray-800">{chatroom.name}</h2>
                         <p className="text-gray-600">{chatroom.description}</p>
@@ -281,7 +287,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                     value={chatroomName}
                     onChange={(e) => setChatroomName(e.target.value)}
                     placeholder="e.g., General Chat"
-                    maxLength={20}
+                    maxLength={35}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
                   />
@@ -295,10 +301,16 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                     value={chatroomDescription}
                     onChange={(e) => setChatroomDescription(e.target.value)}
                     placeholder="e.g., A place for general discussion"
-                    maxLength={200}
+                    maxLength={500}
                     rows={4}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        e.currentTarget.closest('form')?.requestSubmit();
+                      }
+                    }}
                   />
                 </div>
 
@@ -376,7 +388,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                     value={chatroomName}
                     onChange={(e) => setChatroomName(e.target.value)}
                     placeholder="e.g., General Chat"
-                    maxLength={20}
+                    maxLength={35}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
                   />
@@ -390,10 +402,16 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                     value={chatroomDescription}
                     onChange={(e) => setChatroomDescription(e.target.value)}
                     placeholder="e.g., A place for general discussion"
-                    maxLength={200}
+                    maxLength={500}
                     rows={4}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        e.currentTarget.closest('form')?.requestSubmit();
+                      }
+                    }}
                   />
                 </div>
 

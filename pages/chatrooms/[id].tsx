@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
+import Head from 'next/head';
 import Header from '@/components/Header';
 import ChatMessageList from '@/components/chat/ChatMessageList';
 import ChatInput from '@/components/chat/ChatInput';
 import UserActionMenu from '@/components/UserActionMenu';
-import { clientApi } from '@/lib/api';
+import { clientApi, getErrorMessage } from '@/lib/api';
 import { createChatroomMessage, updateChatroom, deleteChatroom } from '@/lib/services/chatrooms';
 import { useChatStore } from '@/store/chatStore';
 import { joinChatroom, leaveChatroom, isSocketConnected, connectSocket } from '@/lib/socket';
@@ -45,9 +46,9 @@ export default function ChatroomMessagesPage() {
 
   // Join chatroom Socket.io room and listen for messages
   useEffect(() => {
-    if (!socket || !id) return;
+    if (!socket || !chatroom) return;
 
-    const chatroomId = Number(id);
+    const chatroomId = chatroom.id;
 
     // Ensure socket is connected before joining chatroom
     const joinChatroomWhenConnected = async () => {
@@ -100,10 +101,18 @@ export default function ChatroomMessagesPage() {
       }
     };
 
-    // Handle reconnection - rejoin chatroom if socket reconnects
-    const handleReconnect = () => {
+    // Handle reconnection - rejoin chatroom and refresh data
+    const handleReconnect = async () => {
       console.log('🔄 Socket reconnected, rejoining chatroom...');
       joinChatroom(chatroomId);
+
+      // Re-fetch messages to catch anything missed while disconnected
+      try {
+        const messagesResponse = await clientApi.get(`/api/chatrooms/${chatroomId}/messages`);
+        setMessages(messagesResponse.data.messages || []);
+      } catch (err) {
+        console.error('Error re-fetching messages on reconnect:', err);
+      }
     };
 
     socket.on('new_chatroom_message', handleNewMessage);
@@ -117,7 +126,7 @@ export default function ChatroomMessagesPage() {
       socket.off('reconnect', handleReconnect);
       leaveChatroom(chatroomId);
     };
-  }, [socket, id]);
+  }, [socket, chatroom]);
 
   // Fetch chatroom info and messages on component mount and when ID changes
   useEffect(() => {
@@ -143,10 +152,13 @@ export default function ChatroomMessagesPage() {
           setUserDiscriminator(userResponse.data.user.discriminator);
         }
 
-        // Find the specific chatroom by ID
+        // Find the specific chatroom by ID or slug
         const chatroomsData = chatroomsResponse.data;
         const chatrooms = Array.isArray(chatroomsData) ? chatroomsData : (chatroomsData.chatrooms || []);
-        const foundChatroom = chatrooms.find((c: ChatroomWithUsers) => c.id === Number(id));
+        const isNumeric = /^\d+$/.test(id as string);
+        const foundChatroom = chatrooms.find((c: ChatroomWithUsers) =>
+          isNumeric ? c.id === Number(id) : (c as any).slug === id
+        );
 
         if (foundChatroom) {
           setChatroom(foundChatroom);
@@ -168,17 +180,17 @@ export default function ChatroomMessagesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!newMessage.trim() || !id) return;
+    if (!newMessage.trim() || !chatroom) return;
 
     setIsSending(true);
 
     try {
-      await createChatroomMessage(Number(id), { content: newMessage.trim() });
+      await createChatroomMessage(chatroom.id, { content: newMessage.trim() });
       setNewMessage('');
       // No need to refresh messages - Socket.io will handle it in real-time
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error sending message:', err);
-      setError('Failed to send message');
+      setError(getErrorMessage(err, 'Failed to send message'));
     } finally {
       setIsSending(false);
     }
@@ -220,9 +232,9 @@ export default function ChatroomMessagesPage() {
       setChatroomName('');
       setChatroomDescription('');
       setIsEditModalOpen(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating chatroom:', err);
-      setFormError('Failed to update chatroom. Please try again.');
+      setFormError(getErrorMessage(err, 'Failed to update chatroom. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -239,9 +251,9 @@ export default function ChatroomMessagesPage() {
       await deleteChatroom(chatroom.id);
       // Redirect to chatrooms list
       router.push('/chatrooms');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting chatroom:', err);
-      alert('Failed to delete chatroom. Please try again.');
+      alert(getErrorMessage(err, 'Failed to delete chatroom. Please try again.'));
     }
   };
 
@@ -260,6 +272,9 @@ export default function ChatroomMessagesPage() {
 
   return (
     <div className="min-h-screen bg-marble-100">
+      <Head>
+        <title>{chatroom?.name || 'Chatroom'} | Eleutheria</title>
+      </Head>
       <Header currentPage="chatrooms" />
 
       {/* Main Content */}
@@ -388,7 +403,7 @@ export default function ChatroomMessagesPage() {
                     value={chatroomName}
                     onChange={(e) => setChatroomName(e.target.value)}
                     placeholder="e.g., General Chat"
-                    maxLength={100}
+                    maxLength={35}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
                   />
@@ -406,6 +421,12 @@ export default function ChatroomMessagesPage() {
                     rows={4}
                     disabled={isSubmitting}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        e.currentTarget.closest('form')?.requestSubmit();
+                      }
+                    }}
                   />
                 </div>
 

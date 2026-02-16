@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 import Header from '@/components/Header';
 import { getAllChatSessions } from '@/lib/services/chat';
 import { getCurrentUser } from '@/lib/services/session';
@@ -191,6 +192,7 @@ export default function PrivateChatsPage() {
         isMinimized: false,
         unreadCount: 0,
         status: session.status as 'active' | 'ended',
+        created_at: session.created_at,
       });
     }
   };
@@ -302,6 +304,9 @@ export default function PrivateChatsPage() {
 
   return (
     <div className="min-h-screen bg-marble-100">
+      <Head>
+        <title>Private Chats | Eleutheria</title>
+      </Head>
       <Header currentPage="private-chats" />
 
       <main className="max-w-4xl mx-auto px-6 py-8">

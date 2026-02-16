@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { createPost, updatePost, deletePost } from '@/lib/services/posts';
+import { getErrorMessage } from '@/lib/api';
 import Pagination from './Pagination';
 import SearchBar from './SearchBar';
 import UserActionMenu from './UserActionMenu';
 import { FeedPost } from '@/lib/types';
+import TruncatedText from './TruncatedText';
 
 interface FeedProps {
   title?: string;
@@ -16,6 +18,7 @@ interface FeedProps {
   };
   posts: FeedPost[];
   forumId?: number;
+  forumSlug?: string;
   username?: string;
   userSessionToken?: string | null;
   showForumActions?: boolean;
@@ -26,8 +29,9 @@ interface FeedProps {
   searchQuery?: string;
 }
 
-export default function Feed({ title = 'Global Feed', description, backLink, posts, forumId = 1, username = 'Anonymous', userSessionToken = null, showForumActions = false, onEditForum, onDeleteForum, currentPage = 1, totalPages = 1, searchQuery: initialSearchQuery = '' }: FeedProps) {
+export default function Feed({ title = 'Global Feed', description, backLink, posts: initialPosts, forumId = 1, forumSlug, username = 'Anonymous', userSessionToken = null, showForumActions = false, onEditForum, onDeleteForum, currentPage = 1, totalPages = 1, searchQuery: initialSearchQuery = '' }: FeedProps) {
   const router = useRouter();
+  const [posts, setPosts] = useState(initialPosts);
   const [postContent, setPostContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -43,13 +47,22 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
     setError('');
 
     try {
-      await createPost(forumId, { content: postContent });
+      const response = await createPost(forumId, { content: postContent });
+      const newPost = response.post as any;
+      // Add new post to the top of the list (user sees it instantly)
+      setPosts(prev => [{
+        id: newPost.id,
+        content: newPost.content,
+        username: newPost.username,
+        author_discriminator: newPost.author_discriminator,
+        is_my_post: true,
+        created_at: newPost.created_at,
+        comment_count: 0,
+      }, ...prev]);
       setPostContent('');
-      // Refresh the page to show the new post
-      router.replace(router.asPath);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error creating post:', err);
-      setError('Failed to create post. Please try again.');
+      setError(getErrorMessage(err, 'Failed to create post. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -73,13 +86,12 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
 
     try {
       await updatePost(forumId, postId, { content: editContent.trim() });
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, content: editContent.trim() } : p));
       setEditingPostId(null);
       setEditContent('');
-      // Refresh the page to show the updated post
-      router.replace(router.asPath);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating post:', err);
-      setError('Failed to update post. Please try again.');
+      setError(getErrorMessage(err, 'Failed to update post. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -95,20 +107,21 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
 
     try {
       await deletePost(forumId, postId);
-      // Refresh the page to show the deleted post is gone
-      router.replace(router.asPath);
-    } catch (err) {
+      setPosts(prev => prev.filter(p => p.id !== postId));
+    } catch (err: any) {
       console.error('Error deleting post:', err);
-      setError('Failed to delete post. Please try again.');
+      setError(getErrorMessage(err, 'Failed to delete post. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const forumIdentifier = forumSlug || forumId;
+
   const handlePageChange = (page: number) => {
-    // If on /feed, navigate to /forums/1 instead
-    const basePath = router.asPath.split('?')[0] === '/feed' 
-      ? `/forums/${forumId}` 
+    // If on /feed, navigate to /forums/<slug> instead
+    const basePath = router.asPath.split('?')[0] === '/feed'
+      ? `/forums/${forumIdentifier}`
       : router.asPath.split('?')[0];
     const params = new URLSearchParams(window.location.search);
     params.set('page', page.toString());
@@ -116,9 +129,9 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
   };
 
   const handleSearch = (query: string) => {
-    // If on /feed, navigate to /forums/1 instead
-    const basePath = router.asPath.split('?')[0] === '/feed' 
-      ? `/forums/${forumId}` 
+    // If on /feed, navigate to /forums/<slug> instead
+    const basePath = router.asPath.split('?')[0] === '/feed'
+      ? `/forums/${forumIdentifier}`
       : router.asPath.split('?')[0];
     if (query) {
       router.push(`${basePath}?q=${encodeURIComponent(query)}&page=1`);
@@ -128,9 +141,9 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
   };
 
   const handleClearSearch = () => {
-    // If on /feed, navigate to /forums/1 instead
-    const basePath = router.asPath.split('?')[0] === '/feed' 
-      ? `/forums/${forumId}` 
+    // If on /feed, navigate to /forums/<slug> instead
+    const basePath = router.asPath.split('?')[0] === '/feed'
+      ? `/forums/${forumIdentifier}`
       : router.asPath.split('?')[0];
     router.push(basePath);
   };
@@ -197,8 +210,14 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
             placeholder="What's on your mind?"
             className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
             rows={3}
-            maxLength={3000}
+            maxLength={25000}
             disabled={isSubmitting}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                e.currentTarget.closest('form')?.requestSubmit();
+              }
+            }}
           />
           <div className="flex justify-end mt-3">
             <button
@@ -241,7 +260,7 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
                   />
                 </span>
                 <span className="text-sm text-gray-500">
-                  {new Date(post.created_at).toLocaleDateString()}
+                  {new Date(post.created_at).toLocaleString(undefined, { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                 </span>
               </div>
 
@@ -253,8 +272,14 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
                     onChange={(e) => setEditContent(e.target.value)}
                     className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
                     rows={3}
-                    maxLength={3000}
+                    maxLength={25000}
                     disabled={isSubmitting}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSaveEdit(post.id);
+                      }
+                    }}
                   />
                   <div className="flex gap-2 mt-2">
                     <button
@@ -275,7 +300,7 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-700 mb-4 p-3 bg-gray-50 rounded-lg">{post.content}</p>
+                <TruncatedText content={post.content} className="mb-4 p-3 bg-gray-50 rounded-lg" />
               )}
 
               {/* Post Actions */}
@@ -283,13 +308,7 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
-                      router.push({
-                        pathname: `/forums/${forumId}/comments/${post.id}`,
-                        query: {
-                          post_content: post.content,
-                          post_username: post.username,
-                        }
-                      });
+                      router.push(`/forums/${forumSlug || forumId}/comments/${post.id}`);
                     }}
                     className="text-sm font-semibold hover:underline"
                     style={{ color: '#AA633F' }}

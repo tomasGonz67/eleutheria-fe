@@ -36,18 +36,19 @@ export function useSocketEvents(
     const handleStartChat = (data: {
       session_id: number;
       user1_username: string;
+      user1_discriminator: string;
       user2_username: string;
+      user2_discriminator: string;
     }) => {
       console.log('Chat started:', data);
 
       if (data.session_id === randomChatSessionId) {
-        // Determine which username is the partner (not me)
-        const partner =
-          data.user1_username === currentUsername
-            ? data.user2_username
-            : data.user1_username;
+        // Determine which username/discriminator is the partner (not me)
+        const isUser1 = data.user1_username === currentUsername;
+        const partner = isUser1 ? data.user2_username : data.user1_username;
+        const partnerDiscriminator = isUser1 ? data.user2_discriminator : data.user1_discriminator;
 
-        setRandomChatPartner(partner);
+        setRandomChatPartner(partner, partnerDiscriminator);
         setRandomChatStatus('matched');
       }
     };

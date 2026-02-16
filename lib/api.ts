@@ -12,4 +12,19 @@ export const clientApi = axios.create({
   },
 });
 
+clientApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 429) {
+      error.message = 'You have been too active. Please wait before trying again.';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export function getErrorMessage(err: any, fallback: string): string {
+  if (err?.response?.status === 429) return err.message;
+  return fallback;
+}
+
 export default clientApi;

@@ -8,11 +8,13 @@ export const API_BASE_URL = isServer
 
 export const API_ENDPOINTS = {
   // Posts
-  getPosts: (forumId: number, page: number = 1, limit: number = 20) =>
+  getPosts: (forumId: number | string, page: number = 1, limit: number = 20) =>
     `${API_BASE_URL}/api/forums/${forumId}/posts?page=${page}&limit=${limit}`,
-  getComments: (forumId: number, parentId: number) =>
+  getComments: (forumId: number | string, parentId: number) =>
     `${API_BASE_URL}/api/forums/${forumId}/posts?parent_id=${parentId}`,
-  searchPosts: (forumId: number, query: string, page: number = 1, limit: number = 20) =>
+  getPost: (forumId: number | string, postId: number) =>
+    `${API_BASE_URL}/api/forums/${forumId}/posts/${postId}`,
+  searchPosts: (forumId: number | string, query: string, page: number = 1, limit: number = 20) =>
     `${API_BASE_URL}/api/forums/${forumId}/posts/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`,
   createPost: (forumId: number) => `${API_BASE_URL}/api/forums/${forumId}/posts`,
 
@@ -34,5 +36,5 @@ export const API_ENDPOINTS = {
   searchChatrooms: (query: string, page: number = 1, limit: number = 20) => 
     `${API_BASE_URL}/api/chatrooms/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`,
   createChatroom: () => `${API_BASE_URL}/api/chatrooms/create`,
-  getChatroomMessages: (chatroomId: number) => `${API_BASE_URL}/api/chatrooms/${chatroomId}/messages`,
+  getChatroomMessages: (chatroomId: number | string) => `${API_BASE_URL}/api/chatrooms/${chatroomId}/messages`,
 };

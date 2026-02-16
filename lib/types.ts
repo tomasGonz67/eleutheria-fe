@@ -28,6 +28,7 @@ export interface LoginResponse {
 export interface Forum {
   id: number;
   name: string;
+  slug?: string;
   description: string;
   created_at: string;
 }
@@ -92,6 +93,7 @@ export interface UpdatePostRequest {
 export interface Chatroom {
   id: number;
   name: string;
+  slug?: string;
   description: string | null;
   created_at: string;
 }

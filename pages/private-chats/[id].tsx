@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 import Header from '@/components/Header';
 import ChatHeader from '@/components/chat/ChatHeader';
 import ChatMessageList from '@/components/chat/ChatMessageList';
@@ -64,19 +65,6 @@ export default function PrivateChatPage() {
 
         // Fetch messages
         const messagesResponse = await clientApi.get(`/api/chat/${sessionId}/messages`);
-
-        // DEBUG: Check for discriminators and UUIDs in messages
-        console.log('=== CHAT MESSAGES DATA CHECK ===');
-        if (messagesResponse.data.messages && messagesResponse.data.messages.length > 0) {
-          const firstMsg = messagesResponse.data.messages[0];
-          console.log('First message sender_discriminator:', firstMsg.sender_discriminator);
-          console.log('First message has sender_session_token?:', 'sender_session_token' in firstMsg);
-          console.log('First message has receiver_session_token?:', 'receiver_session_token' in firstMsg);
-          if ('sender_session_token' in firstMsg || 'receiver_session_token' in firstMsg) {
-            console.warn('⚠️  WARNING: UUID EXPOSURE - session tokens found in message!');
-          }
-        }
-        console.log('================================');
 
         // Map sender_username to username for ChatMessageList component
         const mappedMessages = messagesResponse.data.messages.map((msg: any) => ({
@@ -209,6 +197,9 @@ export default function PrivateChatPage() {
 
   return (
     <div className="min-h-screen bg-marble-100">
+      <Head>
+        <title>Private Chat | Eleutheria</title>
+      </Head>
       <Header currentPage="private-chats" />
 
       <main className="max-w-4xl mx-auto px-6 py-8">

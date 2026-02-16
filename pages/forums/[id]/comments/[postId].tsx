@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 import Header from '@/components/Header';
 import Link from 'next/link';
 import { API_ENDPOINTS } from '@/config/api';
 import { GetServerSideProps } from 'next';
 import { createPost, updatePost, deletePost } from '@/lib/services/posts';
-import { clientApi } from '@/lib/api';
+import { clientApi, getErrorMessage } from '@/lib/api';
 import UserActionMenu from '@/components/UserActionMenu';
 import { FeedPost, Forum } from '@/lib/types';
+import TruncatedText from '@/components/TruncatedText';
 
 interface PostCommentsPageProps {
   forum: Forum;
@@ -49,6 +51,7 @@ interface CommentItemProps {
   onCancelReply: () => void;
   onSubmitReply: (parentId: number) => void;
   onToggleReplies: (commentId: number) => void;
+  onExpandAllReplies: (commentId: number) => void;
   setEditContent: (content: string) => void;
   setCommentReplyContent: (content: string) => void;
 }
@@ -77,6 +80,7 @@ function CommentItem({
   onCancelReply,
   onSubmitReply,
   onToggleReplies,
+  onExpandAllReplies,
   setEditContent,
   setCommentReplyContent,
 }: CommentItemProps) {
@@ -122,7 +126,7 @@ function CommentItem({
             )}
           </div>
           <span className="text-sm text-gray-500 whitespace-nowrap">
-            {new Date(comment.created_at).toLocaleDateString()}
+            {new Date(comment.created_at).toLocaleString(undefined, { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
           </span>
         </div>
 
@@ -134,8 +138,14 @@ function CommentItem({
               onChange={(e) => setEditContent(e.target.value)}
               className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
               rows={3}
-              maxLength={3000}
+              maxLength={5000}
               disabled={isSubmitting}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  onSaveEdit(comment.id);
+                }
+              }}
             />
             <div className="flex gap-2 mt-2">
               <button
@@ -156,33 +166,62 @@ function CommentItem({
             </div>
           </div>
         ) : (
-          <p className="text-gray-700 mb-4 p-3 bg-white rounded-lg">{comment.content}</p>
+          <TruncatedText content={comment.content} className="mb-4 p-3 bg-white rounded-lg" />
         )}
 
         {/* Comment Actions */}
         {editingCommentId !== comment.id && (
           <div className="flex gap-3 items-center">
-            <button
-              onClick={() => onToggleReplies(comment.id)}
-              className="text-sm font-semibold hover:underline"
-              style={{ color: '#AA633F' }}
-              disabled={isLoading}
-            >
-              {isLoading 
-                ? 'Loading...' 
-                : isExpanded 
-                  ? 'Hide Comments (-)'
-                  : `See Replies${comment.comment_count !== undefined ? ` (${comment.comment_count})` : ''}`
-              }
-            </button>
-            <p className="text-gray-500">|</p>
-            <button
-              onClick={() => onStartReply(comment.id)}
-              className="text-sm font-semibold hover:underline"
-              style={{ color: '#AA633F' }}
-            >
-              Reply
-            </button>
+            {isLoading ? (
+              <span className="text-sm font-semibold" style={{ color: '#AA633F' }}>Loading...</span>
+            ) : isExpanded ? (
+              <button
+                onClick={() => onToggleReplies(comment.id)}
+                className="text-sm font-semibold hover:underline"
+                style={{ color: '#AA633F' }}
+              >
+                Hide Replies (-)
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => onToggleReplies(comment.id)}
+                  className="text-sm font-semibold hover:underline"
+                  style={{ color: '#AA633F' }}
+                >
+                  See Direct Replies{comment.comment_count !== undefined && comment.comment_count > 0 ? ` (${comment.comment_count})` : ''}
+                </button>
+                {comment.comment_count !== undefined && comment.comment_count > 0 && (
+                  <>
+                    <p className="text-gray-500">|</p>
+                    <button
+                      onClick={() => onExpandAllReplies(comment.id)}
+                      className="text-sm font-semibold hover:underline"
+                      style={{ color: '#AA633F' }}
+                    >
+                      All Replies
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+            {depth < 7 ? (
+              <>
+                <p className="text-gray-500">|</p>
+                <button
+                  onClick={() => onStartReply(comment.id)}
+                  className="text-sm font-semibold hover:underline"
+                  style={{ color: '#AA633F' }}
+                >
+                  Reply
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-500">|</p>
+                <span className="text-xs text-gray-400 italic">Reply limit reached</span>
+              </>
+            )}
             {/* Show Edit and Delete buttons only for current user's comments */}
             {comment.is_my_post && (
               <>
@@ -219,8 +258,14 @@ function CommentItem({
               placeholder="Write your reply..."
               className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
               rows={3}
-              maxLength={3000}
+              maxLength={5000}
               disabled={isSubmitting}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  onSubmitReply(comment.id);
+                }
+              }}
             />
             <div className="flex gap-2 mt-2">
               <button
@@ -272,6 +317,7 @@ function CommentItem({
               onCancelReply={onCancelReply}
               onSubmitReply={onSubmitReply}
               onToggleReplies={onToggleReplies}
+              onExpandAllReplies={onExpandAllReplies}
               setEditContent={setEditContent}
               setCommentReplyContent={setCommentReplyContent}
             />
@@ -322,9 +368,9 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
       updatedComments.sort((a: FeedPost, b: FeedPost) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       
       setComments(updatedComments);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error creating reply:', err);
-      setFormError('Failed to post reply. Please try again.');
+      setFormError(getErrorMessage(err, 'Failed to post reply. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -369,9 +415,9 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
       
       setEditingCommentId(null);
       setEditContent('');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating comment:', err);
-      setFormError('Failed to update comment. Please try again.');
+      setFormError(getErrorMessage(err, 'Failed to update comment. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -441,9 +487,9 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
           return newMap;
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting comment:', err);
-      setFormError('Failed to delete comment. Please try again.');
+      setFormError(getErrorMessage(err, 'Failed to delete comment. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -504,9 +550,9 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
       
       setReplyingToCommentId(null);
       setCommentReplyContent('');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error creating reply:', err);
-      setFormError('Failed to post reply. Please try again.');
+      setFormError(getErrorMessage(err, 'Failed to post reply. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -581,8 +627,71 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
     }
   };
 
+  // Recursively collect all nested replies
+  const recursivelyCollectReplies = async (
+    commentId: number,
+    collected: Map<number, FeedPost[]>,
+    expanded: Set<number>
+  ) => {
+    let replies: FeedPost[];
+
+    // Reuse already-loaded replies if available
+    if (loadedReplies.has(commentId)) {
+      replies = loadedReplies.get(commentId)!;
+    } else {
+      const response = await clientApi.get(`/api/forums/${forum.id}/posts?parent_id=${commentId}`);
+      replies = Array.isArray(response.data) ? response.data : (response.data.posts || []);
+      replies.sort((a: FeedPost, b: FeedPost) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+
+    collected.set(commentId, replies);
+    expanded.add(commentId);
+
+    // Recursively fetch children that have replies
+    const childrenWithReplies = replies.filter((r: FeedPost) => r.comment_count && r.comment_count > 0);
+    await Promise.all(
+      childrenWithReplies.map((r: FeedPost) => recursivelyCollectReplies(r.id, collected, expanded))
+    );
+  };
+
+  // Expand all nested replies recursively
+  const expandAllReplies = async (commentId: number) => {
+    setLoadingReplies(prev => new Set(prev).add(commentId));
+
+    try {
+      const collected = new Map<number, FeedPost[]>();
+      const expanded = new Set<number>();
+
+      await recursivelyCollectReplies(commentId, collected, expanded);
+
+      // Batch update state
+      setLoadedReplies(prev => {
+        const newMap = new Map(prev);
+        collected.forEach((replies, id) => newMap.set(id, replies));
+        return newMap;
+      });
+      setExpandedComments(prev => {
+        const newSet = new Set(prev);
+        expanded.forEach(id => newSet.add(id));
+        return newSet;
+      });
+    } catch (err) {
+      console.error('Error expanding all replies:', err);
+      setFormError('Failed to load replies.');
+    } finally {
+      setLoadingReplies(prev => {
+        const next = new Set(prev);
+        next.delete(commentId);
+        return next;
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-marble-100">
+      <Head>
+        <title>{forum.name} - Comments | Eleutheria</title>
+      </Head>
       <Header currentPage="forums" />
 
       {/* Main Content */}
@@ -593,7 +702,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
           </div>
         ) : (
           <div className="bg-white p-8 rounded-lg border-4" style={{ borderColor: '#AA633F' }}>
-            <Link href={`/forums/${forum.id}`} className="text-sm mb-4 inline-block hover:underline" style={{ color: '#AA633F' }}>
+            <Link href={`/forums/${forum.slug || forum.id}`} className="text-sm mb-4 inline-block hover:underline" style={{ color: '#AA633F' }}>
               ← Back to {forum.name}
             </Link>
 
@@ -603,7 +712,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
                   Comments for post
                 </h1>
                 <div className="p-4 bg-gray-100 rounded-lg border border-gray-300 mb-2">
-                  <p className="text-gray-700">{postContent}</p>
+                  <TruncatedText content={postContent} />
                 </div>
                 <div className="text-sm text-gray-600">
                   by <UserActionMenu
@@ -636,8 +745,14 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
                   placeholder="Write your reply..."
                   className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
                   rows={3}
-                  maxLength={3000}
+                  maxLength={5000}
                   disabled={isSubmitting}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      e.currentTarget.closest('form')?.requestSubmit();
+                    }
+                  }}
                 />
                 <div className="flex justify-end mt-3">
                   <button
@@ -698,6 +813,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
                       onCancelReply={handleCancelReplyToComment}
                       onSubmitReply={handleSubmitReplyToComment}
                       onToggleReplies={toggleReplies}
+                      onExpandAllReplies={expandAllReplies}
                       setEditContent={setEditContent}
                       setCommentReplyContent={setCommentReplyContent}
                     />
@@ -714,8 +830,6 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id: forumId, postId } = context.params as { id: string; postId: string };
-  const postContent = context.query.post_content as string;
-  const postUsername = context.query.post_username as string;
 
   try {
     // Use SERVER_API_URL for SSR (direct backend access in container)
@@ -723,12 +837,16 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const API_URL = process.env.SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
     const commentsUrl = `${API_URL}/api/forums/${forumId}/posts?parent_id=${postId}`;
-    
-    console.log('Fetching comments from:', commentsUrl);
+    const postUrl = `${API_URL}/api/forums/${forumId}/posts/${postId}`;
 
-    // Fetch user and comments (forum metadata should be in comments response)
-    const [userResponse, commentsResponse] = await Promise.all([
+    // Fetch user, post data, and comments in parallel
+    const [userResponse, postResponse, commentsResponse] = await Promise.all([
       fetch(`${API_URL}/api/session/me`, {
+        headers: {
+          'Cookie': context.req.headers.cookie || '',
+        },
+      }),
+      fetch(postUrl, {
         headers: {
           'Cookie': context.req.headers.cookie || '',
         },
@@ -748,12 +866,21 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const commentsData = await commentsResponse.json();
     const comments = Array.isArray(commentsData) ? commentsData : (commentsData.posts || []);
-    
+
     // Sort comments by most recent first
     comments.sort((a: FeedPost, b: FeedPost) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    
+
     // Get forum from comments response (if backend includes it), otherwise use fallback
-    const forum = commentsData.forum || { id: parseInt(forumId), name: 'Forum', description: '' };
+    const forum = commentsData.forum || { id: parseInt(forumId) || 0, name: 'Forum', slug: forumId, description: '' };
+
+    // Get post content from the API
+    let postContent = null;
+    let postUsername = null;
+    if (postResponse.ok) {
+      const postData = await postResponse.json();
+      postContent = postData.post?.content || null;
+      postUsername = postData.post?.username || null;
+    }
 
     // Get username and session token from user response (if available)
     let username = 'Anonymous';
@@ -771,21 +898,21 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         comments,
         username,
         userSessionToken,
-        postContent: postContent || null,
-        postUsername: postUsername || null,
+        postContent,
+        postUsername,
       },
     };
   } catch (error) {
     console.error('Error fetching post:', error);
     return {
       props: {
-        forum: { id: parseInt(forumId), name: 'Forum', description: '' },
+        forum: { id: parseInt(forumId) || 0, name: 'Forum', slug: forumId, description: '' },
         postId: parseInt(postId),
         comments: [],
         username: 'Anonymous',
         userSessionToken: null,
-        postContent: postContent || null,
-        postUsername: postUsername || null,
+        postContent: null,
+        postUsername: null,
         error: error instanceof Error ? error.message : 'Failed to load post',
       },
     };

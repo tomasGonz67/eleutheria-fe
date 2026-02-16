@@ -11,8 +11,34 @@ export default function FloatingChats() {
   const [inputValues, setInputValues] = useState<Record<number, string>>({});
   const [currentUserDiscriminator, setCurrentUserDiscriminator] = useState<string | null>(null);
   const [openDropdown, setOpenDropdown] = useState<number | null>(null); // Track which dropdown is open
+  const [sessionTimers, setSessionTimers] = useState<Record<number, string>>({}); // session_id -> created_at
+  const [, setTick] = useState(0); // Force re-render every second for countdown
   const messagesEndRef = useRef<Record<number, HTMLDivElement | null>>({});
   const endedByMeRef = useRef<Set<number>>(new Set()); // Track sessions we ended
+
+  // Calculate time remaining for a session (10-second inactivity window)
+  const getTimeRemaining = (createdAt: string): number => {
+    const created = new Date(createdAt).getTime();
+    const now = Date.now();
+    const expiresAt = created + 10000;
+    const remaining = expiresAt - now;
+    return Math.max(0, Math.floor(remaining / 1000));
+  };
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Update countdown every second
+  useEffect(() => {
+    if (plannedChats.length === 0) return;
+    const interval = setInterval(() => {
+      setTick((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [plannedChats.length]);
 
   // Get current user's discriminator
   useEffect(() => {
@@ -36,6 +62,9 @@ export default function FloatingChats() {
         ...prev,
         [sessionId]: response.data.messages,
       }));
+      if (response.data.session_created_at) {
+        setSessionTimers((prev) => ({ ...prev, [sessionId]: response.data.session_created_at }));
+      }
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
@@ -128,6 +157,10 @@ export default function FloatingChats() {
           },
         ],
       }));
+      // Reset inactivity timer when a new message arrives
+      if (data.session_created_at) {
+        setSessionTimers((prev) => ({ ...prev, [sessionId]: data.session_created_at }));
+      }
     };
 
     // Listen for session ended
@@ -255,6 +288,12 @@ export default function FloatingChats() {
               )}
             </div>
             <div className="flex items-center gap-2">
+              {/* Countdown Timer */}
+              {(sessionTimers[chat.id] || chat.created_at) && (
+                <span className="text-xs font-bold text-red-400">
+                  {formatTime(getTimeRemaining(sessionTimers[chat.id] || chat.created_at!))}
+                </span>
+              )}
               <button
                 onClick={(e) => {
                   e.stopPropagation();

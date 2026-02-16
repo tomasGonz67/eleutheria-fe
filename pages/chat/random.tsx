@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 import Header from '@/components/Header';
-import { clientApi } from '@/lib/api';
+import { clientApi, getErrorMessage } from '@/lib/api';
 import { API_ENDPOINTS } from '@/config/api';
 import { endChatSession, cancelChatSession } from '@/lib/services/chat';
 import { useChatStore } from '@/store/chatStore';
@@ -28,6 +29,7 @@ export default function RandomChatPage() {
     randomChatStatus,
     randomChatSessionId,
     randomChatPartner,
+    randomChatPartnerDiscriminator,
     randomChatMessages,
     setRandomChatStatus,
     setRandomChatSessionId,
@@ -189,9 +191,9 @@ export default function RandomChatPage() {
         // Join Socket.io room
         joinChatSession(sessionId);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error starting random chat:', err);
-      setError('Failed to start chat. Please try again.');
+      setError(getErrorMessage(err, 'Failed to start chat. Please try again.'));
       setRandomChatStatus('idle');
     }
   };
@@ -242,14 +244,17 @@ export default function RandomChatPage() {
       });
 
       setNewMessage('');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error sending message:', err);
-      setError('Failed to send message.');
+      setError(getErrorMessage(err, 'Failed to send message.'));
     }
   };
 
   return (
     <div className="min-h-screen bg-marble-100">
+      <Head>
+        <title>Random Chat | Eleutheria</title>
+      </Head>
       <Header currentPage="random-chat" />
 
       {/* Main Content */}
@@ -309,7 +314,7 @@ export default function RandomChatPage() {
                   <div className="text-lg font-semibold text-gray-800">
                     Chatting with: <UserActionMenu
                       username={randomChatPartner || 'Anonymous'}
-                      discriminator={null}
+                      discriminator={randomChatPartnerDiscriminator}
                       accentColor="#4D89B0"
                       className="font-semibold"
                       style={{ color: '#4D89B0' }}

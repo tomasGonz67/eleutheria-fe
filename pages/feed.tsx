@@ -1,3 +1,4 @@
+import Head from 'next/head';
 import Header from '@/components/Header';
 import Feed from '@/components/Feed';
 import { API_ENDPOINTS } from '@/config/api';
@@ -16,6 +17,9 @@ interface FeedPageProps {
 export default function FeedPage({ posts, username, userSessionToken, currentPage, totalPages, error }: FeedPageProps) {
   return (
     <div className="min-h-screen bg-marble-100">
+      <Head>
+        <title>Feed | Eleutheria</title>
+      </Head>
       <Header currentPage="feed" />
 
       {/* Main Content */}
@@ -25,10 +29,11 @@ export default function FeedPage({ posts, username, userSessionToken, currentPag
             <p className="text-red-600">Error loading posts: {error}</p>
           </div>
         ) : (
-          <Feed 
-            posts={posts} 
-            forumId={1} 
-            username={username} 
+          <Feed
+            posts={posts}
+            forumId={1}
+            forumSlug="global-feed"
+            username={username}
             userSessionToken={userSessionToken}
             currentPage={currentPage}
             totalPages={totalPages}

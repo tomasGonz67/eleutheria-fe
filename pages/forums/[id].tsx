@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 import Header from '@/components/Header';
 import Feed from '@/components/Feed';
 import { API_ENDPOINTS } from '@/config/api';
@@ -82,6 +83,9 @@ export default function ForumPostsPage({ forum, posts, username, userSessionToke
 
   return (
     <div className="min-h-screen bg-marble-100">
+      <Head>
+        <title>{forum.name} | Eleutheria</title>
+      </Head>
       <Header currentPage="forums" />
 
       {/* Main Content */}
@@ -98,6 +102,7 @@ export default function ForumPostsPage({ forum, posts, username, userSessionToke
               backLink={{ href: '/forums', label: 'Back to Forums' }}
               posts={posts}
               forumId={forum.id}
+              forumSlug={forum.slug}
               username={username}
               userSessionToken={userSessionToken}
               showForumActions={forum.is_my_forum}
@@ -143,7 +148,7 @@ export default function ForumPostsPage({ forum, posts, username, userSessionToke
                         value={forumName}
                         onChange={(e) => setForumName(e.target.value)}
                         placeholder="e.g., General Discussion"
-                        maxLength={100}
+                        maxLength={35}
                         disabled={isSubmitting}
                         className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
                       />
@@ -161,6 +166,12 @@ export default function ForumPostsPage({ forum, posts, username, userSessionToke
                         rows={4}
                         disabled={isSubmitting}
                         className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            e.currentTarget.closest('form')?.requestSubmit();
+                          }
+                        }}
                       />
                     </div>
 
@@ -220,9 +231,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const API_URL = process.env.SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
     // Determine which endpoint to call based on search query
+    // Pass id as-is (supports both numeric IDs and slugs)
     const postsEndpoint = searchQuery
-      ? API_ENDPOINTS.searchPosts(parseInt(id), searchQuery, page, limit)
-      : API_ENDPOINTS.getPosts(parseInt(id), page, limit);
+      ? API_ENDPOINTS.searchPosts(id, searchQuery, page, limit)
+      : API_ENDPOINTS.getPosts(id, page, limit);
 
     // Fetch user and posts (forum metadata should be in posts response)
     const [userResponse, postsResponse] = await Promise.all([
@@ -244,28 +256,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const postsData = await postsResponse.json();
 
-    // DEBUG: Check for discriminators and UUIDs in posts
-    console.log('=== FORUM POSTS DATA CHECK ===');
-    if (postsData.posts && postsData.posts.length > 0) {
-      const firstPost = postsData.posts[0];
-      console.log('First post discriminator:', firstPost.author_discriminator);
-      console.log('First post has author_session_token?:', 'author_session_token' in firstPost);
-      console.log('First post has is_my_post?:', 'is_my_post' in firstPost);
-      if ('author_session_token' in firstPost) {
-        console.warn('⚠️  WARNING: UUID EXPOSURE - author_session_token found in post!');
-      }
-    }
-    if (postsData.forum) {
-      console.log('Forum creator_discriminator:', postsData.forum.creator_discriminator);
-      console.log('Forum has creator_session_token?:', 'creator_session_token' in postsData.forum);
-      if ('creator_session_token' in postsData.forum) {
-        console.warn('⚠️  WARNING: UUID EXPOSURE - creator_session_token found in forum!');
-      }
-    }
-    console.log('==============================');
-
     // Get forum from posts response (if backend includes it)
-    const forum = postsData.forum || { id: parseInt(id), name: 'Forum', description: '', creator_discriminator: null, is_my_forum: false };
+    const forum = postsData.forum || { id: parseInt(id) || 0, name: 'Forum', slug: id, description: '', creator_discriminator: null, is_my_forum: false };
 
     // Handle different response formats
     const posts = Array.isArray(postsData) ? postsData : (postsData.posts || []);
@@ -297,7 +289,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     console.error('Error fetching forum:', error);
     return {
       props: {
-        forum: { id: parseInt(id), name: 'Forum', description: '', creator_discriminator: null, is_my_forum: false },
+        forum: { id: parseInt(id) || 0, name: 'Forum', slug: id, description: '', creator_discriminator: null, is_my_forum: false },
         posts: [],
         username: 'Anonymous',
         userSessionToken: null,

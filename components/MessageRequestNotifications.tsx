@@ -5,6 +5,37 @@ import { clientApi } from '@/lib/api';
 export default function MessageRequestNotifications() {
   const { messageRequests, removeMessageRequest, socket, showNotification } = useChatStore();
   const [onlineStatus, setOnlineStatus] = useState<Record<string, boolean>>({});
+  const [, setTick] = useState(0);
+
+  // Calculate time remaining for a request (10-second inactivity window)
+  const getTimeRemaining = (createdAt: string): number => {
+    const created = new Date(createdAt).getTime();
+    const now = Date.now();
+    const expiresAt = created + 10000;
+    const remaining = expiresAt - now;
+    return Math.max(0, Math.floor(remaining / 1000));
+  };
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Tick every second for countdown + auto-remove expired requests
+  useEffect(() => {
+    if (messageRequests.length === 0) return;
+    const interval = setInterval(() => {
+      setTick((prev) => prev + 1);
+      // Auto-remove expired requests
+      messageRequests.forEach((request) => {
+        if (getTimeRemaining(request.created_at) <= 0) {
+          removeMessageRequest(request.session_id);
+        }
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [messageRequests]);
 
   const handleAccept = async (sessionId: number) => {
     try {
@@ -97,6 +128,9 @@ export default function MessageRequestNotifications() {
           <div className="flex-1">
             <p className="font-semibold text-sm">
               {request.requester_username} wants to chat
+            </p>
+            <p className="text-xs text-red-300 font-bold mt-1">
+              {formatTime(getTimeRemaining(request.created_at))}
             </p>
           </div>
           <div className="flex gap-2 ml-4">

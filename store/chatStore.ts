@@ -10,6 +10,7 @@ interface PlannedChat {
   isMinimized: boolean;
   unreadCount: number;
   status?: 'active' | 'ended';
+  created_at?: string;
 }
 
 interface Notification {
@@ -29,6 +30,7 @@ interface ChatStore {
   randomChatStatus: 'idle' | 'waiting' | 'matched' | 'ended';
   randomChatSessionId: number | null;
   randomChatPartner: string;
+  randomChatPartnerDiscriminator: string | null;
   randomChatMessages: Message[];
 
   // Planned chats state
@@ -49,7 +51,7 @@ interface ChatStore {
   // Random chat actions
   setRandomChatStatus: (status: 'idle' | 'waiting' | 'matched' | 'ended') => void;
   setRandomChatSessionId: (id: number | null) => void;
-  setRandomChatPartner: (username: string) => void;
+  setRandomChatPartner: (username: string, discriminator?: string | null) => void;
   addRandomChatMessage: (message: Message) => void;
   clearRandomChat: () => void;
 
@@ -84,6 +86,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   randomChatStatus: 'idle',
   randomChatSessionId: null,
   randomChatPartner: '',
+  randomChatPartnerDiscriminator: null,
   randomChatMessages: [],
 
   // Planned chats initial state
@@ -138,7 +141,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   setRandomChatSessionId: (id) => set({ randomChatSessionId: id }),
 
-  setRandomChatPartner: (username) => set({ randomChatPartner: username }),
+  setRandomChatPartner: (username, discriminator) => set({ randomChatPartner: username, randomChatPartnerDiscriminator: discriminator ?? null }),
 
   addRandomChatMessage: (message) =>
     set((state) => ({
@@ -150,6 +153,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       randomChatStatus: 'idle',
       randomChatSessionId: null,
       randomChatPartner: '',
+      randomChatPartnerDiscriminator: null,
       randomChatMessages: [],
     }),
 

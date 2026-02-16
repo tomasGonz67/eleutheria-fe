@@ -22,11 +22,24 @@ export default function UserActionMenu({
 }: UserActionMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isOnline, setIsOnline] = useState<boolean | null>(null); // null = checking, true/false = result
+  const [acceptingRequests, setAcceptingRequests] = useState<boolean | null>(null);
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDetails, setReportDetails] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
   const { socket, showNotification } = useChatStore();
 
   // Check if this is the current user's own message
   const isOwnUser = isOwnPost;
+
+  // Fetch current user's message request preference when own menu opens
+  useEffect(() => {
+    if (isOpen && isOwnUser) {
+      clientApi.get('/api/session/me')
+        .then(res => setAcceptingRequests(res.data.user.accepting_message_requests))
+        .catch(() => {});
+    }
+  }, [isOpen, isOwnUser]);
 
   // Check online status when menu opens
   useEffect(() => {
@@ -107,12 +120,35 @@ export default function UserActionMenu({
   };
 
   const handleReport = () => {
-    // TODO: Implement report functionality
     setIsOpen(false);
+    setIsReportOpen(true);
+    setReportReason('');
+    setReportDetails('');
   };
 
-  const handleToggleMessageRequests = () => {
-    // TODO: Implement toggle message requests functionality
+  const handleSubmitReport = () => {
+    // TODO: Wire up to backend
+    alert('Report submitted! (not yet wired up)');
+    setIsReportOpen(false);
+    setReportReason('');
+    setReportDetails('');
+  };
+
+  const handleToggleMessageRequests = async () => {
+    try {
+      const res = await clientApi.put('/api/session/toggle-message-requests');
+      setAcceptingRequests(res.data.accepting_message_requests);
+      showNotification(
+        'success',
+        res.data.accepting_message_requests
+          ? 'Message requests turned on'
+          : 'Message requests turned off',
+        true,
+        3000
+      );
+    } catch (error) {
+      showNotification('error', 'Failed to update preference');
+    }
     setIsOpen(false);
   };
 
@@ -121,7 +157,6 @@ export default function UserActionMenu({
       {/* Clickable Username */}
       <button
         onClick={() => {
-          console.log('Clicked user discriminator:', discriminator);
           setIsOpen(!isOpen);
         }}
         className={`underline cursor-pointer ${className}`}
@@ -139,7 +174,11 @@ export default function UserActionMenu({
               onClick={handleToggleMessageRequests}
               className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
             >
-              🔕 Turn off message requests
+              {acceptingRequests === null
+                ? '...'
+                : acceptingRequests
+                  ? '🔕 Turn off message requests'
+                  : '🔔 Turn on message requests'}
             </button>
           ) : (
             // Options for clicking on someone else's name
@@ -179,6 +218,57 @@ export default function UserActionMenu({
               </button>
             </>
           )}
+        </div>
+      )}
+      {/* Report Modal */}
+      {isReportOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsReportOpen(false); }}
+        >
+          <div className="bg-white rounded-lg max-w-md w-full p-6 border-4 border-red-500">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">Report {username}</h2>
+              <button onClick={() => setIsReportOpen(false)} className="text-gray-500 hover:text-gray-700 text-2xl">
+                &times;
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Reason</label>
+                <select
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
+                >
+                  <option value="">Select a reason...</option>
+                  <option value="harassment">Harassment</option>
+                  <option value="spam">Spam</option>
+                  <option value="inappropriate">Inappropriate Content</option>
+                  <option value="impersonation">Impersonation</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Details <span className="text-gray-400 font-normal">(optional)</span></label>
+                <textarea
+                  value={reportDetails}
+                  onChange={(e) => setReportDetails(e.target.value)}
+                  placeholder="Provide additional context..."
+                  className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                  rows={3}
+                  maxLength={1000}
+                />
+              </div>
+              <button
+                disabled={!reportReason}
+                onClick={handleSubmitReport}
+                className="w-full py-3 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed bg-red-600 hover:bg-red-700"
+              >
+                Submit Report
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

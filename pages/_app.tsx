@@ -6,6 +6,8 @@ import { useRouter } from 'next/router';
 import FloatingChats from '@/components/FloatingChats';
 import MessageRequestNotifications from '@/components/MessageRequestNotifications';
 import NotificationBanner from '@/components/NotificationBanner';
+import Footer from '@/components/Footer';
+import LegalModal from '@/components/LegalModal';
 import { useChatStore } from '@/store/chatStore';
 import { getCurrentUser } from '@/lib/services/session';
 
@@ -26,6 +28,7 @@ export default function App({ Component, pageProps }: AppProps) {
   const isHomePage = router.pathname === '/';
   const { socket, initializeSocket, addMessageRequest, addPlannedChat, notification, dismissNotification, plannedChats } = useChatStore();
   const [mySessionToken, setMySessionToken] = useState<string | null>(null);
+  const [legalModal, setLegalModal] = useState<'terms' | 'privacy' | 'rules' | null>(null);
 
   // Dismiss notification when route changes
   useEffect(() => {
@@ -87,6 +90,22 @@ export default function App({ Component, pageProps }: AppProps) {
     };
   }, [socket, isHomePage, plannedChats, router.pathname, router.query.id]);
 
+  // Listen for reply notifications on all pages except home
+  useEffect(() => {
+    if (!socket || isHomePage) return;
+
+    const handleReplyNotification = (data: { from_username: string }) => {
+      const { showNotification } = useChatStore.getState();
+      showNotification('info', `${data.from_username} replied to your post`, true, 5000);
+    };
+
+    socket.on('new_reply_notification', handleReplyNotification);
+
+    return () => {
+      socket.off('new_reply_notification', handleReplyNotification);
+    };
+  }, [socket, isHomePage]);
+
   // Listen for message requests and chat acceptance on all pages except home
   useEffect(() => {
     if (!socket || isHomePage) return;
@@ -108,6 +127,7 @@ export default function App({ Component, pageProps }: AppProps) {
         partnerUsername: data.partner_username,
         isMinimized: false,
         unreadCount: 0,
+        created_at: data.created_at,
       });
     };
 
@@ -136,6 +156,14 @@ export default function App({ Component, pageProps }: AppProps) {
           autoDismiss={notification.autoDismiss}
           autoDismissDelay={notification.autoDismissDelay}
         />
+      )}
+      <Footer
+        onOpenTerms={() => setLegalModal('terms')}
+        onOpenPrivacy={() => setLegalModal('privacy')}
+        onOpenRules={() => setLegalModal('rules')}
+      />
+      {legalModal && (
+        <LegalModal type={legalModal} onClose={() => setLegalModal(null)} />
       )}
     </div>
   );

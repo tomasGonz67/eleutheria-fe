@@ -1,0 +1,166 @@
+import { useEffect } from 'react';
+
+type LegalType = 'terms' | 'privacy' | 'rules';
+
+interface LegalModalProps {
+  type: LegalType;
+  onClose: () => void;
+}
+
+const TERMS_CONTENT = `
+Last Updated: February 2025
+
+1. Acceptance of Terms
+By accessing or using Eleutheria ("the Platform"), you agree to be bound by these Terms of Service. If you do not agree, do not use the Platform.
+
+2. Eligibility
+You must be at least 13 years of age to use this Platform. By using Eleutheria, you represent that you meet this age requirement.
+
+3. User Conduct
+You agree not to:
+- Post content that is illegal, threatening, harassing, defamatory, or obscene
+- Impersonate any person or entity
+- Upload malware, viruses, or other harmful code
+- Attempt to gain unauthorized access to the Platform or other users' accounts
+- Use the Platform for any unlawful purpose
+- Spam, flood, or otherwise disrupt the Platform
+
+4. User-Generated Content
+You retain ownership of content you post. By posting content, you grant Eleutheria a non-exclusive, royalty-free license to display and distribute that content on the Platform. You are solely responsible for the content you post.
+
+5. Sessions and Cookies
+Your identity on the Platform is maintained through an anonymous session cookie. This cookie persists for 1 year and is automatically renewed each time you use the Platform, so your session will not expire as long as you remain active. If you clear your cookies or do not visit the Platform for over a year, your session will end and you will receive a new anonymous identity.
+
+6. Content Moderation
+We reserve the right to remove any content and suspend or terminate any user at our sole discretion, without prior notice, for any reason including violation of these Terms.
+
+7. DMCA / Copyright
+If you believe content on the Platform infringes your copyright, please contact us with a description of the copyrighted work, the infringing material, and your contact information. We will respond to valid takedown requests in accordance with the DMCA.
+
+8. Disclaimer of Warranties
+The Platform is provided "as is" without warranties of any kind, express or implied. We do not guarantee that the Platform will be uninterrupted, secure, or error-free.
+
+9. Limitation of Liability
+To the maximum extent permitted by law, Eleutheria shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Platform.
+
+10. Changes to Terms
+We may update these Terms at any time. Continued use of the Platform after changes constitutes acceptance of the updated Terms.
+
+11. Contact
+For questions about these Terms, please reach out through the Platform.
+`;
+
+const PRIVACY_CONTENT = `
+Last Updated: February 2025
+
+1. Information We Collect
+
+Session Data: We use anonymous session tokens to identify users. No email, password, or personal account information is required.
+
+Device Information: We collect IP addresses and browser fingerprints for the purpose of session management, abuse prevention, and platform security.
+
+Usage Data: We collect information about how you interact with the Platform, including pages visited, content posted, and timestamps.
+
+2. How We Use Your Information
+- To provide and maintain the Platform
+- To identify and prevent abuse, spam, and unauthorized access
+- To manage user sessions
+- To improve the Platform
+
+3. Data Sharing
+We do not sell your data. We may share information only:
+- When required by law or legal process
+- To protect the rights and safety of the Platform and its users
+- With service providers who assist in operating the Platform
+
+4. Data Retention
+Session data and associated content are retained as long as necessary to provide the Platform. IP addresses and fingerprints are retained for security and abuse prevention purposes.
+
+5. Cookies and Tracking
+We use session cookies to maintain your session on the Platform. These are essential for the Platform to function.
+
+6. Your Rights
+You may request deletion of your content by contacting us. Note that anonymous session-based data may not be individually identifiable.
+
+For users in the EU (GDPR): You have the right to access, rectify, or erase your personal data, and to object to or restrict processing. Our lawful basis for processing is legitimate interest (platform security and abuse prevention).
+
+For users in California (CCPA): You have the right to know what personal information we collect, to request deletion, and to opt out of the sale of personal information. We do not sell personal information.
+
+7. Children's Privacy
+The Platform is not intended for children under 13. We do not knowingly collect information from children under 13. If we learn we have collected such information, we will delete it.
+
+8. Security
+We implement reasonable security measures to protect your information. However, no method of transmission over the Internet is 100% secure.
+
+9. Changes to This Policy
+We may update this Privacy Policy at any time. Continued use of the Platform after changes constitutes acceptance.
+
+10. Contact
+For privacy-related questions or requests, please reach out through the Platform.
+`;
+
+const RULES_CONTENT = `
+Community Rules
+
+Eleutheria is an anonymous platform built on free expression. That said, there are lines. These rules exist to keep the platform usable and safe for everyone.
+
+1. No Harassment or Targeted Abuse
+Do not repeatedly target, threaten, or intimidate other users. Disagreement is fine. Harassment is not.
+
+2. No Spam or Flooding
+Do not post repetitive content, flood chatrooms, or use the platform for advertising or self-promotion.
+
+3. No Illegal Content
+Do not post content that violates any applicable law. This includes but is not limited to: CSAM, doxxing, credible threats of violence, and distribution of stolen data.
+
+4. No Impersonation
+Do not impersonate other users, moderators, or any real person or organization with intent to deceive.
+
+5. No Malicious Links or Code
+Do not share links to malware, phishing sites, or any content designed to harm other users' devices or accounts.
+
+6. No NSFW Content Without Context
+Explicit content should be kept to appropriate forums. Do not post graphic content in general chatrooms or forums.
+
+7. Respect the Platform
+Do not attempt to exploit, attack, or disrupt the Platform's infrastructure or other users' sessions.
+
+Consequences
+Violations may result in content removal, temporary suspension, or permanent ban at our discretion. Bans are applied by IP and browser fingerprint. There is no appeals process at this time.
+
+These rules may be updated at any time. Use common sense.
+`;
+
+export default function LegalModal({ type, onClose }: LegalModalProps) {
+  const titles = { terms: 'Terms of Service', privacy: 'Privacy Policy', rules: 'Community Rules' };
+  const contents = { terms: TERMS_CONTENT, privacy: PRIVACY_CONTENT, rules: RULES_CONTENT };
+  const title = titles[type];
+  const content = contents[type];
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white rounded-lg max-w-2xl w-full p-6 border-4 max-h-[80vh] flex flex-col" style={{ borderColor: '#AA633F' }}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold text-gray-800" style={{ fontFamily: 'var(--font-cinzel)' }}>{title}</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">
+            &times;
+          </button>
+        </div>
+        <div className="overflow-y-auto flex-1 text-gray-700 whitespace-pre-line text-sm leading-relaxed">
+          {content}
+        </div>
+      </div>
+    </div>
+  );
+}
