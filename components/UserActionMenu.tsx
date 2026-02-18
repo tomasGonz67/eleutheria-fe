@@ -126,12 +126,22 @@ export default function UserActionMenu({
     setReportDetails('');
   };
 
-  const handleSubmitReport = () => {
-    // TODO: Wire up to backend
-    alert('Report submitted! (not yet wired up)');
-    setIsReportOpen(false);
-    setReportReason('');
-    setReportDetails('');
+  const handleSubmitReport = async () => {
+    if (!discriminator) return;
+    try {
+      await clientApi.post('/api/report', {
+        discriminator,
+        reason: reportReason,
+        details: reportDetails.trim() || undefined,
+      });
+      showNotification('success', 'Report submitted', true, 3000);
+      setIsReportOpen(false);
+      setReportReason('');
+      setReportDetails('');
+    } catch (error: any) {
+      const msg = error.response?.data?.error || 'Failed to submit report';
+      showNotification('error', msg);
+    }
   };
 
   const handleToggleMessageRequests = async () => {

@@ -31,7 +31,8 @@ export default function Header({ currentPage }: HeaderProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const bellRef = useRef<HTMLDivElement>(null);
+  const bellDesktopRef = useRef<HTMLDivElement>(null);
+  const bellMobileRef = useRef<HTMLDivElement>(null);
 
   // Fetch notification count from API
   useEffect(() => {
@@ -107,7 +108,10 @@ export default function Header({ currentPage }: HeaderProps) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsMobileMenuOpen(false);
       }
-      if (bellRef.current && !bellRef.current.contains(event.target as Node)) {
+      const clickedInsideBell =
+        (bellDesktopRef.current && bellDesktopRef.current.contains(event.target as Node)) ||
+        (bellMobileRef.current && bellMobileRef.current.contains(event.target as Node));
+      if (!clickedInsideBell) {
         setIsBellOpen(false);
       }
     };
@@ -122,9 +126,12 @@ export default function Header({ currentPage }: HeaderProps) {
   }, [isMobileMenuOpen, isBellOpen]);
 
   const handleNotificationClick = async (notif: Notification) => {
+    const targetUrl = notif.parent_post_id
+      ? `/forums/${notif.forum_id}/comments/${notif.parent_post_id}?highlight=${notif.post_id}`
+      : `/forums/${notif.forum_id}/comments/${notif.post_id}`;
     if (!notif.is_read) {
       try {
-        await markNotificationRead(notif.id);
+        markNotificationRead(notif.id);
         setNotifications((prev) =>
           prev.map((n) => (n.id === notif.id ? { ...n, is_read: true } : n))
         );
@@ -134,7 +141,7 @@ export default function Header({ currentPage }: HeaderProps) {
       }
     }
     setIsBellOpen(false);
-    router.push(`/forums/${notif.forum_id}/comments/${notif.post_id}`);
+    router.push(targetUrl);
   };
 
   const handleMarkAllRead = async () => {
@@ -232,7 +239,7 @@ export default function Header({ currentPage }: HeaderProps) {
           ))}
 
           {/* Bell icon (desktop) */}
-          <div className="relative" ref={bellRef}>
+          <div className="relative" ref={bellDesktopRef}>
             <button
               onClick={() => setIsBellOpen(!isBellOpen)}
               className="relative text-gray-600 hover:text-gray-800 p-1"
@@ -251,7 +258,7 @@ export default function Header({ currentPage }: HeaderProps) {
         {/* Mobile: bell + hamburger */}
         <div className="md:hidden flex items-center gap-2">
           {/* Bell icon (mobile) */}
-          <div className="relative" ref={bellRef}>
+          <div className="relative" ref={bellMobileRef}>
             <button
               onClick={() => { setIsBellOpen(!isBellOpen); setIsMobileMenuOpen(false); }}
               className="relative text-gray-700 p-2"

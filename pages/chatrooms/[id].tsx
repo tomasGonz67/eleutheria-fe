@@ -102,28 +102,27 @@ export default function ChatroomMessagesPage() {
     };
 
     // Handle reconnection - rejoin chatroom and refresh data
-    const handleReconnect = async () => {
-      console.log('🔄 Socket reconnected, rejoining chatroom...');
-      joinChatroom(chatroomId);
-
-      // Re-fetch messages to catch anything missed while disconnected
-      try {
-        const messagesResponse = await clientApi.get(`/api/chatrooms/${chatroomId}/messages`);
-        setMessages(messagesResponse.data.messages || []);
-      } catch (err) {
-        console.error('Error re-fetching messages on reconnect:', err);
+    let hasRegistered = false;
+    const handleRegistered = () => {
+      if (!hasRegistered) {
+        // First time (initial connection) - just mark as registered
+        hasRegistered = true;
+        return;
       }
+      // Subsequent times (reconnection) - reload the page
+      console.log('🔄 Socket reconnected, reloading chatroom page...');
+      router.reload();
     };
 
     socket.on('new_chatroom_message', handleNewMessage);
     socket.on('chatroom_users_updated', handleUsersUpdated);
-    socket.on('reconnect', handleReconnect);
+    socket.on('registered', handleRegistered);
 
     // Cleanup on unmount or when ID changes
     return () => {
       socket.off('new_chatroom_message', handleNewMessage);
       socket.off('chatroom_users_updated', handleUsersUpdated);
-      socket.off('reconnect', handleReconnect);
+      socket.off('registered', handleRegistered);
       leaveChatroom(chatroomId);
     };
   }, [socket, chatroom]);

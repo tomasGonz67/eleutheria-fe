@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Header from '@/components/Header';
@@ -41,6 +41,7 @@ interface CommentItemProps {
   expandedComments: Set<number>;
   loadedReplies: Map<number, FeedPost[]>;
   loadingReplies: Set<number>;
+  highlightCommentId: number | null;
   parentUsername?: string;
   parentDiscriminator?: string;
   onStartEdit: (comment: FeedPost) => void;
@@ -70,6 +71,7 @@ function CommentItem({
   expandedComments,
   loadedReplies,
   loadingReplies,
+  highlightCommentId,
   parentUsername,
   parentDiscriminator,
   onStartEdit,
@@ -97,8 +99,8 @@ function CommentItem({
   const isLoading = loadingReplies.has(comment.id);
 
   return (
-    <div className={`${depth > 0 ? 'ml-6 mt-2' : ''}`}>
-      <div className={`border border-gray-300 rounded-lg p-4 ${getBackgroundColor(depth)}`}>
+    <div id={`comment-${comment.id}`} className={`${depth > 0 ? 'ml-6 mt-2' : ''}`}>
+      <div className={`border border-gray-300 rounded-lg p-4 ${getBackgroundColor(depth)}${highlightCommentId === comment.id ? ' comment-highlight' : ''}`}>
         {/* Comment Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 flex-wrap">
@@ -307,6 +309,7 @@ function CommentItem({
               expandedComments={expandedComments}
               loadedReplies={loadedReplies}
               loadingReplies={loadingReplies}
+              highlightCommentId={highlightCommentId}
               parentUsername={comment.username}
               parentDiscriminator={comment.author_discriminator}
               onStartEdit={onStartEdit}
@@ -337,12 +340,71 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
   const [editContent, setEditContent] = useState('');
   const [replyingToCommentId, setReplyingToCommentId] = useState<number | null>(null);
   const [commentReplyContent, setCommentReplyContent] = useState('');
-  
+
+  // Highlight from notification
+  const highlightParam = router.query.highlight;
+  const highlightCommentId = highlightParam ? parseInt(highlightParam as string) : null;
+
   // State for comments and lazy-loaded nested replies
   const [comments, setComments] = useState<FeedPost[]>(initialComments);
   const [expandedComments, setExpandedComments] = useState<Set<number>>(new Set());
   const [loadedReplies, setLoadedReplies] = useState<Map<number, FeedPost[]>>(new Map());
   const [loadingReplies, setLoadingReplies] = useState<Set<number>>(new Set());
+
+  // Auto-expand ancestor chain and scroll to highlighted comment
+  useEffect(() => {
+    if (!highlightCommentId) return;
+    let cancelled = false;
+
+    const expandAndScroll = async () => {
+      try {
+        // Fetch the ancestor chain for the highlighted comment
+        const res = await clientApi.get(`/api/forums/${forum.id}/posts/${highlightCommentId}/ancestors`);
+        const ancestors: number[] = res.data.ancestors; // [root, ..., parent, target]
+
+        if (cancelled) return;
+
+        // Remove the root (it's the current page's postId) and the target itself
+        // We need to expand everything between root and target
+        const toExpand = ancestors.filter((id: number) => id !== postId && id !== highlightCommentId);
+
+        // Sequentially expand each ancestor to load the chain
+        for (const ancestorId of toExpand) {
+          if (cancelled) return;
+          const repliesRes = await clientApi.get(`/api/forums/${forum.id}/posts?parent_id=${ancestorId}`);
+          const replies = Array.isArray(repliesRes.data) ? repliesRes.data : (repliesRes.data.posts || []);
+          replies.sort((a: FeedPost, b: FeedPost) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+          setLoadedReplies(prev => new Map(prev).set(ancestorId, replies));
+          setExpandedComments(prev => new Set(prev).add(ancestorId));
+          // Small delay to let React render the expanded section
+          await new Promise(r => setTimeout(r, 50));
+        }
+
+        if (cancelled) return;
+
+        // Wait for render, then scroll to the highlighted comment
+        setTimeout(() => {
+          const el = document.getElementById(`comment-${highlightCommentId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 200);
+      } catch (err) {
+        console.error('Error expanding ancestor chain:', err);
+        // Fallback: try scrolling anyway (comment might be a direct reply)
+        setTimeout(() => {
+          const el = document.getElementById(`comment-${highlightCommentId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 300);
+      }
+    };
+
+    expandAndScroll();
+    return () => { cancelled = true; };
+  }, [highlightCommentId, forum.id, postId]);
 
   const handleReplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -805,6 +867,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
                       expandedComments={expandedComments}
                       loadedReplies={loadedReplies}
                       loadingReplies={loadingReplies}
+                      highlightCommentId={highlightCommentId}
                       onStartEdit={handleStartEdit}
                       onCancelEdit={handleCancelEdit}
                       onSaveEdit={handleSaveEdit}

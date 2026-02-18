@@ -129,3 +129,22 @@ h1, h2, h3, h4, h5, h6 {
   opacity: 0;
   animation: fade-in 1200ms ease-in 400ms forwards;
 }
+
+@keyframes comment-glow {
+  0% {
+    box-shadow: 0 0 0px rgba(170, 99, 63, 0);
+    border-color: #d1d5db;
+  }
+  15% {
+    box-shadow: 0 0 15px rgba(170, 99, 63, 0.5);
+    border-color: #AA633F;
+  }
+  100% {
+    box-shadow: 0 0 0px rgba(170, 99, 63, 0);
+    border-color: #d1d5db;
+  }
+}
+
+.comment-highlight {
+  animation: comment-glow 3s ease-out;
+}

@@ -81,6 +81,7 @@ export default function App({ Component, pageProps }: AppProps) {
           socket.emit('join_session', { session_id: sessionId });
         }
       }
+
     };
 
     socket.on('connect', handleConnect);

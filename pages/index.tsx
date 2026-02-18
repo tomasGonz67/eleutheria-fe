@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { createSession } from '@/lib/services/session';
 import { useChatStore } from '@/store/chatStore';
+import { clientApi } from '@/lib/api';
 
 export default function Home() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function Home() {
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactMessage, setContactMessage] = useState('');
+  const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
 
   useEffect(() => {
     const saved = localStorage.getItem('eleutheria_username');
@@ -166,13 +168,25 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Contact Button */}
-        <div className="mt-10 text-center">
+        {/* Contact & Reset Buttons */}
+        <div className="mt-10 text-center flex justify-center gap-4">
           <button
             onClick={() => setIsContactOpen(true)}
             className="px-8 py-3 border-2 border-gray-400 text-gray-600 rounded-lg transition font-semibold hover:border-gray-600 hover:text-gray-800"
           >
             Contact Us
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                await clientApi.post('/api/session/reset');
+              } catch {}
+              localStorage.removeItem('eleutheria_username');
+              window.location.reload();
+            }}
+            className="px-8 py-3 border-2 border-red-500 text-red-500 rounded-lg transition font-semibold hover:bg-red-500 hover:text-white"
+          >
+            Reset User ID
           </button>
         </div>
 
@@ -230,21 +244,34 @@ export default function Home() {
                 />
               </div>
               <button
-                disabled={!contactMessage.trim()}
+                disabled={!contactMessage.trim() || contactStatus === 'sending' || contactStatus === 'sent'}
                 className="w-full py-3 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                 style={{ backgroundColor: !contactMessage.trim() ? '#9ca3af' : '#4D89B0' }}
                 onMouseEnter={(e) => contactMessage.trim() && (e.currentTarget.style.backgroundColor = '#3d6e8f')}
                 onMouseLeave={(e) => contactMessage.trim() && (e.currentTarget.style.backgroundColor = '#4D89B0')}
-                onClick={() => {
-                  // TODO: Wire up to backend
-                  alert('Message sent! (not yet wired up)');
-                  setContactName('');
-                  setContactEmail('');
-                  setContactMessage('');
-                  setIsContactOpen(false);
+                onClick={async () => {
+                  setContactStatus('sending');
+                  try {
+                    await clientApi.post('/api/contact', {
+                      name: contactName.trim() || undefined,
+                      email: contactEmail.trim() || undefined,
+                      message: contactMessage.trim(),
+                    });
+                    setContactStatus('sent');
+                    setContactName('');
+                    setContactEmail('');
+                    setContactMessage('');
+                    setTimeout(() => {
+                      setIsContactOpen(false);
+                      setContactStatus('idle');
+                    }, 1500);
+                  } catch {
+                    setContactStatus('error');
+                    setTimeout(() => setContactStatus('idle'), 3000);
+                  }
                 }}
               >
-                Send Message
+                {contactStatus === 'sending' ? 'Sending...' : contactStatus === 'sent' ? 'Sent!' : contactStatus === 'error' ? 'Failed — try again' : 'Send Message'}
               </button>
             </div>
           </div>

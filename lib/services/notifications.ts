@@ -4,6 +4,7 @@ export interface Notification {
   id: number;
   type: string;
   post_id: number;
+  parent_post_id: number;
   forum_id: number;
   from_username: string;
   from_discriminator: string;
@@ -18,8 +19,13 @@ export async function getNotifications(): Promise<{ notifications: Notification[
 }
 
 export async function markNotificationRead(id: number): Promise<{ success: boolean }> {
-  const { data } = await clientApi.put(`/api/notifications/${id}/read`);
-  return data;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const res = await fetch(`${API_URL}/api/notifications/${id}/read`, {
+    method: 'PUT',
+    credentials: 'include',
+    keepalive: true,
+  });
+  return res.json();
 }
 
 export async function markAllNotificationsRead(): Promise<{ success: boolean }> {
