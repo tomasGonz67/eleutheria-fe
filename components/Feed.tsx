@@ -254,6 +254,7 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
                   <UserActionMenu
                     username={post.username}
                     discriminator={post.author_discriminator}
+                    hideDiscriminator={post.author_hide_discriminator}
                     isOwnPost={post.is_my_post}
                     accentColor="#AA633F"
                     className="font-semibold text-gray-800"

@@ -184,6 +184,7 @@ export default function PrivateChatPage() {
   const isUser1 = session.user1_discriminator === myDiscriminator;
   const partnerUsername = isUser1 ? session.user2_username : session.user1_username;
   const partnerDiscriminator = isUser1 ? session.user2_discriminator : session.user1_discriminator;
+  const partnerHideDiscriminator = isUser1 ? session.user2_hide_discriminator : session.user1_hide_discriminator;
 
   const getDisabledMessage = () => {
     if (session.status === 'ended') {
@@ -210,6 +211,7 @@ export default function PrivateChatPage() {
               <UserActionMenu
                 username={partnerUsername}
                 discriminator={partnerDiscriminator}
+                hideDiscriminator={partnerHideDiscriminator}
                 accentColor="#1e40af"
                 className="text-xl font-semibold"
               />

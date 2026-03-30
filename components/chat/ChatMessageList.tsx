@@ -74,6 +74,7 @@ export default function ChatMessageList({
                 <UserActionMenu
                   username={message.username}
                   discriminator={message.sender_discriminator}
+                  hideDiscriminator={message.sender_hide_discriminator}
                   isOwnPost={message.is_me}
                   accentColor={accentColor}
                   className="font-semibold text-gray-800 text-sm"

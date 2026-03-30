@@ -334,6 +334,7 @@ export default function PrivateChatsPage() {
                 const isUser1 = session.user1_discriminator === myDiscriminator;
                 const partnerUsername = isUser1 ? session.user2_username : session.user1_username;
                 const partnerDiscriminator = isUser1 ? session.user2_discriminator : session.user1_discriminator;
+                const partnerHideDiscriminator = isUser1 ? session.user2_hide_discriminator : session.user1_hide_discriminator;
 
                 return (
                   <div
@@ -347,6 +348,7 @@ export default function PrivateChatsPage() {
                           <UserActionMenu
                             username={partnerUsername}
                             discriminator={partnerDiscriminator}
+                            hideDiscriminator={partnerHideDiscriminator}
                             accentColor="#4D89B0"
                             className="text-lg font-semibold"
                             style={{ color: '#4D89B0' }}

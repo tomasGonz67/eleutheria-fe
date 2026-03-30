@@ -6,6 +6,7 @@ import { isSocketConnected } from '@/lib/socket';
 interface UserActionMenuProps {
   username: string;
   discriminator?: string | null; // The discriminator of the user being clicked
+  hideDiscriminator?: boolean; // Whether this user has hidden their discriminator
   isOwnPost?: boolean; // Whether this is the current user's own post/message
   accentColor?: string;
   className?: string;
@@ -15,6 +16,7 @@ interface UserActionMenuProps {
 export default function UserActionMenu({
   username,
   discriminator,
+  hideDiscriminator = false,
   isOwnPost = false,
   accentColor = '#4D89B0',
   className = '',
@@ -206,7 +208,7 @@ export default function UserActionMenu({
                   <div>
                     <span className="text-sm font-semibold text-gray-700">{username}</span>
                     {discriminator && (
-                      <p className="text-xs text-gray-400 font-mono">#{discriminator}</p>
+                      <p className="text-xs text-gray-400 font-mono">#{hideDiscriminator ? 'XXXXXXXX' : discriminator}</p>
                     )}
                   </div>
                   {isOnline === null ? (
@@ -226,14 +228,12 @@ export default function UserActionMenu({
               </div>
 
               {/* Actions */}
-              {discriminator && (
-                <button
-                  onClick={handleSendMessage}
-                  className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition border-b border-gray-200"
-                >
-                  📨 Send message
-                </button>
-              )}
+              <button
+                onClick={handleSendMessage}
+                className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition border-b border-gray-200"
+              >
+                📨 Send message
+              </button>
               <button
                 onClick={handleReport}
                 className="w-full text-left px-4 py-3 text-sm font-semibold text-red-600 hover:bg-gray-50 transition"

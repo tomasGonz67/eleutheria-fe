@@ -370,6 +370,7 @@ export default function RandomChatPage() {
                           <UserActionMenu
                             username={message.username}
                             discriminator={message.sender_discriminator}
+                            hideDiscriminator={message.sender_hide_discriminator}
                             isOwnPost={message.is_me}
                             accentColor="#4D89B0"
                             className="font-semibold text-sm"

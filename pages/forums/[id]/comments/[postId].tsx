@@ -21,6 +21,7 @@ interface PostCommentsPageProps {
   postContent?: string;
   postUsername?: string;
   postDiscriminator?: string;
+  postHideDiscriminator?: boolean;
   currentPage: number;
   totalPages: number;
   totalComments: number;
@@ -49,6 +50,7 @@ interface CommentItemProps {
   highlightCommentId: number | null;
   parentUsername?: string;
   parentDiscriminator?: string;
+  parentHideDiscriminator?: boolean;
   onStartEdit: (comment: FeedPost) => void;
   onCancelEdit: () => void;
   onSaveEdit: (commentId: number) => void;
@@ -79,6 +81,7 @@ function CommentItem({
   highlightCommentId,
   parentUsername,
   parentDiscriminator,
+  parentHideDiscriminator,
   onStartEdit,
   onCancelEdit,
   onSaveEdit,
@@ -113,6 +116,7 @@ function CommentItem({
               <UserActionMenu
                 username={comment.username}
                 discriminator={comment.author_discriminator}
+                hideDiscriminator={comment.author_hide_discriminator}
                 isOwnPost={comment.is_my_post}
                 accentColor="#AA633F"
                 className="font-semibold text-gray-800"
@@ -125,6 +129,7 @@ function CommentItem({
                   <UserActionMenu
                     username={parentUsername}
                     discriminator={parentDiscriminator}
+                    hideDiscriminator={parentHideDiscriminator}
                     accentColor="#AA633F"
                     className="text-sm font-semibold text-gray-700"
                   />
@@ -317,6 +322,7 @@ function CommentItem({
               highlightCommentId={highlightCommentId}
               parentUsername={comment.username}
               parentDiscriminator={comment.author_discriminator}
+              parentHideDiscriminator={comment.author_hide_discriminator}
               onStartEdit={onStartEdit}
               onCancelEdit={onCancelEdit}
               onSaveEdit={onSaveEdit}
@@ -336,7 +342,7 @@ function CommentItem({
   );
 }
 
-export default function PostCommentsPage({ forum, postId, comments: initialComments, username, userSessionToken, postContent, postUsername, postDiscriminator, currentPage, totalPages, totalComments, error }: PostCommentsPageProps) {
+export default function PostCommentsPage({ forum, postId, comments: initialComments, username, userSessionToken, postContent, postUsername, postDiscriminator, postHideDiscriminator, currentPage, totalPages, totalComments, error }: PostCommentsPageProps) {
   const router = useRouter();
   const [replyContent, setReplyContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -802,6 +808,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
                   by <UserActionMenu
                     username={postUsername}
                     discriminator={postDiscriminator}
+                    hideDiscriminator={postHideDiscriminator}
                     accentColor="#AA633F"
                     className="text-sm text-gray-600"
                   />
@@ -971,11 +978,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     let postContent = null;
     let postUsername = null;
     let postDiscriminator = null;
+    let postHideDiscriminator = false;
     if (postResponse.ok) {
       const postData = await postResponse.json();
       postContent = postData.post?.content || null;
       postUsername = postData.post?.username || null;
       postDiscriminator = postData.post?.author_discriminator || null;
+      postHideDiscriminator = postData.post?.author_hide_discriminator || false;
     }
 
     // Get username and session token from user response (if available)
@@ -997,6 +1006,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         postContent,
         postUsername,
         postDiscriminator,
+        postHideDiscriminator,
         currentPage: page,
         totalPages,
         totalComments,
@@ -1014,6 +1024,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         postContent: null,
         postUsername: null,
         postDiscriminator: null,
+        postHideDiscriminator: false,
         currentPage: 1,
         totalPages: 1,
         totalComments: 0,
