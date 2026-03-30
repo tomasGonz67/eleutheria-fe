@@ -10,6 +10,8 @@ export interface AnonymousUser {
   last_active: string;
   notifications?: number;
   accepting_message_requests?: boolean;
+  appear_offline?: boolean;
+  hide_discriminator?: boolean;
 }
 
 export interface SessionResponse {
