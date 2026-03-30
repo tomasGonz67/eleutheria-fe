@@ -4,6 +4,7 @@ import { useChatStore } from '@/store/chatStore';
 import { useState, useEffect, useRef } from 'react';
 import { getCurrentUser } from '@/lib/services/session';
 import { getNotifications, markNotificationRead, markAllNotificationsRead, Notification } from '@/lib/services/notifications';
+import { clientApi } from '@/lib/api';
 
 interface HeaderProps {
   currentPage?: 'feed' | 'forums' | 'random-chat' | 'chatrooms' | 'private-chats';
@@ -28,11 +29,17 @@ export default function Header({ currentPage }: HeaderProps) {
   const [notificationCount, setNotificationCount] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isBellOpen, setIsBellOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [rejectingMessages, setRejectingMessages] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const bellDesktopRef = useRef<HTMLDivElement>(null);
   const bellMobileRef = useRef<HTMLDivElement>(null);
+  const settingsDesktopRef = useRef<HTMLDivElement>(null);
+  const settingsMobileRef = useRef<HTMLDivElement>(null);
 
   // Fetch notification count from API
   useEffect(() => {
@@ -40,6 +47,7 @@ export default function Header({ currentPage }: HeaderProps) {
       try {
         const response = await getCurrentUser();
         setNotificationCount(response.user.notifications || 0);
+        setRejectingMessages(!response.user.accepting_message_requests);
       } catch (error) {
         console.error('Error fetching notifications:', error);
       }
@@ -102,7 +110,7 @@ export default function Header({ currentPage }: HeaderProps) {
     return () => { socket.off('new_reply_notification', handleNewReply); };
   }, [socket, isBellOpen]);
 
-  // Close mobile menu and bell when clicking outside
+  // Close mobile menu, bell, and settings when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -114,16 +122,42 @@ export default function Header({ currentPage }: HeaderProps) {
       if (!clickedInsideBell) {
         setIsBellOpen(false);
       }
+      const clickedInsideSettings =
+        (settingsDesktopRef.current && settingsDesktopRef.current.contains(event.target as Node)) ||
+        (settingsMobileRef.current && settingsMobileRef.current.contains(event.target as Node));
+      if (!clickedInsideSettings) {
+        setIsSettingsOpen(false);
+      }
     };
 
-    if (isMobileMenuOpen || isBellOpen) {
+    if (isMobileMenuOpen || isBellOpen || isSettingsOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isMobileMenuOpen, isBellOpen]);
+  }, [isMobileMenuOpen, isBellOpen, isSettingsOpen]);
+
+  // Read dark mode preference from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('eleutheria_dark_mode');
+    if (stored === 'true') {
+      setDarkMode(true);
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
+  const handleToggleDarkMode = () => {
+    const next = !darkMode;
+    setDarkMode(next);
+    localStorage.setItem('eleutheria_dark_mode', String(next));
+    if (next) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
 
   const handleNotificationClick = async (notif: Notification) => {
     const targetUrl = notif.parent_post_id
@@ -212,7 +246,61 @@ export default function Header({ currentPage }: HeaderProps) {
     </div>
   );
 
+  const gearIcon = (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  );
+
+  const settingsDropdown = (
+    <div className="absolute right-0 top-full mt-2 bg-white border-2 border-gray-300 rounded-lg shadow-lg min-w-[220px] z-50">
+      <div className="px-4 py-3 border-b border-gray-200">
+        <span className="font-semibold text-gray-800 text-sm">Settings</span>
+      </div>
+      <button
+        onClick={() => { setIsSettingsOpen(false); setIsResetModalOpen(true); }}
+        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition border-b border-gray-100 flex items-center gap-3"
+      >
+        <span>🔄</span>
+        <span>Reset User ID</span>
+      </button>
+      <button
+        onClick={handleToggleDarkMode}
+        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition border-b border-gray-100 flex items-center justify-between"
+      >
+        <div className="flex items-center gap-3">
+          <span>{darkMode ? '🌙' : '☀️'}</span>
+          <span>{darkMode ? 'Dark Mode' : 'Light Mode'}</span>
+        </div>
+        <div className={`relative w-10 h-5 rounded-full transition-colors ${darkMode ? 'bg-aegean-600' : 'bg-gray-300'}`}>
+          <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${darkMode ? 'translate-x-5' : 'translate-x-0'}`} />
+        </div>
+      </button>
+      <button
+        onClick={async () => {
+          try {
+            const res = await clientApi.put('/api/session/toggle-message-requests');
+            setRejectingMessages(!res.data.accepting_message_requests);
+          } catch (error) {
+            console.error('Error toggling message requests:', error);
+          }
+        }}
+        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition flex items-center justify-between"
+      >
+        <div className="flex items-center gap-3">
+          <span>🔕</span>
+          <span>Reject Message Invitations</span>
+        </div>
+        <div className={`relative w-10 h-5 rounded-full transition-colors ${rejectingMessages ? 'bg-red-500' : 'bg-gray-300'}`}>
+          <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${rejectingMessages ? 'translate-x-5' : 'translate-x-0'}`} />
+        </div>
+      </button>
+    </div>
+  );
+
   return (
+    <>
     <header className="bg-marble-200 border-b-4 border-gold-600 shadow-sm">
       <div className="max-w-4xl mx-auto px-6 py-5 flex items-center justify-between">
         <Link href="/" className="text-3xl font-bold text-aegean-700 hover:text-gold-600 transition-colors tracking-wide">
@@ -232,7 +320,7 @@ export default function Header({ currentPage }: HeaderProps) {
               }
               style={currentPage === link.key ? { color: '#AA633F' } : {}}
               onMouseEnter={(e) => e.currentTarget.style.color = '#AA633F'}
-              onMouseLeave={(e) => currentPage !== link.key ? e.currentTarget.style.color = '#6b7280' : null}
+              onMouseLeave={(e) => currentPage !== link.key ? e.currentTarget.style.color = '' : null}
             >
               {link.label}
             </Link>
@@ -241,7 +329,7 @@ export default function Header({ currentPage }: HeaderProps) {
           {/* Bell icon (desktop) */}
           <div className="relative" ref={bellDesktopRef}>
             <button
-              onClick={() => setIsBellOpen(!isBellOpen)}
+              onClick={() => { setIsBellOpen(!isBellOpen); setIsSettingsOpen(false); }}
               className="relative text-gray-600 hover:text-gray-800 p-1"
             >
               {bellIcon}
@@ -253,14 +341,25 @@ export default function Header({ currentPage }: HeaderProps) {
             </button>
             {isBellOpen && notificationDropdown}
           </div>
+
+          {/* Settings gear (desktop) */}
+          <div className="relative" ref={settingsDesktopRef}>
+            <button
+              onClick={() => { setIsSettingsOpen(!isSettingsOpen); setIsBellOpen(false); }}
+              className="text-gray-600 hover:text-gray-800 p-1"
+            >
+              {gearIcon}
+            </button>
+            {isSettingsOpen && settingsDropdown}
+          </div>
         </nav>
 
-        {/* Mobile: bell + hamburger */}
+        {/* Mobile: bell + settings + hamburger */}
         <div className="md:hidden flex items-center gap-2">
           {/* Bell icon (mobile) */}
           <div className="relative" ref={bellMobileRef}>
             <button
-              onClick={() => { setIsBellOpen(!isBellOpen); setIsMobileMenuOpen(false); }}
+              onClick={() => { setIsBellOpen(!isBellOpen); setIsMobileMenuOpen(false); setIsSettingsOpen(false); }}
               className="relative text-gray-700 p-2"
             >
               {bellIcon}
@@ -273,10 +372,21 @@ export default function Header({ currentPage }: HeaderProps) {
             {isBellOpen && notificationDropdown}
           </div>
 
+          {/* Settings gear (mobile) */}
+          <div className="relative" ref={settingsMobileRef}>
+            <button
+              onClick={() => { setIsSettingsOpen(!isSettingsOpen); setIsBellOpen(false); setIsMobileMenuOpen(false); }}
+              className="text-gray-700 p-2"
+            >
+              {gearIcon}
+            </button>
+            {isSettingsOpen && settingsDropdown}
+          </div>
+
           {/* Hamburger */}
           <div className="relative" ref={menuRef}>
             <button
-              onClick={() => { setIsMobileMenuOpen(!isMobileMenuOpen); setIsBellOpen(false); }}
+              onClick={() => { setIsMobileMenuOpen(!isMobileMenuOpen); setIsBellOpen(false); setIsSettingsOpen(false); }}
               className="text-gray-700 p-2"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -299,7 +409,7 @@ export default function Header({ currentPage }: HeaderProps) {
                     className={`block px-4 py-3 text-sm font-semibold border-b border-gray-100 last:border-b-0 ${
                       currentPage === link.key ? 'bg-gray-50' : 'hover:bg-gray-50'
                     }`}
-                    style={currentPage === link.key ? { color: '#AA633F' } : { color: '#374151' }}
+                    style={currentPage === link.key ? { color: '#AA633F' } : {}}
                   >
                     {link.label}
                   </Link>
@@ -310,5 +420,48 @@ export default function Header({ currentPage }: HeaderProps) {
         </div>
       </div>
     </header>
+
+    {/* Reset User ID Confirmation Modal */}
+    {isResetModalOpen && (
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+        onClick={(e) => { if (e.target === e.currentTarget) setIsResetModalOpen(false); }}
+      >
+        <div className="bg-white rounded-lg max-w-md w-full p-6 border-4 border-red-500">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-800">Reset User ID</h2>
+            <button onClick={() => setIsResetModalOpen(false)} className="text-gray-500 hover:text-gray-700 text-2xl">
+              &times;
+            </button>
+          </div>
+          <p className="text-gray-600 mb-2">Are you sure you want to reset your User ID?</p>
+          <p className="text-sm text-gray-500 mb-6">
+            This will generate a new anonymous identity. Your current username, session, and all associated data (posts, messages, notifications) will no longer be linked to you. This action cannot be undone.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setIsResetModalOpen(false)}
+              className="flex-1 py-3 border-2 border-gray-300 text-gray-600 rounded-lg transition font-semibold hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  await clientApi.post('/api/session/reset');
+                } catch {}
+                localStorage.removeItem('eleutheria_username');
+                router.push('/');
+                window.location.href = '/';
+              }}
+              className="flex-1 py-3 bg-red-500 text-white rounded-lg transition font-semibold hover:bg-red-600"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

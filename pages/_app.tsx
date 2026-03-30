@@ -142,7 +142,7 @@ export default function App({ Component, pageProps }: AppProps) {
   }, [socket, isHomePage, addMessageRequest, addPlannedChat]);
 
   return (
-    <div className={`${cinzel.variable} ${libreBaskerville.variable}`}>
+    <div className={`${cinzel.variable} ${libreBaskerville.variable} min-h-screen flex flex-col`}>
       <Component {...pageProps} />
       {/* Show floating chats on all pages except home */}
       {!isHomePage && <FloatingChats />}

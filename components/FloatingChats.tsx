@@ -339,7 +339,9 @@ export default function FloatingChats() {
                           : 'bg-blue-500 text-white'
                       }`}
                     >
-                      <p className="text-sm break-words">{msg.content}</p>
+                      <p className="text-sm break-words whitespace-pre-wrap max-h-[120px] overflow-y-auto">
+                        {msg.content.replace(/\n{3,}/g, '\n\n').trim()}
+                      </p>
                     </div>
                   </div>
                 ))}

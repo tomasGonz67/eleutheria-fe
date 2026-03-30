@@ -10,6 +10,7 @@ import { clientApi, getErrorMessage } from '@/lib/api';
 import UserActionMenu from '@/components/UserActionMenu';
 import { FeedPost, Forum } from '@/lib/types';
 import TruncatedText from '@/components/TruncatedText';
+import Pagination from '@/components/Pagination';
 
 interface PostCommentsPageProps {
   forum: Forum;
@@ -19,6 +20,10 @@ interface PostCommentsPageProps {
   userSessionToken: string | null;
   postContent?: string;
   postUsername?: string;
+  postDiscriminator?: string;
+  currentPage: number;
+  totalPages: number;
+  totalComments: number;
   error?: string;
 }
 
@@ -331,7 +336,7 @@ function CommentItem({
   );
 }
 
-export default function PostCommentsPage({ forum, postId, comments: initialComments, username, userSessionToken, postContent, postUsername, error }: PostCommentsPageProps) {
+export default function PostCommentsPage({ forum, postId, comments: initialComments, username, userSessionToken, postContent, postUsername, postDiscriminator, currentPage, totalPages, totalComments, error }: PostCommentsPageProps) {
   const router = useRouter();
   const [replyContent, setReplyContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -345,11 +350,25 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
   const highlightParam = router.query.highlight;
   const highlightCommentId = highlightParam ? parseInt(highlightParam as string) : null;
 
+  const handlePageChange = (page: number) => {
+    const basePath = router.asPath.split('?')[0];
+    const params = new URLSearchParams();
+    params.set('page', page.toString());
+    router.push(`${basePath}?${params.toString()}`);
+  };
+
   // State for comments and lazy-loaded nested replies
   const [comments, setComments] = useState<FeedPost[]>(initialComments);
   const [expandedComments, setExpandedComments] = useState<Set<number>>(new Set());
   const [loadedReplies, setLoadedReplies] = useState<Map<number, FeedPost[]>>(new Map());
   const [loadingReplies, setLoadingReplies] = useState<Set<number>>(new Set());
+
+  // Sync comments state when props change (pagination / router.replace)
+  useEffect(() => {
+    setComments(initialComments);
+    setExpandedComments(new Set());
+    setLoadedReplies(new Map());
+  }, [initialComments]);
 
   // Auto-expand ancestor chain and scroll to highlighted comment
   useEffect(() => {
@@ -415,21 +434,24 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
     setFormError('');
 
     try {
-      const response = await createPost(forum.id, { 
+      const response = await createPost(forum.id, {
         content: replyContent.trim(),
-        parent_id: postId 
+        parent_id: postId
       });
-      
+
+      // Optimistically prepend the new comment (newest first)
+      const newComment: FeedPost = {
+        id: response.post.id,
+        content: replyContent.trim(),
+        username,
+        author_discriminator: '',
+        is_my_post: true,
+        created_at: new Date().toISOString(),
+        comment_count: 0,
+        parent_id: postId,
+      };
+      setComments(prev => [newComment, ...prev]);
       setReplyContent('');
-      
-      // Re-fetch top-level comments to show the new reply without losing expanded state
-      const commentsResponse = await clientApi.get(`/api/forums/${forum.id}/posts?parent_id=${postId}`);
-      const updatedComments = Array.isArray(commentsResponse.data) ? commentsResponse.data : (commentsResponse.data.posts || []);
-      
-      // Sort by most recent first
-      updatedComments.sort((a: FeedPost, b: FeedPost) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      
-      setComments(updatedComments);
     } catch (err: any) {
       console.error('Error creating reply:', err);
       setFormError(getErrorMessage(err, 'Failed to post reply. Please try again.'));
@@ -779,6 +801,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
                 <div className="text-sm text-gray-600">
                   by <UserActionMenu
                     username={postUsername}
+                    discriminator={postDiscriminator}
                     accentColor="#AA633F"
                     className="text-sm text-gray-600"
                   />
@@ -842,7 +865,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
             {/* Comments List */}
             <div>
               <h2 className="text-lg font-semibold mb-4 text-gray-800">
-                Direct Replies ({comments.length})
+                Direct Replies ({totalComments})
               </h2>
 
               {comments.length === 0 ? (
@@ -883,6 +906,13 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
                   ))}
                 </div>
               )}
+
+              {/* Pagination */}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
             </div>
           </div>
         )}
@@ -893,13 +923,15 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id: forumId, postId } = context.params as { id: string; postId: string };
+  const page = parseInt(context.query.page as string) || 1;
+  const limit = 20;
 
   try {
     // Use SERVER_API_URL for SSR (direct backend access in container)
     // Falls back to NEXT_PUBLIC_API_URL for local dev
     const API_URL = process.env.SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
-    const commentsUrl = `${API_URL}/api/forums/${forumId}/posts?parent_id=${postId}`;
+    const commentsUrl = `${API_URL}/api/forums/${forumId}/posts?parent_id=${postId}&page=${page}&limit=${limit}`;
     const postUrl = `${API_URL}/api/forums/${forumId}/posts/${postId}`;
 
     // Fetch user, post data, and comments in parallel
@@ -929,9 +961,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const commentsData = await commentsResponse.json();
     const comments = Array.isArray(commentsData) ? commentsData : (commentsData.posts || []);
-
-    // Sort comments by most recent first
-    comments.sort((a: FeedPost, b: FeedPost) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const totalPages = commentsData.totalPages || 1;
+    const totalComments = commentsData.totalPosts || comments.length;
 
     // Get forum from comments response (if backend includes it), otherwise use fallback
     const forum = commentsData.forum || { id: parseInt(forumId) || 0, name: 'Forum', slug: forumId, description: '' };
@@ -939,10 +970,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Get post content from the API
     let postContent = null;
     let postUsername = null;
+    let postDiscriminator = null;
     if (postResponse.ok) {
       const postData = await postResponse.json();
       postContent = postData.post?.content || null;
       postUsername = postData.post?.username || null;
+      postDiscriminator = postData.post?.author_discriminator || null;
     }
 
     // Get username and session token from user response (if available)
@@ -963,6 +996,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         userSessionToken,
         postContent,
         postUsername,
+        postDiscriminator,
+        currentPage: page,
+        totalPages,
+        totalComments,
       },
     };
   } catch (error) {
@@ -976,6 +1013,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         userSessionToken: null,
         postContent: null,
         postUsername: null,
+        postDiscriminator: null,
+        currentPage: 1,
+        totalPages: 1,
+        totalComments: 0,
         error: error instanceof Error ? error.message : 'Failed to load post',
       },
     };

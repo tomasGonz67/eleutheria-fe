@@ -6,7 +6,7 @@ interface FooterProps {
 
 export default function Footer({ onOpenTerms, onOpenPrivacy, onOpenRules }: FooterProps) {
   return (
-    <footer className="w-full py-4 text-center text-sm text-gray-500 border-t border-gray-200">
+    <footer className="w-full py-4 text-center text-sm text-black border-t border-gray-200">
       <button
         onClick={onOpenTerms}
         className="hover:text-gray-700 underline cursor-pointer"

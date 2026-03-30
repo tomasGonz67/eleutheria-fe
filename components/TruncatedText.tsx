@@ -2,6 +2,11 @@ import { useState } from 'react';
 
 const CHAR_LIMIT = 300;
 
+/** Collapse 3+ consecutive newlines into 2 and trim leading/trailing whitespace */
+function collapseNewlines(text: string): string {
+  return text.replace(/\n{3,}/g, '\n\n').trim();
+}
+
 interface TruncatedTextProps {
   content: string;
   className?: string;
@@ -9,12 +14,13 @@ interface TruncatedTextProps {
 
 export default function TruncatedText({ content, className = '' }: TruncatedTextProps) {
   const [expanded, setExpanded] = useState(false);
-  const needsTruncation = content.length > CHAR_LIMIT;
+  const sanitized = collapseNewlines(content);
+  const needsTruncation = sanitized.length > CHAR_LIMIT;
 
   return (
     <div className={`overflow-hidden ${className}`}>
-      <p className="text-gray-700 break-words whitespace-pre-wrap">
-        {expanded || !needsTruncation ? content : `${content.slice(0, CHAR_LIMIT)}...`}
+      <p className="text-gray-700 break-words whitespace-pre-wrap max-h-[250px] overflow-y-auto">
+        {expanded || !needsTruncation ? sanitized : `${sanitized.slice(0, CHAR_LIMIT)}...`}
       </p>
       {needsTruncation && (
         <button

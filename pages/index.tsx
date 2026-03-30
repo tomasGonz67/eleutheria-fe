@@ -48,7 +48,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-marble-100">
+    <div className="flex-1 flex flex-col bg-marble-100">
       <Head>
         <title>Eleutheria - Anonymous Community Platform | Forums & Chat</title>
         <meta name="description" content="Eleutheria is an anonymous, session-based community platform. Speak freely in forums, chatrooms, and random chats. No sign-up required." />
@@ -57,12 +57,12 @@ export default function Home() {
         <meta property="og:type" content="website" />
       </Head>
       {/* Hero Section */}
-      <main className="max-w-6xl mx-auto px-6 py-16">
-        <div className="text-center mb-12 mt-28">
+      <main className="flex-1 flex flex-col justify-center max-w-6xl mx-auto px-6 py-6 w-full">
+        <div className="text-center mb-6">
           <h1 className="text-4xl md:text-7xl font-bold mb-2 text-aegean-800 tracking-widest">ELEUTHERIA</h1>
           <p className="text-3xl md:text-6xl font-bold text-aegean-600 tracking-[0.15em] md:tracking-[0.3em] mb-4 animate-fade-in-greek" style={{ fontStyle: 'italic' }}>ΕΛΕΥΘΕΡΙΑ</p>
           <div>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-4">
               Anonymous, session-based community platform. Speak freely in forums, chatrooms, and random chats.
             </p>
 
@@ -102,12 +102,12 @@ export default function Home() {
         {/* Two Column Layout */}
         <div className="grid md:grid-cols-2 gap-8">
           {/* Forums Section */}
-          <div className="bg-marble-200 p-8 rounded-lg border-4 shadow-lg" style={{ borderColor: '#4D89B0' }}>
-            <h3 className="text-3xl font-bold mb-4 flex items-center gap-3" style={{ color: '#4D89B0' }}>
+          <div className="bg-marble-200 p-6 rounded-lg border-4 shadow-lg" style={{ borderColor: '#4D89B0' }}>
+            <h3 className="text-3xl font-bold mb-2 flex items-center gap-3" style={{ color: '#4D89B0' }}>
               <span className="text-4xl">📜</span>
               Forums
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-4">
               Browse public forums and join discussions. Create posts and engage with the community.
             </p>
             <div className="space-y-3">
@@ -135,12 +135,12 @@ export default function Home() {
           </div>
 
           {/* Chat Section */}
-          <div className="bg-marble-200 p-8 rounded-lg border-4 shadow-lg" style={{ borderColor: '#AA633F' }}>
-            <h3 className="text-3xl font-bold mb-4 flex items-center gap-3" style={{ color: '#AA633F' }}>
+          <div className="bg-marble-200 p-6 rounded-lg border-4 shadow-lg" style={{ borderColor: '#AA633F' }}>
+            <h3 className="text-3xl font-bold mb-2 flex items-center gap-3" style={{ color: '#AA633F' }}>
               <span className="text-4xl">💬</span>
               Chat
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-4">
               Connect with others through random 1-on-1 chats or join public chatrooms for group conversations.
             </p>
             <div className="space-y-3">
@@ -168,30 +168,18 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Contact & Reset Buttons */}
-        <div className="mt-10 text-center flex justify-center gap-4">
+        {/* Contact Button */}
+        <div className="mt-6 text-center flex justify-center gap-4">
           <button
             onClick={() => setIsContactOpen(true)}
             className="px-8 py-3 border-2 border-gray-400 text-gray-600 rounded-lg transition font-semibold hover:border-gray-600 hover:text-gray-800"
           >
             Contact Us
           </button>
-          <button
-            onClick={async () => {
-              try {
-                await clientApi.post('/api/session/reset');
-              } catch {}
-              localStorage.removeItem('eleutheria_username');
-              window.location.reload();
-            }}
-            className="px-8 py-3 border-2 border-red-500 text-red-500 rounded-lg transition font-semibold hover:bg-red-500 hover:text-white"
-          >
-            Reset User ID
-          </button>
         </div>
 
         {/* Info Section */}
-        <div className="mt-16 text-center">
+        <div className="mt-6 text-center">
           <p className="text-gray-500">
             All interactions are anonymous. No sign-up required. Your session is tracked by cookies for moderation purposes only.
           </p>

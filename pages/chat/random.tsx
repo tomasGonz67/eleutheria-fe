@@ -363,7 +363,7 @@ export default function RandomChatPage() {
                             ? 'border border-black'
                             : 'border border-black'
                         }`}
-                        style={message.is_me ? { backgroundColor: '#e3f2fd' } : { backgroundColor: '#f5f5f5' }}
+                        style={message.is_me ? { backgroundColor: '#e0f0f8' } : { backgroundColor: '#f5f5f5' }}
                       >
                         {/* Message Header */}
                         <div className="flex items-center justify-between mb-2">
@@ -376,7 +376,7 @@ export default function RandomChatPage() {
                             style={message.is_me ? { color: '#4D89B0' } : { color: '#6b7280' }}
                           />
                           <span className="text-xs text-gray-500 ml-3">
-                            {new Date(message.created_at).toLocaleTimeString()}
+                            {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
 

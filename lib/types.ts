@@ -9,6 +9,7 @@ export interface AnonymousUser {
   created_at: string;
   last_active: string;
   notifications?: number;
+  accepting_message_requests?: boolean;
 }
 
 export interface SessionResponse {

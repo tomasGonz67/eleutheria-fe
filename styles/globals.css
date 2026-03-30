@@ -63,13 +63,6 @@
   --color-olive-900: #365314;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
@@ -148,3 +141,62 @@ h1, h2, h3, h4, h5, h6 {
 .comment-highlight {
   animation: comment-glow 3s ease-out;
 }
+
+/* Dark mode overrides */
+.dark {
+  --background: #1a1410;
+  --foreground: #e8dfd6;
+
+  --aegean-blue: #4d89b0;
+  --deep-blue: #3b6d94;
+  --gold: #e8a317;
+  --bronze: #b8660e;
+  --marble: #2a2218;
+  --marble-dark: #1e1a12;
+  --olive: #7dc410;
+  --terracotta: #e84040;
+
+  --color-background: #1a1410;
+  --color-foreground: #e8dfd6;
+
+  --color-aegean-50: #1a2332;
+  --color-aegean-100: #1e2d42;
+  --color-aegean-200: #253a54;
+  --color-aegean-300: #3b6d94;
+  --color-aegean-400: #4d89b0;
+  --color-aegean-500: #5a9bc4;
+  --color-aegean-600: #4d89b0;
+  --color-aegean-700: #6ba3c8;
+  --color-aegean-800: #82b5d4;
+  --color-aegean-900: #a8cde2;
+
+  --color-gold-50: #2a2010;
+  --color-gold-100: #3a2d12;
+  --color-gold-200: #5c4a1a;
+  --color-gold-300: #8a6f20;
+  --color-gold-400: #c49a1a;
+  --color-gold-500: #e0ad18;
+  --color-gold-600: #e8a317;
+  --color-gold-700: #f0bc3a;
+  --color-gold-800: #f4cc60;
+  --color-gold-900: #f8dc8a;
+
+  --color-marble-50: #1e1a12;
+  --color-marble-100: #2a2218;
+  --color-marble-200: #362c20;
+  --color-marble-300: #5a4a35;
+  --color-marble-400: #7a6548;
+  --color-marble-500: #9a8060;
+
+  --color-olive-50: #1a2010;
+  --color-olive-100: #222c14;
+  --color-olive-200: #354418;
+  --color-olive-300: #4a6020;
+  --color-olive-400: #6a8a28;
+  --color-olive-500: #84a830;
+  --color-olive-600: #7dc410;
+  --color-olive-700: #96d430;
+  --color-olive-800: #a8e048;
+  --color-olive-900: #c0ec70;
+}
+

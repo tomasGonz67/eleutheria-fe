@@ -180,6 +180,12 @@ export default function UserActionMenu({
         <div className="absolute left-0 top-full mt-1 z-50 bg-white border-2 border-gray-300 rounded-lg shadow-lg min-w-[180px]">
           {isOwnUser ? (
             // Options for clicking on your own name
+            <>
+              {discriminator && (
+                <div className="px-4 py-2 border-b border-gray-200 bg-gray-50">
+                  <span className="text-xs text-gray-400 font-mono">#{discriminator}</span>
+                </div>
+              )}
             <button
               onClick={handleToggleMessageRequests}
               className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
@@ -190,13 +196,19 @@ export default function UserActionMenu({
                   ? '🔕 Turn off message requests'
                   : '🔔 Turn on message requests'}
             </button>
+            </>
           ) : (
             // Options for clicking on someone else's name
             <>
               {/* Online Status */}
               <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-gray-700">{username}</span>
+                  <div>
+                    <span className="text-sm font-semibold text-gray-700">{username}</span>
+                    {discriminator && (
+                      <p className="text-xs text-gray-400 font-mono">#{discriminator}</p>
+                    )}
+                  </div>
                   {isOnline === null ? (
                     <span className="text-xs text-gray-500">Checking...</span>
                   ) : isOnline ? (
