@@ -226,12 +226,14 @@ export default function UserActionMenu({
               </div>
 
               {/* Actions */}
-              <button
-                onClick={handleSendMessage}
-                className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition border-b border-gray-200"
-              >
-                📨 Send message
-              </button>
+              {discriminator && (
+                <button
+                  onClick={handleSendMessage}
+                  className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition border-b border-gray-200"
+                >
+                  📨 Send message
+                </button>
+              )}
               <button
                 onClick={handleReport}
                 className="w-full text-left px-4 py-3 text-sm font-semibold text-red-600 hover:bg-gray-50 transition"

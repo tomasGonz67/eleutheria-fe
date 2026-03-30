@@ -33,6 +33,8 @@ export default function Header({ currentPage }: HeaderProps) {
   const [darkMode, setDarkMode] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [rejectingMessages, setRejectingMessages] = useState(false);
+  const [appearOffline, setAppearOffline] = useState(false);
+  const [hideDiscriminator, setHideDiscriminator] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -48,6 +50,8 @@ export default function Header({ currentPage }: HeaderProps) {
         const response = await getCurrentUser();
         setNotificationCount(response.user.notifications || 0);
         setRejectingMessages(!response.user.accepting_message_requests);
+        setAppearOffline(response.user.appear_offline || false);
+        setHideDiscriminator(response.user.hide_discriminator || false);
       } catch (error) {
         console.error('Error fetching notifications:', error);
       }
@@ -286,7 +290,7 @@ export default function Header({ currentPage }: HeaderProps) {
             console.error('Error toggling message requests:', error);
           }
         }}
-        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition flex items-center justify-between"
+        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition border-b border-gray-100 flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
           <span>🔕</span>
@@ -294,6 +298,44 @@ export default function Header({ currentPage }: HeaderProps) {
         </div>
         <div className={`relative w-10 h-5 rounded-full transition-colors ${rejectingMessages ? 'bg-red-500' : 'bg-gray-300'}`}>
           <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${rejectingMessages ? 'translate-x-5' : 'translate-x-0'}`} />
+        </div>
+      </button>
+      <button
+        onClick={async () => {
+          try {
+            const res = await clientApi.put('/api/session/toggle-appear-offline');
+            setAppearOffline(res.data.appear_offline);
+          } catch (error) {
+            console.error('Error toggling appear offline:', error);
+          }
+        }}
+        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition border-b border-gray-100 flex items-center justify-between"
+      >
+        <div className="flex items-center gap-3">
+          <span>👻</span>
+          <span>Appear Offline</span>
+        </div>
+        <div className={`relative w-10 h-5 rounded-full transition-colors ${appearOffline ? 'bg-red-500' : 'bg-gray-300'}`}>
+          <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${appearOffline ? 'translate-x-5' : 'translate-x-0'}`} />
+        </div>
+      </button>
+      <button
+        onClick={async () => {
+          try {
+            const res = await clientApi.put('/api/session/toggle-hide-discriminator');
+            setHideDiscriminator(res.data.hide_discriminator);
+          } catch (error) {
+            console.error('Error toggling hide discriminator:', error);
+          }
+        }}
+        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition flex items-center justify-between"
+      >
+        <div className="flex items-center gap-3">
+          <span>🔒</span>
+          <span>Hide Discriminator</span>
+        </div>
+        <div className={`relative w-10 h-5 rounded-full transition-colors ${hideDiscriminator ? 'bg-red-500' : 'bg-gray-300'}`}>
+          <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${hideDiscriminator ? 'translate-x-5' : 'translate-x-0'}`} />
         </div>
       </button>
     </div>
