@@ -16,7 +16,9 @@ interface ChatSession {
   user1_username: string;
   user2_username: string;
   user1_discriminator: string;
+  user1_hide_discriminator?: boolean;
   user2_discriminator: string;
+  user2_hide_discriminator?: boolean;
 }
 
 export default function PrivateChatsPage() {
