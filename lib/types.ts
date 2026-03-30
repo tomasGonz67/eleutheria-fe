@@ -148,7 +148,9 @@ export interface ChatSession {
   user1_username: string;
   user2_username: string;
   user1_discriminator: string;
+  user1_hide_discriminator?: boolean;
   user2_discriminator: string | null;
+  user2_hide_discriminator?: boolean;
   status: 'waiting' | 'active' | 'ended';
   type: 'random' | 'planned';
   created_at: string;
@@ -197,6 +199,7 @@ export interface Message {
   username: string; // Sender's username
   is_me: boolean; // Whether this message is from the current user
   sender_discriminator?: string; // Sender's discriminator
+  sender_hide_discriminator?: boolean;
   created_at: string;
   isSystem?: boolean; // For system messages like "User left"
 }
@@ -214,6 +217,7 @@ export interface FeedPost {
   content: string;
   username: string;
   author_discriminator: string;
+  author_hide_discriminator?: boolean;
   is_my_post: boolean;
   created_at: string;
   comment_count?: number;
