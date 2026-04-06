@@ -31,11 +31,11 @@ export default function Home() {
       } else {
         localStorage.removeItem('eleutheria_username');
       }
-      
+
       // Initialize Socket.io connection once session is created
       initializeSocket();
       console.log('🔌 Socket initialized after session creation');
-      
+
       // Navigate after session is created
       router.push(path);
     } catch (error) {
@@ -62,7 +62,7 @@ export default function Home() {
           <h1 className="text-4xl md:text-7xl font-bold mb-2 text-aegean-800 tracking-widest">ELEUTHERIA</h1>
           <p className="text-3xl md:text-6xl font-bold text-aegean-600 tracking-[0.15em] md:tracking-[0.3em] mb-4 animate-fade-in-greek" style={{ fontStyle: 'italic' }}>ΕΛΕΥΘΕΡΙΑ</p>
           <div>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-4">
+            <p className="text-xl text-text-tertiary max-w-2xl mx-auto mb-4">
               Anonymous, session-based community platform. Speak freely in forums, chatrooms, and random chats.
             </p>
 
@@ -76,23 +76,17 @@ export default function Home() {
                 onChange={(e) => setUsername(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !isCreatingSession && handleNavigate('/feed')}
                 maxLength={20}
-                className="flex-1 px-4 py-3 border-2 border-black text-black rounded-lg focus:outline-none"
-                style={{ }}
-                onFocus={(e) => e.target.style.borderColor = '#4D89B0'}
-                onBlur={(e) => e.target.style.borderColor = 'black'}
+                className="flex-1 px-4 py-3 border-2 border-border-strong text-text-primary bg-surface rounded-lg focus:outline-none focus:border-accent-forum"
               />
               <button
                 onClick={() => handleNavigate('/feed')}
                 disabled={isCreatingSession}
-                className="px-6 py-3 text-white rounded-lg transition font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: '#4D89B0' }}
-                onMouseEnter={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#3d6e8f')}
-                onMouseLeave={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#4D89B0')}
+                className="px-6 py-3 bg-accent-forum hover:bg-accent-forum-hover text-text-on-color rounded-lg transition font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCreatingSession ? '...' : 'Enter'}
               </button>
             </div>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-text-muted mt-2">
                 Leave blank for a random Greek-themed username
               </p>
             </div>
@@ -102,32 +96,26 @@ export default function Home() {
         {/* Two Column Layout */}
         <div className="grid md:grid-cols-2 gap-8">
           {/* Forums Section */}
-          <div className="bg-marble-200 p-6 rounded-lg border-4 shadow-lg" style={{ borderColor: '#4D89B0' }}>
-            <h3 className="text-3xl font-bold mb-2 flex items-center gap-3" style={{ color: '#4D89B0' }}>
+          <div className="bg-marble-200 p-6 rounded-lg border-4 border-accent-forum shadow-lg">
+            <h3 className="text-3xl font-bold mb-2 flex items-center gap-3 text-accent-forum">
               <span className="text-4xl">📜</span>
               Forums
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-text-tertiary mb-4">
               Browse public forums and join discussions. Create posts and engage with the community.
             </p>
             <div className="space-y-3">
               <button
                 onClick={() => handleNavigate('/feed')}
                 disabled={isCreatingSession}
-                className="block w-full py-3 px-4 text-white text-center rounded-lg transition font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: '#4D89B0' }}
-                onMouseEnter={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#3d6e8f')}
-                onMouseLeave={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#4D89B0')}
+                className="block w-full py-3 px-4 bg-accent-forum hover:bg-accent-forum-hover text-text-on-color text-center rounded-lg transition font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCreatingSession ? 'Loading...' : 'View Global Feed'}
               </button>
               <button
                 onClick={() => handleNavigate('/forums')}
                 disabled={isCreatingSession}
-                className="block w-full py-3 px-4 text-white text-center rounded-lg transition font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: '#4D89B0' }}
-                onMouseEnter={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#3d6e8f')}
-                onMouseLeave={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#4D89B0')}
+                className="block w-full py-3 px-4 bg-accent-forum hover:bg-accent-forum-hover text-text-on-color text-center rounded-lg transition font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCreatingSession ? 'Loading...' : 'Browse Forums'}
               </button>
@@ -135,32 +123,26 @@ export default function Home() {
           </div>
 
           {/* Chat Section */}
-          <div className="bg-marble-200 p-6 rounded-lg border-4 shadow-lg" style={{ borderColor: '#AA633F' }}>
-            <h3 className="text-3xl font-bold mb-2 flex items-center gap-3" style={{ color: '#AA633F' }}>
+          <div className="bg-marble-200 p-6 rounded-lg border-4 border-accent-chat shadow-lg">
+            <h3 className="text-3xl font-bold mb-2 flex items-center gap-3 text-accent-chat">
               <span className="text-4xl">💬</span>
               Chat
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-text-tertiary mb-4">
               Connect with others through random 1-on-1 chats or join public chatrooms for group conversations.
             </p>
             <div className="space-y-3">
               <button
                 onClick={() => handleNavigate('/chat/random')}
                 disabled={isCreatingSession}
-                className="block w-full py-3 px-4 text-white text-center rounded-lg transition font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: '#AA633F' }}
-                onMouseEnter={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#8a4f32')}
-                onMouseLeave={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#AA633F')}
+                className="block w-full py-3 px-4 bg-accent-chat hover:bg-accent-chat-hover text-text-on-color text-center rounded-lg transition font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCreatingSession ? 'Loading...' : 'Random Chat'}
               </button>
               <button
                 onClick={() => handleNavigate('/chatrooms')}
                 disabled={isCreatingSession}
-                className="block w-full py-3 px-4 text-white text-center rounded-lg transition font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: '#AA633F' }}
-                onMouseEnter={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#8a4f32')}
-                onMouseLeave={(e) => !isCreatingSession && (e.currentTarget.style.backgroundColor = '#AA633F')}
+                className="block w-full py-3 px-4 bg-accent-chat hover:bg-accent-chat-hover text-text-on-color text-center rounded-lg transition font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCreatingSession ? 'Loading...' : 'Browse Chatrooms'}
               </button>
@@ -172,7 +154,7 @@ export default function Home() {
         <div className="mt-6 text-center flex justify-center gap-4">
           <button
             onClick={() => setIsContactOpen(true)}
-            className="px-8 py-3 border-2 border-gray-400 text-gray-600 rounded-lg transition font-semibold hover:border-gray-600 hover:text-gray-800"
+            className="px-8 py-3 border-2 border-border text-text-muted rounded-lg transition font-semibold hover:border-border-strong hover:text-text-primary"
           >
             Contact Us
           </button>
@@ -180,7 +162,7 @@ export default function Home() {
 
         {/* Info Section */}
         <div className="mt-6 text-center">
-          <p className="text-gray-500">
+          <p className="text-text-muted">
             All interactions are anonymous. No sign-up required. Your session is tracked by cookies for moderation purposes only.
           </p>
         </div>
@@ -192,51 +174,48 @@ export default function Home() {
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
           onClick={(e) => { if (e.target === e.currentTarget) setIsContactOpen(false); }}
         >
-          <div className="bg-white rounded-lg max-w-md w-full p-6 border-4" style={{ borderColor: '#4D89B0' }}>
+          <div className="bg-surface rounded-lg max-w-md w-full p-6 border-4 border-accent-forum">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">Contact Us</h2>
-              <button onClick={() => setIsContactOpen(false)} className="text-gray-500 hover:text-gray-700 text-2xl">
+              <h2 className="text-2xl font-bold text-text-primary">Contact Us</h2>
+              <button onClick={() => setIsContactOpen(false)} className="text-text-muted hover:text-text-secondary text-2xl">
                 &times;
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Name <span className="text-gray-400 font-normal">(optional)</span></label>
+                <label className="block text-sm font-semibold text-text-secondary mb-1">Name <span className="text-text-faint font-normal">(optional)</span></label>
                 <input
                   type="text"
                   value={contactName}
                   onChange={(e) => setContactName(e.target.value)}
                   placeholder="Your name"
-                  className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
+                  className="w-full p-3 border-2 border-border text-text-primary bg-surface rounded-lg focus:border-border-strong focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Email <span className="text-gray-400 font-normal">(optional)</span></label>
+                <label className="block text-sm font-semibold text-text-secondary mb-1">Email <span className="text-text-faint font-normal">(optional)</span></label>
                 <input
                   type="email"
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
                   placeholder="Your email"
-                  className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
+                  className="w-full p-3 border-2 border-border text-text-primary bg-surface rounded-lg focus:border-border-strong focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Message</label>
+                <label className="block text-sm font-semibold text-text-secondary mb-1">Message</label>
                 <textarea
                   value={contactMessage}
                   onChange={(e) => setContactMessage(e.target.value)}
                   placeholder="What would you like to tell us?"
-                  className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                  className="w-full p-3 border-2 border-border text-text-primary bg-surface rounded-lg focus:border-border-strong focus:outline-none resize-none"
                   rows={4}
                   maxLength={2000}
                 />
               </div>
               <button
                 disabled={!contactMessage.trim() || contactStatus === 'sending' || contactStatus === 'sent'}
-                className="w-full py-3 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
-                style={{ backgroundColor: !contactMessage.trim() ? '#9ca3af' : '#4D89B0' }}
-                onMouseEnter={(e) => contactMessage.trim() && (e.currentTarget.style.backgroundColor = '#3d6e8f')}
-                onMouseLeave={(e) => contactMessage.trim() && (e.currentTarget.style.backgroundColor = '#4D89B0')}
+                className={`w-full py-3 text-text-on-color rounded-lg transition font-semibold disabled:bg-disabled disabled:cursor-not-allowed ${contactMessage.trim() ? 'bg-accent-forum hover:bg-accent-forum-hover' : 'bg-disabled'}`}
                 onClick={async () => {
                   setContactStatus('sending');
                   try {

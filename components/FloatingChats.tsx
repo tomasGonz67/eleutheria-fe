@@ -226,7 +226,7 @@ export default function FloatingChats() {
           {plannedChats.map((chat) => (
         <div
           key={chat.id}
-          className="bg-white rounded-lg shadow-xl border-2"
+          className="bg-surface rounded-lg shadow-xl border-2"
           style={{
             borderColor: '#1e40af',
             width: chat.isMinimized ? '280px' : '320px',
@@ -240,7 +240,7 @@ export default function FloatingChats() {
                 toggleMinimize(chat.id);
               }
             }}
-            className={`p-3 border-b border-gray-200 flex items-center justify-between ${chat.isMinimized ? 'cursor-pointer' : ''}`}
+            className={`p-3 border-b border-border-light flex items-center justify-between ${chat.isMinimized ? 'cursor-pointer' : ''}`}
             style={{ backgroundColor: '#1e40af' }}
           >
             <div className="flex items-center gap-2 relative">
@@ -251,7 +251,7 @@ export default function FloatingChats() {
                     setOpenDropdown(openDropdown === chat.id ? null : chat.id);
                   }
                 }}
-                className="flex items-center gap-1 text-white hover:text-gray-200"
+                className="flex items-center gap-1 text-text-on-color hover:text-text-faint"
               >
                 <span className="font-semibold text-sm">
                   {chat.partnerUsername || chat.inviteCode}
@@ -261,7 +261,7 @@ export default function FloatingChats() {
 
               {/* Dropdown Menu */}
               {openDropdown === chat.id && (
-                <div className="absolute top-full left-0 mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg min-w-[140px] z-50">
+                <div className="absolute top-full left-0 mt-1 bg-surface border-2 border-border rounded-lg shadow-lg min-w-[140px] z-50">
                   {chat.status !== 'ended' && (
                     <button
                       onClick={(e) => {
@@ -269,7 +269,7 @@ export default function FloatingChats() {
                         setOpenDropdown(null);
                         endChat(chat.id);
                       }}
-                      className="w-full text-left px-4 py-2 text-sm font-semibold text-red-600 hover:bg-gray-50 transition"
+                      className="w-full text-left px-4 py-2 text-sm font-semibold text-error-text hover:bg-surface-secondary transition"
                     >
                       End Chat
                     </button>
@@ -280,7 +280,7 @@ export default function FloatingChats() {
                       setOpenDropdown(null);
                       // Report functionality to be implemented
                     }}
-                    className="w-full text-left px-4 py-2 text-sm font-semibold text-orange-600 hover:bg-gray-50 transition"
+                    className="w-full text-left px-4 py-2 text-sm font-semibold text-orange-600 hover:bg-surface-secondary transition"
                   >
                     Report
                   </button>
@@ -300,7 +300,7 @@ export default function FloatingChats() {
                   setOpenDropdown(null);
                   toggleMinimize(chat.id);
                 }}
-                className="text-white hover:text-gray-200 text-xl"
+                className="text-text-on-color hover:text-text-faint text-xl"
                 title={chat.isMinimized ? "Expand" : "Minimize"}
               >
                 {chat.isMinimized ? '+' : '−'}
@@ -310,7 +310,7 @@ export default function FloatingChats() {
                   e.stopPropagation();
                   removePlannedChat(chat.id);
                 }}
-                className="text-white hover:text-gray-200 text-2xl"
+                className="text-text-on-color hover:text-text-faint text-2xl"
                 title="Close"
               >
                 ✕
@@ -335,8 +335,8 @@ export default function FloatingChats() {
                     <div
                       className={`max-w-[70%] rounded-lg px-3 py-2 ${
                         msg.sender_discriminator !== currentUserDiscriminator
-                          ? 'bg-gray-200 text-gray-800'
-                          : 'bg-blue-500 text-white'
+                          ? 'bg-surface-elevated text-text-primary'
+                          : 'bg-info text-text-on-color'
                       }`}
                     >
                       <p className="text-sm break-words whitespace-pre-wrap max-h-[120px] overflow-y-auto">
@@ -349,9 +349,9 @@ export default function FloatingChats() {
               </div>
 
               {/* Input */}
-              <div className="border-t border-gray-200 p-4">
+              <div className="border-t border-border-light p-4">
                 {chat.status === 'ended' ? (
-                  <div className="text-center text-gray-500 text-sm italic py-2">
+                  <div className="text-center text-text-muted text-sm italic py-2">
                     This chat has ended. You can view the message history above.
                   </div>
                 ) : (
@@ -372,11 +372,11 @@ export default function FloatingChats() {
                         }))
                       }
                       placeholder="Type a message..."
-                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm text-gray-900 placeholder-gray-500"
+                      className="flex-1 px-4 py-2.5 border border-border rounded-lg focus:outline-none focus:border-blue-500 text-sm text-gray-900 placeholder-gray-500"
                     />
                     <button
                       type="submit"
-                      className="px-5 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm font-semibold"
+                      className="px-5 py-2.5 bg-info text-text-on-color rounded-lg hover:bg-info-bg transition text-sm font-semibold"
                     >
                       Send
                     </button>

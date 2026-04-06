@@ -96,10 +96,10 @@ function CommentItem({
 }: CommentItemProps) {
   // Background color gets lighter with depth
   const getBackgroundColor = (depth: number) => {
-    if (depth === 0) return 'bg-white';
-    if (depth === 1) return 'bg-gray-50';
-    if (depth === 2) return 'bg-gray-100';
-    return 'bg-gray-200';
+    if (depth === 0) return 'bg-surface';
+    if (depth === 1) return 'bg-surface-secondary';
+    if (depth === 2) return 'bg-surface-tertiary';
+    return 'bg-surface-elevated';
   };
 
   const isExpanded = expandedComments.has(comment.id);
@@ -108,36 +108,36 @@ function CommentItem({
 
   return (
     <div id={`comment-${comment.id}`} className={`${depth > 0 ? 'ml-6 mt-2' : ''}`}>
-      <div className={`border border-gray-300 rounded-lg p-4 ${getBackgroundColor(depth)}${highlightCommentId === comment.id ? ' comment-highlight' : ''}`}>
+      <div className={`border border-border rounded-lg p-4 ${getBackgroundColor(depth)}${highlightCommentId === comment.id ? ' comment-highlight' : ''}`}>
         {/* Comment Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-gray-800 px-3 py-1 bg-gray-200 rounded-md">
+            <span className="font-semibold text-text-primary px-3 py-1 bg-surface-elevated rounded-md">
               <UserActionMenu
                 username={comment.username}
                 discriminator={comment.author_discriminator}
                 hideDiscriminator={comment.author_hide_discriminator}
                 isOwnPost={comment.is_my_post}
                 accentColor="#AA633F"
-                className="font-semibold text-gray-800"
+                className="font-semibold text-text-primary"
               />
             </span>
             {parentUsername && (
               <>
-                <span className="text-sm text-gray-500">Reply to →</span>
-                <span className="text-sm font-semibold text-gray-700">
+                <span className="text-sm text-text-muted">Reply to →</span>
+                <span className="text-sm font-semibold text-text-secondary">
                   <UserActionMenu
                     username={parentUsername}
                     discriminator={parentDiscriminator}
                     hideDiscriminator={parentHideDiscriminator}
                     accentColor="#AA633F"
-                    className="text-sm font-semibold text-gray-700"
+                    className="text-sm font-semibold text-text-secondary"
                   />
                 </span>
               </>
             )}
           </div>
-          <span className="text-sm text-gray-500 whitespace-nowrap">
+          <span className="text-sm text-text-muted whitespace-nowrap">
             {new Date(comment.created_at).toLocaleString(undefined, { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
           </span>
         </div>
@@ -148,7 +148,7 @@ function CommentItem({
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+              className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none resize-none"
               rows={3}
               maxLength={5000}
               disabled={isSubmitting}
@@ -163,34 +163,32 @@ function CommentItem({
               <button
                 onClick={() => onSaveEdit(comment.id)}
                 disabled={isSubmitting || !editContent.trim()}
-                className="px-4 py-1 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
-                style={{ backgroundColor: isSubmitting || !editContent.trim() ? '#9ca3af' : '#AA633F' }}
+                className="px-4 py-1 text-text-on-color rounded-lg transition font-semibold disabled:bg-disabled disabled:cursor-not-allowed text-sm bg-accent-chat hover:bg-accent-chat-hover"
               >
                 {isSubmitting ? 'Saving...' : 'Save'}
               </button>
               <button
                 onClick={onCancelEdit}
                 disabled={isSubmitting}
-                className="px-4 py-1 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold text-sm disabled:opacity-50"
+                className="px-4 py-1 border-2 border-border text-text-secondary rounded-lg hover:bg-surface-secondary transition font-semibold text-sm disabled:opacity-50"
               >
                 Cancel
               </button>
             </div>
           </div>
         ) : (
-          <TruncatedText content={comment.content} className="mb-4 p-3 bg-white rounded-lg" />
+          <TruncatedText content={comment.content} className="mb-4 p-3 bg-surface rounded-lg" />
         )}
 
         {/* Comment Actions */}
         {editingCommentId !== comment.id && (
           <div className="flex gap-3 items-center">
             {isLoading ? (
-              <span className="text-sm font-semibold" style={{ color: '#AA633F' }}>Loading...</span>
+              <span className="text-sm font-semibold text-accent-chat">Loading...</span>
             ) : isExpanded ? (
               <button
                 onClick={() => onToggleReplies(comment.id)}
-                className="text-sm font-semibold hover:underline"
-                style={{ color: '#AA633F' }}
+                className="text-sm font-semibold hover:underline text-accent-chat"
               >
                 Hide Replies (-)
               </button>
@@ -198,18 +196,16 @@ function CommentItem({
               <>
                 <button
                   onClick={() => onToggleReplies(comment.id)}
-                  className="text-sm font-semibold hover:underline"
-                  style={{ color: '#AA633F' }}
+                  className="text-sm font-semibold hover:underline text-accent-chat"
                 >
                   See Direct Replies{comment.comment_count !== undefined && comment.comment_count > 0 ? ` (${comment.comment_count})` : ''}
                 </button>
                 {comment.comment_count !== undefined && comment.comment_count > 0 && (
                   <>
-                    <p className="text-gray-500">|</p>
+                    <p className="text-text-muted">|</p>
                     <button
                       onClick={() => onExpandAllReplies(comment.id)}
-                      className="text-sm font-semibold hover:underline"
-                      style={{ color: '#AA633F' }}
+                      className="text-sm font-semibold hover:underline text-accent-chat"
                     >
                       All Replies
                     </button>
@@ -219,36 +215,34 @@ function CommentItem({
             )}
             {depth < 7 ? (
               <>
-                <p className="text-gray-500">|</p>
+                <p className="text-text-muted">|</p>
                 <button
                   onClick={() => onStartReply(comment.id)}
-                  className="text-sm font-semibold hover:underline"
-                  style={{ color: '#AA633F' }}
+                  className="text-sm font-semibold hover:underline text-accent-chat"
                 >
                   Reply
                 </button>
               </>
             ) : (
               <>
-                <p className="text-gray-500">|</p>
-                <span className="text-xs text-gray-400 italic">Reply limit reached</span>
+                <p className="text-text-muted">|</p>
+                <span className="text-xs text-text-faint italic">Reply limit reached</span>
               </>
             )}
             {/* Show Edit and Delete buttons only for current user's comments */}
             {comment.is_my_post && (
               <>
-                <p className="text-gray-500">|</p>
+                <p className="text-text-muted">|</p>
                 <button
                   onClick={() => onStartEdit(comment)}
-                  className="text-sm font-semibold hover:underline"
-                  style={{ color: '#AA633F' }}
+                  className="text-sm font-semibold hover:underline text-accent-chat"
                 >
                   Edit
                 </button>
-                <p className="text-gray-500">|</p>
+                <p className="text-text-muted">|</p>
                 <button
                   onClick={() => onDelete(comment.id)}
-                  className="text-sm font-semibold hover:underline text-red-600"
+                  className="text-sm font-semibold hover:underline text-error-text"
                 >
                   Delete
                 </button>
@@ -259,16 +253,16 @@ function CommentItem({
 
         {/* Reply Form */}
         {replyingToCommentId === comment.id && (
-          <div className="mt-4 pl-6 border-l-4" style={{ borderColor: '#AA633F' }}>
+          <div className="mt-4 pl-6 border-l-4 border-accent-chat">
             <div className="mb-2">
-              <span className="text-sm text-gray-600">Replying to {comment.username} as: </span>
-              <span className="text-sm font-semibold text-gray-800">{username}</span>
+              <span className="text-sm text-text-tertiary">Replying to {comment.username} as: </span>
+              <span className="text-sm font-semibold text-text-primary">{username}</span>
             </div>
             <textarea
               value={commentReplyContent}
               onChange={(e) => setCommentReplyContent(e.target.value)}
               placeholder="Write your reply..."
-              className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+              className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none resize-none"
               rows={3}
               maxLength={5000}
               disabled={isSubmitting}
@@ -283,15 +277,14 @@ function CommentItem({
               <button
                 onClick={() => onSubmitReply(comment.id)}
                 disabled={isSubmitting || !commentReplyContent.trim()}
-                className="px-4 py-1 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
-                style={{ backgroundColor: isSubmitting || !commentReplyContent.trim() ? '#9ca3af' : '#AA633F' }}
+                className="px-4 py-1 text-text-on-color rounded-lg transition font-semibold disabled:bg-disabled disabled:cursor-not-allowed text-sm bg-accent-chat hover:bg-accent-chat-hover"
               >
                 {isSubmitting ? 'Replying...' : 'Post Reply'}
               </button>
               <button
                 onClick={onCancelReply}
                 disabled={isSubmitting}
-                className="px-4 py-1 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold text-sm disabled:opacity-50"
+                className="px-4 py-1 border-2 border-border text-text-secondary rounded-lg hover:bg-surface-secondary transition font-semibold text-sm disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -484,16 +477,16 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
 
     try {
       await updatePost(forum.id, commentId, { content: editContent.trim() });
-      
+
       // Update the comment in state
       const updateCommentInList = (commentsList: FeedPost[]): FeedPost[] => {
-        return commentsList.map(c => 
+        return commentsList.map(c =>
           c.id === commentId ? { ...c, content: editContent.trim() } : c
         );
       };
-      
+
       setComments(updateCommentInList(comments));
-      
+
       // Also update in loaded replies if it exists there
       setLoadedReplies(prev => {
         const newMap = new Map(prev);
@@ -502,7 +495,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
         });
         return newMap;
       });
-      
+
       setEditingCommentId(null);
       setEditContent('');
     } catch (err: any) {
@@ -523,7 +516,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
     const findComment = (commentsList: FeedPost[]): FeedPost | undefined => {
       return commentsList.find(c => c.id === commentId);
     };
-    
+
     const deletedComment = findComment(comments);
     if (deletedComment) {
       deletedCommentParentId = deletedComment.parent_id ?? null;
@@ -540,14 +533,14 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
 
     try {
       await deletePost(forum.id, commentId);
-      
+
       // Remove the comment from state
       const filterComments = (commentsList: FeedPost[]): FeedPost[] => {
         return commentsList.filter(c => c.id !== commentId);
       };
-      
+
       setComments(filterComments(comments));
-      
+
       // Also remove from loaded replies if it exists there
       setLoadedReplies(prev => {
         const newMap = new Map(prev);
@@ -556,19 +549,19 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
         });
         return newMap;
       });
-      
+
       // Decrement comment_count for the parent comment
       if (deletedCommentParentId) {
         const decrementCount = (commentsList: FeedPost[]): FeedPost[] => {
-          return commentsList.map(c => 
-            c.id === deletedCommentParentId 
-              ? { ...c, comment_count: Math.max((c.comment_count || 0) - 1, 0) } 
+          return commentsList.map(c =>
+            c.id === deletedCommentParentId
+              ? { ...c, comment_count: Math.max((c.comment_count || 0) - 1, 0) }
               : c
           );
         };
-        
+
         setComments(decrementCount(comments));
-        
+
         setLoadedReplies(prev => {
           const newMap = new Map(prev);
           newMap.forEach((replies, parentId) => {
@@ -602,33 +595,33 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
     setFormError('');
 
     try {
-      const response = await createPost(forum.id, { 
+      const response = await createPost(forum.id, {
         content: commentReplyContent.trim(),
-        parent_id: parentCommentId 
+        parent_id: parentCommentId
       });
-      
+
       // Always re-fetch replies and auto-expand to show the new reply
       const repliesResponse = await clientApi.get(`/api/forums/${forum.id}/posts?parent_id=${parentCommentId}`);
       const replies = Array.isArray(repliesResponse.data) ? repliesResponse.data : (repliesResponse.data.posts || []);
-      
+
       // Sort by most recent first
       replies.sort((a: FeedPost, b: FeedPost) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      
+
       // Update loaded replies and expand the comment to show new reply
       setLoadedReplies(prev => new Map(prev).set(parentCommentId, replies));
       setExpandedComments(prev => new Set(prev).add(parentCommentId));
-      
+
       // Update comment_count for the parent comment
       const updateCommentCount = (commentsList: FeedPost[]): FeedPost[] => {
-        return commentsList.map(c => 
-          c.id === parentCommentId 
-            ? { ...c, comment_count: (c.comment_count || 0) + 1 } 
+        return commentsList.map(c =>
+          c.id === parentCommentId
+            ? { ...c, comment_count: (c.comment_count || 0) + 1 }
             : c
         );
       };
-      
+
       setComments(updateCommentCount(comments));
-      
+
       // Also update in loaded replies if it exists there
       setLoadedReplies(prev => {
         const newMap = new Map(prev);
@@ -637,7 +630,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
         });
         return newMap;
       });
-      
+
       setReplyingToCommentId(null);
       setCommentReplyContent('');
     } catch (err: any) {
@@ -652,16 +645,16 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
   const fetchReplies = async (commentId: number) => {
     console.log('🔍 Fetching replies for comment:', commentId);
     setLoadingReplies(prev => new Set(prev).add(commentId));
-    
+
     try {
       const response = await clientApi.get(`/api/forums/${forum.id}/posts?parent_id=${commentId}`);
       const replies = Array.isArray(response.data) ? response.data : (response.data.posts || []);
-      
+
       // Sort replies by most recent first
       replies.sort((a: FeedPost, b: FeedPost) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      
+
       console.log('✅ Loaded replies for comment', commentId, ':', replies.length, 'replies');
-      
+
       // Store replies in state
       setLoadedReplies(prev => new Map(prev).set(commentId, replies));
       setExpandedComments(prev => new Set(prev).add(commentId));
@@ -680,20 +673,20 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
   // Recursively collapse all descendants when hiding replies
   const collapseAllDescendants = (commentId: number) => {
     const replies = loadedReplies.get(commentId) || [];
-    
+
     setExpandedComments(prev => {
       const next = new Set(prev);
       next.delete(commentId);
-      
+
       // Recursively collapse all child comments
       replies.forEach(reply => {
         collapseDescendantsRecursive(reply.id, next);
       });
-      
+
       return next;
     });
   };
-  
+
   const collapseDescendantsRecursive = (commentId: number, expandedSet: Set<number>) => {
     expandedSet.delete(commentId);
     const replies = loadedReplies.get(commentId) || [];
@@ -787,47 +780,47 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-6 py-8">
         {error ? (
-          <div className="bg-white p-8 rounded-lg border-4 border-red-500">
-            <p className="text-red-600">Error loading post: {error}</p>
+          <div className="bg-surface p-8 rounded-lg border-4 border-error">
+            <p className="text-error-text">Error loading post: {error}</p>
           </div>
         ) : (
-          <div className="bg-white p-8 rounded-lg border-4" style={{ borderColor: '#AA633F' }}>
-            <Link href={`/forums/${forum.slug || forum.id}`} className="text-sm mb-4 inline-block hover:underline" style={{ color: '#AA633F' }}>
+          <div className="bg-surface p-8 rounded-lg border-4 border-accent-chat">
+            <Link href={`/forums/${forum.slug || forum.id}`} className="text-sm mb-4 inline-block hover:underline text-accent-chat">
               ← Back to {forum.name}
             </Link>
 
             {postContent && postUsername ? (
               <div className="mb-6">
-                <h1 className="text-xl font-bold mb-3 text-gray-800">
+                <h1 className="text-xl font-bold mb-3 text-text-primary">
                   Comments for post
                 </h1>
-                <div className="p-4 bg-gray-100 rounded-lg border border-gray-300 mb-2">
+                <div className="p-4 bg-surface-tertiary rounded-lg border border-border mb-2">
                   <TruncatedText content={postContent} />
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-text-tertiary">
                   by <UserActionMenu
                     username={postUsername}
                     discriminator={postDiscriminator}
                     hideDiscriminator={postHideDiscriminator}
                     accentColor="#AA633F"
-                    className="text-sm text-gray-600"
+                    className="text-sm text-text-tertiary"
                   />
                 </div>
               </div>
             ) : (
-              <h1 className="text-2xl font-bold mb-4 text-gray-800">Comments for Post #{postId}</h1>
+              <h1 className="text-2xl font-bold mb-4 text-text-primary">Comments for Post #{postId}</h1>
             )}
 
             {/* Reply Form */}
-            <div className="border border-gray-300 rounded-lg p-6 mb-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">Add a Reply</h2>
+            <div className="border border-border rounded-lg p-6 mb-6">
+              <h2 className="text-lg font-semibold mb-4 text-text-primary">Add a Reply</h2>
               <form onSubmit={handleReplySubmit}>
                 <div className="mb-3">
-                  <span className="text-sm text-gray-600">Posting as: </span>
-                  <span className="font-semibold text-gray-800">{username}</span>
+                  <span className="text-sm text-text-tertiary">Posting as: </span>
+                  <span className="font-semibold text-text-primary">{username}</span>
                 </div>
                 {formError && (
-                  <div className="mb-3 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                  <div className="mb-3 p-2 bg-error-bg border border-red-400 text-error-text-strong rounded">
                     {formError}
                   </div>
                 )}
@@ -835,7 +828,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
                   value={replyContent}
                   onChange={(e) => setReplyContent(e.target.value)}
                   placeholder="Write your reply..."
-                  className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                  className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none resize-none"
                   rows={3}
                   maxLength={5000}
                   disabled={isSubmitting}
@@ -850,18 +843,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
                   <button
                     type="submit"
                     disabled={isSubmitting || !replyContent.trim()}
-                    className="px-6 py-2 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: isSubmitting || !replyContent.trim() ? '#9ca3af' : '#AA633F' }}
-                    onMouseEnter={(e) => {
-                      if (!isSubmitting && replyContent.trim()) {
-                        e.currentTarget.style.backgroundColor = '#8a4f32';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSubmitting && replyContent.trim()) {
-                        e.currentTarget.style.backgroundColor = '#AA633F';
-                      }
-                    }}
+                    className="px-6 py-2 text-text-on-color rounded-lg transition font-semibold disabled:bg-disabled disabled:cursor-not-allowed bg-accent-chat hover:bg-accent-chat-hover"
                   >
                     {isSubmitting ? 'Posting...' : 'Post Reply'}
                   </button>
@@ -871,13 +853,13 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
 
             {/* Comments List */}
             <div>
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">
+              <h2 className="text-lg font-semibold mb-4 text-text-primary">
                 Direct Replies ({totalComments})
               </h2>
 
               {comments.length === 0 ? (
-                <div className="text-center py-12 border border-gray-300 rounded-lg">
-                  <p className="text-gray-500">No comments yet. Be the first to reply!</p>
+                <div className="text-center py-12 border border-border rounded-lg">
+                  <p className="text-text-muted">No comments yet. Be the first to reply!</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -1033,4 +1015,3 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     };
   }
 };
-

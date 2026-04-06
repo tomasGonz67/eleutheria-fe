@@ -154,19 +154,16 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-6 py-8">
         {error ? (
-          <div className="bg-white p-8 rounded-lg border-4 border-red-500">
-            <p className="text-red-600">Error loading forums: {error}</p>
+          <div className="bg-surface p-8 rounded-lg border-4 border-error">
+            <p className="text-error-text">Error loading forums: {error}</p>
           </div>
         ) : (
-          <div className="bg-white p-8 rounded-lg border-4" style={{ borderColor: '#AA633F' }}>
+          <div className="bg-surface p-8 rounded-lg border-4 border-accent-chat">
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-3xl font-bold text-gray-800">Forums</h1>
+              <h1 className="text-3xl font-bold text-text-primary">Forums</h1>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="px-4 py-2 text-white rounded-lg transition font-semibold"
-                style={{ backgroundColor: '#AA633F' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#8a4f32'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#AA633F'}
+                className="px-4 py-2 text-text-on-color rounded-lg transition font-semibold bg-accent-chat hover:bg-accent-chat-hover"
               >
                 Create Forum
               </button>
@@ -178,7 +175,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
               onSearch={handleSearch}
               onClear={handleClearSearch}
               placeholder="Search forums..."
-              color="#AA633F"
+              accentClass="bg-accent-chat hover:bg-accent-chat-hover"
             />
 
             {/* Forums List */}
@@ -186,14 +183,13 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
               {forums.map((forum) => (
                 <div
                   key={forum.id}
-                  className="block bg-white p-6 rounded-lg border-2 hover:shadow-lg transition relative"
-                  style={{ borderColor: '#AA633F' }}
+                  className="block bg-surface p-6 rounded-lg border-2 border-accent-chat hover:shadow-lg transition relative"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <Link href={`/forums/${forum.slug}`} className="flex-1">
                       <div>
-                        <h2 className="text-xl font-semibold mb-2 text-gray-800">{forum.name}</h2>
-                        <p className="text-gray-600">{forum.description}</p>
+                        <h2 className="text-xl font-semibold mb-2 text-text-primary">{forum.name}</h2>
+                        <p className="text-text-tertiary">{forum.description}</p>
                       </div>
                     </Link>
 
@@ -205,8 +201,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                             e.preventDefault();
                             handleStartEdit(forum);
                           }}
-                          className="text-sm font-semibold hover:underline"
-                          style={{ color: '#AA633F' }}
+                          className="text-sm font-semibold hover:underline text-accent-chat"
                         >
                           Edit
                         </button>
@@ -215,7 +210,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                             e.preventDefault();
                             handleDelete(forum);
                           }}
-                          className="text-sm font-semibold text-red-600 hover:underline"
+                          className="text-sm font-semibold text-error-text hover:underline"
                         >
                           Delete
                         </button>
@@ -225,7 +220,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
 
                   {/* Date at bottom right */}
                   <div className="flex justify-end mt-2">
-                    <span className="text-sm text-gray-500 whitespace-nowrap">
+                    <span className="text-sm text-text-muted whitespace-nowrap">
                       {new Date(forum.created_at).toLocaleDateString()}
                     </span>
                   </div>
@@ -236,7 +231,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
             {/* Empty State */}
             {forums.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-gray-500">No forums yet. Create the first one!</p>
+                <p className="text-text-muted">No forums yet. Create the first one!</p>
               </div>
             )}
 
@@ -245,7 +240,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={handlePageChange}
-              color="#AA633F"
+              accentClass="bg-accent-chat"
             />
           </div>
         )}
@@ -253,9 +248,9 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
         {/* Create Forum Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full p-6 border-4" style={{ borderColor: '#AA633F' }}>
+            <div className="bg-surface rounded-lg max-w-md w-full p-6 border-4 border-accent-chat">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">Create Forum</h2>
+                <h2 className="text-2xl font-bold text-text-primary">Create Forum</h2>
                 <button
                   onClick={() => {
                     setIsModalOpen(false);
@@ -263,7 +258,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                     setForumName('');
                     setForumDescription('');
                   }}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                  className="text-text-muted hover:text-text-secondary text-2xl"
                 >
                   ×
                 </button>
@@ -271,13 +266,13 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
 
               <form onSubmit={handleSubmit}>
                 {formError && (
-                  <div className="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                  <div className="mb-4 p-2 bg-error-bg border border-red-400 text-error-text-strong rounded">
                     {formError}
                   </div>
                 )}
 
                 <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-text-secondary mb-2">
                     Forum Name
                   </label>
                   <input
@@ -287,12 +282,12 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                     placeholder="e.g., Technology Discussion"
                     maxLength={35}
                     disabled={isSubmitting}
-                    className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
+                    className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none"
                   />
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-text-secondary mb-2">
                     Description
                   </label>
                   <textarea
@@ -302,7 +297,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                     maxLength={500}
                     rows={4}
                     disabled={isSubmitting}
-                    className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                    className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none resize-none"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -322,25 +317,14 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                       setForumDescription('');
                     }}
                     disabled={isSubmitting}
-                    className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-4 py-2 border-2 border-border text-text-secondary rounded-lg hover:bg-surface-secondary transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting || !forumName.trim() || !forumDescription.trim()}
-                    className="flex-1 px-4 py-2 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: isSubmitting || !forumName.trim() || !forumDescription.trim() ? '#9ca3af' : '#AA633F' }}
-                    onMouseEnter={(e) => {
-                      if (!isSubmitting && forumName.trim() && forumDescription.trim()) {
-                        e.currentTarget.style.backgroundColor = '#8a4f32';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSubmitting && forumName.trim() && forumDescription.trim()) {
-                        e.currentTarget.style.backgroundColor = '#AA633F';
-                      }
-                    }}
+                    className="flex-1 px-4 py-2 text-text-on-color rounded-lg transition font-semibold disabled:bg-disabled disabled:cursor-not-allowed bg-accent-chat hover:bg-accent-chat-hover"
                   >
                     {isSubmitting ? 'Creating...' : 'Create Forum'}
                   </button>
@@ -353,9 +337,9 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
         {/* Edit Forum Modal */}
         {isEditModalOpen && editingForum && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full p-6 border-4" style={{ borderColor: '#AA633F' }}>
+            <div className="bg-surface rounded-lg max-w-md w-full p-6 border-4 border-accent-chat">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">Edit Forum</h2>
+                <h2 className="text-2xl font-bold text-text-primary">Edit Forum</h2>
                 <button
                   onClick={() => {
                     setIsEditModalOpen(false);
@@ -364,7 +348,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                     setForumName('');
                     setForumDescription('');
                   }}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                  className="text-text-muted hover:text-text-secondary text-2xl"
                 >
                   ×
                 </button>
@@ -372,13 +356,13 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
 
               <form onSubmit={handleEditSubmit}>
                 {formError && (
-                  <div className="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                  <div className="mb-4 p-2 bg-error-bg border border-red-400 text-error-text-strong rounded">
                     {formError}
                   </div>
                 )}
 
                 <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-text-secondary mb-2">
                     Forum Name
                   </label>
                   <input
@@ -388,12 +372,12 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                     placeholder="e.g., Technology Discussion"
                     maxLength={35}
                     disabled={isSubmitting}
-                    className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
+                    className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none"
                   />
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-text-secondary mb-2">
                     Description
                   </label>
                   <textarea
@@ -403,7 +387,7 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                     maxLength={500}
                     rows={4}
                     disabled={isSubmitting}
-                    className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                    className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none resize-none"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -424,25 +408,14 @@ export default function ForumsPage({ forums, userSessionToken, currentPage, tota
                       setForumDescription('');
                     }}
                     disabled={isSubmitting}
-                    className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-4 py-2 border-2 border-border text-text-secondary rounded-lg hover:bg-surface-secondary transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting || !forumName.trim() || !forumDescription.trim()}
-                    className="flex-1 px-4 py-2 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: isSubmitting || !forumName.trim() || !forumDescription.trim() ? '#9ca3af' : '#AA633F' }}
-                    onMouseEnter={(e) => {
-                      if (!isSubmitting && forumName.trim() && forumDescription.trim()) {
-                        e.currentTarget.style.backgroundColor = '#8a4f32';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSubmitting && forumName.trim() && forumDescription.trim()) {
-                        e.currentTarget.style.backgroundColor = '#AA633F';
-                      }
-                    }}
+                    className="flex-1 px-4 py-2 text-text-on-color rounded-lg transition font-semibold disabled:bg-disabled disabled:cursor-not-allowed bg-accent-chat hover:bg-accent-chat-hover"
                   >
                     {isSubmitting ? 'Updating...' : 'Update Forum'}
                   </button>
@@ -467,7 +440,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const API_URL = process.env.SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
     // Determine which endpoint to call based on search query
-    const forumsEndpoint = searchQuery 
+    const forumsEndpoint = searchQuery
       ? API_ENDPOINTS.searchForums(searchQuery, page, limit)
       : API_ENDPOINTS.getForums(page, limit);
 

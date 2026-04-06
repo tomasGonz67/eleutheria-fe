@@ -123,13 +123,13 @@ export default function MessageRequestNotifications() {
       {onlineRequests.map((request) => (
         <div
           key={request.session_id}
-          className="bg-blue-600 text-white rounded-lg shadow-lg p-4 min-w-[280px] flex items-center justify-between"
+          className="bg-info-bg text-text-on-color rounded-lg shadow-lg p-4 min-w-[280px] flex items-center justify-between"
         >
           <div className="flex-1">
             <p className="font-semibold text-sm">
               {request.requester_username} wants to chat
             </p>
-            <p className="text-xs text-red-300 font-bold mt-1">
+            <p className="text-xs text-error-text font-bold mt-1">
               {formatTime(getTimeRemaining(request.created_at))}
             </p>
           </div>
@@ -137,7 +137,7 @@ export default function MessageRequestNotifications() {
             {/* Accept button - Green checkmark */}
             <button
               onClick={() => handleAccept(request.session_id)}
-              className="bg-green-500 hover:bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center transition"
+              className="bg-success hover:bg-success-hover text-text-on-color rounded-full w-8 h-8 flex items-center justify-center transition"
               title="Accept"
             >
               ✓
@@ -145,7 +145,7 @@ export default function MessageRequestNotifications() {
             {/* Reject button - Red X */}
             <button
               onClick={() => handleReject(request.session_id)}
-              className="bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center transition"
+              className="bg-error hover:bg-error-hover text-text-on-color rounded-full w-8 h-8 flex items-center justify-center transition"
               title="Reject"
             >
               ✕

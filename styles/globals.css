@@ -1,71 +1,279 @@
 @import "tailwindcss";
 
-:root {
-  --background: #E8D5B5;
-  --foreground: #2c2416;
+/* =============================================================================
+   COLOR SYSTEM
 
-  /* Greek-themed colors */
-  --aegean-blue: #1e40af;
-  --deep-blue: #1e3a8a;
-  --gold: #d97706;
-  --bronze: #92400e;
-  --marble: #E8D5B5;
-  --marble-dark: #D4C4A8;
-  --olive: #65a30d;
-  --terracotta: #dc2626;
+   Single source of truth: CSS variables in :root / .dark
+   Tailwind @theme inline references these variables
+   Components use only Tailwind classes (bg-surface, text-primary, etc.)
+
+   Toggling .dark on <html> swaps all colors automatically.
+   ============================================================================= */
+
+:root {
+  /* Semantic surface colors */
+  --surface: #ffffff;
+  --surface-secondary: #f9fafb;    /* subtle alternate bg (was bg-gray-50) */
+  --surface-tertiary: #f3f4f6;     /* cards, inputs (was bg-gray-100) */
+  --surface-elevated: #e5e7eb;     /* hover states, raised elements (was bg-gray-200) */
+
+  /* Semantic text colors */
+  --text-primary: #1f2937;         /* main text (was text-gray-800) */
+  --text-secondary: #374151;       /* secondary text (was text-gray-700) */
+  --text-tertiary: #4b5563;        /* muted text (was text-gray-600) */
+  --text-muted: #6b7280;           /* subtle text (was text-gray-500) */
+  --text-faint: #9ca3af;           /* placeholder-like (was text-gray-400) */
+  --text-on-color: #ffffff;        /* text on colored backgrounds */
+  --text-inverted: #000000;        /* text-black */
+
+  /* Semantic border colors */
+  --border: #d1d5db;               /* default border (was border-gray-300) */
+  --border-light: #e5e7eb;         /* subtle border (was border-gray-200) */
+  --border-lighter: #f3f4f6;       /* very subtle (was border-gray-100) */
+  --border-strong: #1f2937;        /* bold border (was border-gray-800 / border-black) */
+
+  /* Disabled / inactive */
+  --disabled: #9ca3af;             /* disabled buttons (was bg-gray-400) */
+  --disabled-bg: #d1d5db;          /* disabled backgrounds (was bg-gray-300) */
+
+  /* Status colors */
+  --success: #22c55e;              /* bg-green-500 */
+  --success-hover: #16a34a;        /* bg-green-600 */
+  --success-text: #16a34a;         /* text-green-600 */
+  --error: #ef4444;                /* bg-red-500 */
+  --error-hover: #dc2626;          /* bg-red-600 */
+  --error-strong: #b91c1c;         /* bg-red-700 */
+  --error-text: #dc2626;           /* text-red-600 */
+  --error-text-strong: #b91c1c;    /* text-red-700 */
+  --error-bg: #fef2f2;             /* bg-red-100 */
+  --info: #3b82f6;                 /* bg-blue-500 */
+  --info-bg: #2563eb;              /* bg-blue-600 */
+
+  /* Greek-themed palette */
+  --aegean-50: #eff6ff;
+  --aegean-100: #dbeafe;
+  --aegean-200: #bfdbfe;
+  --aegean-300: #93c5fd;
+  --aegean-400: #60a5fa;
+  --aegean-500: #3b82f6;
+  --aegean-600: #1e40af;
+  --aegean-700: #1e3a8a;
+  --aegean-800: #1e3a70;
+  --aegean-900: #1e2a50;
+
+  --gold-50: #fffbeb;
+  --gold-100: #fef3c7;
+  --gold-200: #fde68a;
+  --gold-300: #fcd34d;
+  --gold-400: #fbbf24;
+  --gold-500: #f59e0b;
+  --gold-600: #d97706;
+  --gold-700: #b45309;
+  --gold-800: #92400e;
+  --gold-900: #78350f;
+
+  --marble-50: #F5EFE0;
+  --marble-100: #E8D5B5;
+  --marble-200: #D4C4A8;
+  --marble-300: #C8A55F;
+  --marble-400: #B89550;
+  --marble-500: #A87F40;
+
+  --olive-50: #f7fee7;
+  --olive-100: #ecfccb;
+  --olive-200: #d9f99d;
+  --olive-300: #bef264;
+  --olive-400: #a3e635;
+  --olive-500: #84cc16;
+  --olive-600: #65a30d;
+  --olive-700: #4d7c0f;
+  --olive-800: #3f6212;
+  --olive-900: #365314;
+
+  /* Accent colors (used in inline styles currently — now tokenized) */
+  --accent-forum: #4D89B0;
+  --accent-forum-hover: #3d6e8f;
+  --accent-chat: #AA633F;
+  --accent-chat-hover: #8a4f32;
 }
 
+/* Dark mode overrides */
+.dark {
+  --surface: #1e1a14;
+  --surface-secondary: #252018;
+  --surface-tertiary: #2a2218;
+  --surface-elevated: #362c20;
+
+  --text-primary: #e8dfd6;
+  --text-secondary: #d4ccc2;
+  --text-tertiary: #b8b0a6;
+  --text-muted: #9a928a;
+  --text-faint: #6b6560;
+  --text-on-color: #ffffff;
+  --text-inverted: #e8dfd6;
+
+  --border: #4a4038;
+  --border-light: #3a3028;
+  --border-lighter: #2e2620;
+  --border-strong: #d4ccc2;
+
+  --disabled: #6b6560;
+  --disabled-bg: #4a4038;
+
+  --success: #22c55e;
+  --success-hover: #16a34a;
+  --success-text: #4ade80;
+  --error: #ef4444;
+  --error-hover: #dc2626;
+  --error-strong: #b91c1c;
+  --error-text: #f87171;
+  --error-text-strong: #fca5a5;
+  --error-bg: #3a1a1a;
+  --info: #60a5fa;
+  --info-bg: #3b82f6;
+
+  --aegean-50: #1a2332;
+  --aegean-100: #1e2d42;
+  --aegean-200: #253a54;
+  --aegean-300: #3b6d94;
+  --aegean-400: #4d89b0;
+  --aegean-500: #5a9bc4;
+  --aegean-600: #4d89b0;
+  --aegean-700: #6ba3c8;
+  --aegean-800: #82b5d4;
+  --aegean-900: #a8cde2;
+
+  --gold-50: #2a2010;
+  --gold-100: #3a2d12;
+  --gold-200: #5c4a1a;
+  --gold-300: #8a6f20;
+  --gold-400: #c49a1a;
+  --gold-500: #e0ad18;
+  --gold-600: #e8a317;
+  --gold-700: #f0bc3a;
+  --gold-800: #f4cc60;
+  --gold-900: #f8dc8a;
+
+  --marble-50: #1e1a12;
+  --marble-100: #2a2218;
+  --marble-200: #362c20;
+  --marble-300: #5a4a35;
+  --marble-400: #7a6548;
+  --marble-500: #9a8060;
+
+  --olive-50: #1a2010;
+  --olive-100: #222c14;
+  --olive-200: #354418;
+  --olive-300: #4a6020;
+  --olive-400: #6a8a28;
+  --olive-500: #84a830;
+  --olive-600: #7dc410;
+  --olive-700: #96d430;
+  --olive-800: #a8e048;
+  --olive-900: #c0ec70;
+
+  --accent-forum: #5a9bc4;
+  --accent-forum-hover: #6ba3c8;
+  --accent-chat: #c4795a;
+  --accent-chat-hover: #d48a6b;
+}
+
+/* =============================================================================
+   TAILWIND THEME — maps CSS variables to Tailwind utility classes
+   ============================================================================= */
+
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-libre), serif;
   --font-display: var(--font-cinzel), serif;
 
-  /* Greek color palette */
-  --color-aegean-50: #eff6ff;
-  --color-aegean-100: #dbeafe;
-  --color-aegean-200: #bfdbfe;
-  --color-aegean-300: #93c5fd;
-  --color-aegean-400: #60a5fa;
-  --color-aegean-500: #3b82f6;
-  --color-aegean-600: #1e40af;
-  --color-aegean-700: #1e3a8a;
-  --color-aegean-800: #1e3a70;
-  --color-aegean-900: #1e2a50;
+  /* Semantic tokens → Tailwind classes */
+  --color-surface: var(--surface);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-tertiary: var(--surface-tertiary);
+  --color-surface-elevated: var(--surface-elevated);
 
-  --color-gold-50: #fffbeb;
-  --color-gold-100: #fef3c7;
-  --color-gold-200: #fde68a;
-  --color-gold-300: #fcd34d;
-  --color-gold-400: #fbbf24;
-  --color-gold-500: #f59e0b;
-  --color-gold-600: #d97706;
-  --color-gold-700: #b45309;
-  --color-gold-800: #92400e;
-  --color-gold-900: #78350f;
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-text-on-color: var(--text-on-color);
+  --color-text-inverted: var(--text-inverted);
 
-  --color-marble-50: #F5EFE0;
-  --color-marble-100: #E8D5B5;
-  --color-marble-200: #D4C4A8;
-  --color-marble-300: #C8A55F;
-  --color-marble-400: #B89550;
-  --color-marble-500: #A87F40;
+  --color-border: var(--border);
+  --color-border-light: var(--border-light);
+  --color-border-lighter: var(--border-lighter);
+  --color-border-strong: var(--border-strong);
 
-  --color-olive-50: #f7fee7;
-  --color-olive-100: #ecfccb;
-  --color-olive-200: #d9f99d;
-  --color-olive-300: #bef264;
-  --color-olive-400: #a3e635;
-  --color-olive-500: #84cc16;
-  --color-olive-600: #65a30d;
-  --color-olive-700: #4d7c0f;
-  --color-olive-800: #3f6212;
-  --color-olive-900: #365314;
+  --color-disabled: var(--disabled);
+  --color-disabled-bg: var(--disabled-bg);
+
+  --color-success: var(--success);
+  --color-success-hover: var(--success-hover);
+  --color-success-text: var(--success-text);
+  --color-error: var(--error);
+  --color-error-hover: var(--error-hover);
+  --color-error-strong: var(--error-strong);
+  --color-error-text: var(--error-text);
+  --color-error-text-strong: var(--error-text-strong);
+  --color-error-bg: var(--error-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+
+  /* Greek palette */
+  --color-aegean-50: var(--aegean-50);
+  --color-aegean-100: var(--aegean-100);
+  --color-aegean-200: var(--aegean-200);
+  --color-aegean-300: var(--aegean-300);
+  --color-aegean-400: var(--aegean-400);
+  --color-aegean-500: var(--aegean-500);
+  --color-aegean-600: var(--aegean-600);
+  --color-aegean-700: var(--aegean-700);
+  --color-aegean-800: var(--aegean-800);
+  --color-aegean-900: var(--aegean-900);
+
+  --color-gold-50: var(--gold-50);
+  --color-gold-100: var(--gold-100);
+  --color-gold-200: var(--gold-200);
+  --color-gold-300: var(--gold-300);
+  --color-gold-400: var(--gold-400);
+  --color-gold-500: var(--gold-500);
+  --color-gold-600: var(--gold-600);
+  --color-gold-700: var(--gold-700);
+  --color-gold-800: var(--gold-800);
+  --color-gold-900: var(--gold-900);
+
+  --color-marble-50: var(--marble-50);
+  --color-marble-100: var(--marble-100);
+  --color-marble-200: var(--marble-200);
+  --color-marble-300: var(--marble-300);
+  --color-marble-400: var(--marble-400);
+  --color-marble-500: var(--marble-500);
+
+  --color-olive-50: var(--olive-50);
+  --color-olive-100: var(--olive-100);
+  --color-olive-200: var(--olive-200);
+  --color-olive-300: var(--olive-300);
+  --color-olive-400: var(--olive-400);
+  --color-olive-500: var(--olive-500);
+  --color-olive-600: var(--olive-600);
+  --color-olive-700: var(--olive-700);
+  --color-olive-800: var(--olive-800);
+  --color-olive-900: var(--olive-900);
+
+  --color-accent-forum: var(--accent-forum);
+  --color-accent-forum-hover: var(--accent-forum-hover);
+  --color-accent-chat: var(--accent-chat);
+  --color-accent-chat-hover: var(--accent-chat-hover);
 }
 
+/* =============================================================================
+   GLOBAL STYLES
+   ============================================================================= */
+
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--marble-100);
+  color: var(--text-primary);
   font-family: var(--font-libre), serif;
 }
 
@@ -78,21 +286,20 @@ h1, h2, h3, h4, h5, h6 {
 .greek-pattern {
   background-image: repeating-linear-gradient(
     90deg,
-    var(--gold) 0px,
-    var(--gold) 2px,
+    var(--gold-600) 0px,
+    var(--gold-600) 2px,
     transparent 2px,
     transparent 10px
   );
 }
 
-/* Fade-in animation */
+/* =============================================================================
+   ANIMATIONS
+   ============================================================================= */
+
 @keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .animate-fade-in {
@@ -100,12 +307,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes fade-in-greek {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 0.6;
-  }
+  from { opacity: 0; }
+  to { opacity: 0.6; }
 }
 
 .animate-fade-in-greek {
@@ -126,77 +329,18 @@ h1, h2, h3, h4, h5, h6 {
 @keyframes comment-glow {
   0% {
     box-shadow: 0 0 0px rgba(170, 99, 63, 0);
-    border-color: #d1d5db;
+    border-color: var(--border);
   }
   15% {
     box-shadow: 0 0 15px rgba(170, 99, 63, 0.5);
-    border-color: #AA633F;
+    border-color: var(--accent-chat);
   }
   100% {
     box-shadow: 0 0 0px rgba(170, 99, 63, 0);
-    border-color: #d1d5db;
+    border-color: var(--border);
   }
 }
 
 .comment-highlight {
   animation: comment-glow 3s ease-out;
 }
-
-/* Dark mode overrides */
-.dark {
-  --background: #1a1410;
-  --foreground: #e8dfd6;
-
-  --aegean-blue: #4d89b0;
-  --deep-blue: #3b6d94;
-  --gold: #e8a317;
-  --bronze: #b8660e;
-  --marble: #2a2218;
-  --marble-dark: #1e1a12;
-  --olive: #7dc410;
-  --terracotta: #e84040;
-
-  --color-background: #1a1410;
-  --color-foreground: #e8dfd6;
-
-  --color-aegean-50: #1a2332;
-  --color-aegean-100: #1e2d42;
-  --color-aegean-200: #253a54;
-  --color-aegean-300: #3b6d94;
-  --color-aegean-400: #4d89b0;
-  --color-aegean-500: #5a9bc4;
-  --color-aegean-600: #4d89b0;
-  --color-aegean-700: #6ba3c8;
-  --color-aegean-800: #82b5d4;
-  --color-aegean-900: #a8cde2;
-
-  --color-gold-50: #2a2010;
-  --color-gold-100: #3a2d12;
-  --color-gold-200: #5c4a1a;
-  --color-gold-300: #8a6f20;
-  --color-gold-400: #c49a1a;
-  --color-gold-500: #e0ad18;
-  --color-gold-600: #e8a317;
-  --color-gold-700: #f0bc3a;
-  --color-gold-800: #f4cc60;
-  --color-gold-900: #f8dc8a;
-
-  --color-marble-50: #1e1a12;
-  --color-marble-100: #2a2218;
-  --color-marble-200: #362c20;
-  --color-marble-300: #5a4a35;
-  --color-marble-400: #7a6548;
-  --color-marble-500: #9a8060;
-
-  --color-olive-50: #1a2010;
-  --color-olive-100: #222c14;
-  --color-olive-200: #354418;
-  --color-olive-300: #4a6020;
-  --color-olive-400: #6a8a28;
-  --color-olive-500: #84a830;
-  --color-olive-600: #7dc410;
-  --color-olive-700: #96d430;
-  --color-olive-800: #a8e048;
-  --color-olive-900: #c0ec70;
-}
-

@@ -259,8 +259,8 @@ export default function RandomChatPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-white p-8 rounded-lg border-4" style={{ borderColor: '#4D89B0' }}>
-          <h1 className="text-3xl font-bold mb-6 text-gray-800">Random Chat</h1>
+        <div className="bg-surface p-8 rounded-lg border-4 border-accent-forum">
+          <h1 className="text-3xl font-bold mb-6 text-text-primary">Random Chat</h1>
 
           {/* Error Message */}
           {error && (
@@ -271,19 +271,16 @@ export default function RandomChatPage() {
 
           {/* Idle State - Not matched */}
           {randomChatStatus === 'idle' && (
-            <div className="p-12 text-center border border-black rounded-lg">
+            <div className="p-12 text-center border border-border-strong rounded-lg">
               <div className="text-6xl mb-6">🦴</div>
-              <h2 className="text-2xl text-gray-800 font-semibold mb-4">Cast the Astragaloi</h2>
-              <p className="text-gray-600 mb-6">
+              <h2 className="text-2xl text-text-primary font-semibold mb-4">Cast the Astragaloi</h2>
+              <p className="text-text-tertiary mb-6">
                 Roll the ancient knucklebones to find a random chat partner
               </p>
               <button
                 onClick={handleFindChat}
                 disabled={isConnecting}
-                className="px-8 py-3 text-white rounded-lg transition font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: isConnecting ? '#6b7280' : '#4D89B0' }}
-                onMouseEnter={(e) => !isConnecting && (e.currentTarget.style.backgroundColor = '#3d6e8f')}
-                onMouseLeave={(e) => !isConnecting && (e.currentTarget.style.backgroundColor = '#4D89B0')}
+                className={`px-8 py-3 text-text-on-color rounded-lg transition font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed ${isConnecting ? 'bg-disabled' : 'bg-accent-forum hover:bg-accent-forum-hover'}`}
               >
                 {isConnecting ? 'Connecting...' : 'Start Random Chat'}
               </button>
@@ -292,13 +289,13 @@ export default function RandomChatPage() {
 
           {/* Waiting State - Looking for match */}
           {randomChatStatus === 'waiting' && (
-            <div className="p-12 text-center border border-black rounded-lg">
+            <div className="p-12 text-center border border-border-strong rounded-lg">
               <div className="text-6xl mb-6 animate-pulse">⏳</div>
-              <h2 className="text-2xl font-semibold mb-4 text-gray-800">Looking for a chat partner...</h2>
-              <p className="text-gray-600 mb-6">Please wait while we find someone for you</p>
+              <h2 className="text-2xl font-semibold mb-4 text-text-primary">Looking for a chat partner...</h2>
+              <p className="text-text-tertiary mb-6">Please wait while we find someone for you</p>
               <button
                 onClick={handleEndChat}
-                className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-semibold"
+                className="px-6 py-2 bg-error text-text-on-color rounded-lg hover:bg-error-hover transition font-semibold"
               >
                 Cancel Search
               </button>
@@ -307,34 +304,30 @@ export default function RandomChatPage() {
 
           {/* Matched/Ended State - Active or ended chat */}
           {(randomChatStatus === 'matched' || randomChatStatus === 'ended') && (
-            <div className="border border-black rounded-lg">
+            <div className="border border-border-strong rounded-lg">
               {/* Chat Header */}
-              <div className="p-4 border-b border-black flex items-center justify-between">
+              <div className="p-4 border-b border-border-strong flex items-center justify-between">
                 <div>
-                  <div className="text-lg font-semibold text-gray-800">
+                  <div className="text-lg font-semibold text-text-primary">
                     Chatting with: <UserActionMenu
                       username={randomChatPartner || 'Anonymous'}
                       discriminator={randomChatPartnerDiscriminator}
                       accentColor="#4D89B0"
-                      className="font-semibold"
-                      style={{ color: '#4D89B0' }}
+                      className="font-semibold text-accent-forum"
                     />
                   </div>
-                  <p className="text-sm text-gray-500">Random 1-on-1 Chat</p>
+                  <p className="text-sm text-text-muted">Random 1-on-1 Chat</p>
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={handleReroll}
-                    className="px-4 py-2 text-white rounded-lg transition font-semibold"
-                    style={{ backgroundColor: '#4D89B0' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d6e8f'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4D89B0'}
+                    className="px-4 py-2 text-text-on-color rounded-lg transition font-semibold bg-accent-forum hover:bg-accent-forum-hover"
                   >
                     Reroll
                   </button>
                   <button
                     onClick={handleEndChat}
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-semibold"
+                    className="px-4 py-2 bg-error text-text-on-color rounded-lg hover:bg-error-hover transition font-semibold"
                   >
                     Leave Chat
                   </button>
@@ -347,7 +340,7 @@ export default function RandomChatPage() {
                   message.isSystem ? (
                     // System message (centered)
                     <div key={message.id} className="flex justify-center">
-                      <div className="px-4 py-2 bg-gray-200 text-gray-600 rounded-full text-sm italic">
+                      <div className="px-4 py-2 bg-surface-elevated text-text-tertiary rounded-full text-sm italic">
                         {message.content}
                       </div>
                     </div>
@@ -358,12 +351,11 @@ export default function RandomChatPage() {
                       className={`flex ${message.is_me ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[70%] p-4 rounded-lg ${
+                        className={`max-w-[70%] p-4 rounded-lg border border-border-strong ${
                           message.is_me
-                            ? 'border border-black'
-                            : 'border border-black'
+                            ? 'bg-aegean-100'
+                            : 'bg-surface-secondary'
                         }`}
-                        style={message.is_me ? { backgroundColor: '#e0f0f8' } : { backgroundColor: '#f5f5f5' }}
                       >
                         {/* Message Header */}
                         <div className="flex items-center justify-between mb-2">
@@ -373,16 +365,15 @@ export default function RandomChatPage() {
                             hideDiscriminator={message.sender_hide_discriminator}
                             isOwnPost={message.is_me}
                             accentColor="#4D89B0"
-                            className="font-semibold text-sm"
-                            style={message.is_me ? { color: '#4D89B0' } : { color: '#6b7280' }}
+                            className={`font-semibold text-sm ${message.is_me ? 'text-accent-forum' : 'text-text-muted'}`}
                           />
-                          <span className="text-xs text-gray-500 ml-3">
+                          <span className="text-xs text-text-muted ml-3">
                             {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
 
                         {/* Message Content */}
-                        <p className="text-gray-700">{message.content}</p>
+                        <p className="text-text-secondary">{message.content}</p>
                       </div>
                     </div>
                   )
@@ -393,9 +384,9 @@ export default function RandomChatPage() {
               </div>
 
               {/* Send Message Form */}
-              <form onSubmit={handleSubmit} className="p-4 border-t border-black">
+              <form onSubmit={handleSubmit} className="p-4 border-t border-border-strong">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                  <label className="flex items-center gap-2 text-sm text-text-tertiary cursor-pointer">
                     <input
                       type="checkbox"
                       checked={autoScroll}
@@ -412,15 +403,12 @@ export default function RandomChatPage() {
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder={randomChatStatus === 'ended' ? 'Chat has ended' : 'Type a message...'}
                     disabled={randomChatStatus === 'ended'}
-                    className="flex-1 px-4 py-2 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="flex-1 px-4 py-2 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none disabled:bg-surface-tertiary disabled:cursor-not-allowed"
                   />
                   <button
                     type="submit"
                     disabled={!newMessage.trim() || randomChatStatus === 'ended'}
-                    className="px-6 py-2 text-white rounded-lg transition font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: randomChatStatus === 'ended' ? '#9ca3af' : '#4D89B0' }}
-                    onMouseEnter={(e) => (!newMessage.trim() || randomChatStatus === 'ended') ? null : e.currentTarget.style.backgroundColor = '#3d6e8f'}
-                    onMouseLeave={(e) => (!newMessage.trim() || randomChatStatus === 'ended') ? null : e.currentTarget.style.backgroundColor = '#4D89B0'}
+                    className={`px-6 py-2 text-text-on-color rounded-lg transition font-semibold disabled:bg-disabled-bg disabled:cursor-not-allowed ${randomChatStatus === 'ended' ? 'bg-disabled' : 'bg-accent-forum hover:bg-accent-forum-hover'}`}
                   >
                     Send
                   </button>

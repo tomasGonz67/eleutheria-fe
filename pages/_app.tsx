@@ -10,6 +10,7 @@ import Footer from '@/components/Footer';
 import LegalModal from '@/components/LegalModal';
 import { useChatStore } from '@/store/chatStore';
 import { getCurrentUser } from '@/lib/services/session';
+import { markNotificationRead } from '@/lib/services/notifications';
 
 const cinzel = Cinzel({
   subsets: ['latin'],
@@ -95,9 +96,15 @@ export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
     if (!socket || isHomePage) return;
 
-    const handleReplyNotification = (data: { from_username: string }) => {
+    const handleReplyNotification = (data: { notification_id?: number; from_username: string; post_id: number; parent_post_id?: number; forum_id: number }) => {
       const { showNotification } = useChatStore.getState();
-      showNotification('info', `${data.from_username} replied to your post`, true, 5000);
+      const targetUrl = data.parent_post_id
+        ? `/forums/${data.forum_id}/comments/${data.parent_post_id}?highlight=${data.post_id}`
+        : `/forums/${data.forum_id}/comments/${data.post_id}`;
+      const onAction = data.notification_id
+        ? () => { markNotificationRead(data.notification_id!).catch(() => {}); }
+        : undefined;
+      showNotification('info', `${data.from_username} replied to your post`, true, 8000, 'See now', targetUrl, onAction);
     };
 
     socket.on('new_reply_notification', handleReplyNotification);
@@ -156,6 +163,9 @@ export default function App({ Component, pageProps }: AppProps) {
           onDismiss={dismissNotification}
           autoDismiss={notification.autoDismiss}
           autoDismissDelay={notification.autoDismissDelay}
+          actionLabel={notification.actionLabel}
+          actionHref={notification.actionHref}
+          onAction={notification.onAction}
         />
       )}
       <Footer

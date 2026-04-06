@@ -204,7 +204,7 @@ export default function PrivateChatPage() {
       <Header currentPage="private-chats" />
 
       <main className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-white rounded-lg border-4 border-aegean-600 overflow-hidden">
+        <div className="bg-surface rounded-lg border-4 border-aegean-600 overflow-hidden">
           {/* Chat Header */}
           <ChatHeader
             title={
@@ -227,7 +227,7 @@ export default function PrivateChatPage() {
               session.status === 'active' && (
                 <button
                   onClick={handleEndChat}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+                  className="px-4 py-2 bg-red-600 text-text-on-color rounded-lg hover:bg-red-700 transition font-semibold"
                 >
                   End Chat
                 </button>
@@ -236,7 +236,7 @@ export default function PrivateChatPage() {
           />
 
           {/* Messages */}
-          <div className="border-t border-gray-200">
+          <div className="border-t border-border-light">
             <ChatMessageList
               messages={messages}
               currentUserDiscriminator={myDiscriminator}

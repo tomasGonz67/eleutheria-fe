@@ -295,7 +295,7 @@ export default function PrivateChatsPage() {
         );
       case 'ended':
         return (
-          <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full font-semibold">
+          <span className="px-3 py-1 bg-surface-tertiary text-text-secondary text-sm rounded-full font-semibold">
             Ended
           </span>
         );
@@ -312,21 +312,21 @@ export default function PrivateChatsPage() {
       <Header currentPage="private-chats" />
 
       <main className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-white p-8 rounded-lg border-4 border-aegean-600">
-          <h1 className="text-3xl font-bold mb-6 text-gray-800">Private Chats</h1>
-          <p className="text-gray-600 mb-8">
+        <div className="bg-surface p-8 rounded-lg border-4 border-aegean-600">
+          <h1 className="text-3xl font-bold mb-6 text-text-primary">Private Chats</h1>
+          <p className="text-text-tertiary mb-8">
             Manage your one-on-one private conversations
           </p>
 
           {loading ? (
             <div className="text-center py-12">
-              <div className="text-gray-500">Loading your private chats...</div>
+              <div className="text-text-muted">Loading your private chats...</div>
             </div>
           ) : sessions.filter((session) => session.status === 'waiting' || session.status === 'active').length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+            <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
               <div className="text-6xl mb-4">💬</div>
-              <h2 className="text-xl font-semibold text-gray-700 mb-2">No Private Chats Yet</h2>
-              <p className="text-gray-500">
+              <h2 className="text-xl font-semibold text-text-secondary mb-2">No Private Chats Yet</h2>
+              <p className="text-text-muted">
                 Start a conversation by sending a chat request to another user
               </p>
             </div>
@@ -342,7 +342,7 @@ export default function PrivateChatsPage() {
                   <div
                     key={session.id}
                     onClick={() => openChat(session.id)}
-                    className="border-2 border-gray-200 rounded-lg p-6 hover:border-aegean-400 transition-colors cursor-pointer"
+                    className="border-2 border-border-light rounded-lg p-6 hover:border-aegean-400 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -352,17 +352,16 @@ export default function PrivateChatsPage() {
                             discriminator={partnerDiscriminator}
                             hideDiscriminator={partnerHideDiscriminator}
                             accentColor="#4D89B0"
-                            className="text-lg font-semibold"
-                            style={{ color: '#4D89B0' }}
+                            className="text-lg font-semibold text-accent-forum"
                           />
                           {getStatusBadge(session.status)}
                         </div>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-text-muted">
                           Started {new Date(session.created_at).toLocaleDateString()} at{' '}
                           {new Date(session.created_at).toLocaleTimeString()}
                         </p>
                         {session.ended_at && (
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-text-muted">
                             Ended {new Date(session.ended_at).toLocaleDateString()} at{' '}
                             {new Date(session.ended_at).toLocaleTimeString()}
                           </p>
@@ -377,7 +376,7 @@ export default function PrivateChatsPage() {
                                   e.stopPropagation();
                                   openChatAsFloater(session);
                                 }}
-                                className="px-6 py-2 bg-aegean-600 text-white rounded-lg hover:bg-aegean-700 transition font-semibold"
+                                className="px-6 py-2 bg-aegean-600 text-text-on-color rounded-lg hover:bg-aegean-700 transition font-semibold"
                               >
                                 {plannedChats.find((chat) => chat.id === session.id) ? 'Close Chat Window' : 'Open Chat Window'}
                               </button>
@@ -386,7 +385,7 @@ export default function PrivateChatsPage() {
                                   e.stopPropagation();
                                   handleEndChat(session.id);
                                 }}
-                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+                                className="px-4 py-2 bg-red-600 text-text-on-color rounded-lg hover:bg-red-700 transition font-semibold"
                               >
                                 End Chat
                               </button>
@@ -394,7 +393,7 @@ export default function PrivateChatsPage() {
                             {(() => {
                               const timeRemaining = getTimeRemaining(session.created_at);
                               return (
-                                <div className={`text-xs font-semibold ${timeRemaining <= 3 ? 'text-red-600' : 'text-gray-600'}`}>
+                                <div className={`text-xs font-semibold ${timeRemaining <= 3 ? 'text-error-text' : 'text-text-tertiary'}`}>
                                   Inactivity timeout: {formatTime(timeRemaining)}
                                 </div>
                               );
@@ -405,13 +404,13 @@ export default function PrivateChatsPage() {
                           <div>
                             {isUser1 ? (
                               <div className="flex flex-col items-end gap-1">
-                                <div className="text-sm text-gray-500 italic">
+                                <div className="text-sm text-text-muted italic">
                                   Waiting for acceptance
                                 </div>
                                 {(() => {
                                   const timeRemaining = getTimeRemaining(session.created_at);
                                   return (
-                                    <div className={`text-xs font-semibold ${timeRemaining <= 3 ? 'text-red-600' : 'text-gray-600'}`}>
+                                    <div className={`text-xs font-semibold ${timeRemaining <= 3 ? 'text-error-text' : 'text-text-tertiary'}`}>
                                       Expires in {formatTime(timeRemaining)}
                                     </div>
                                   );
@@ -425,7 +424,7 @@ export default function PrivateChatsPage() {
                                       e.stopPropagation();
                                       handleAcceptRequest(session.id);
                                     }}
-                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
+                                    className="px-4 py-2 bg-green-600 text-text-on-color rounded-lg hover:bg-green-700 transition font-semibold"
                                   >
                                     Accept
                                   </button>
@@ -434,7 +433,7 @@ export default function PrivateChatsPage() {
                                       e.stopPropagation();
                                       handleRejectRequest(session.id);
                                     }}
-                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+                                    className="px-4 py-2 bg-red-600 text-text-on-color rounded-lg hover:bg-red-700 transition font-semibold"
                                   >
                                     Reject
                                   </button>
@@ -442,7 +441,7 @@ export default function PrivateChatsPage() {
                                 {(() => {
                                   const timeRemaining = getTimeRemaining(session.created_at);
                                   return (
-                                    <div className={`text-xs font-semibold ${timeRemaining <= 3 ? 'text-red-600' : 'text-gray-600'}`}>
+                                    <div className={`text-xs font-semibold ${timeRemaining <= 3 ? 'text-error-text' : 'text-text-tertiary'}`}>
                                       Expires in {formatTime(timeRemaining)}
                                     </div>
                                   );
@@ -457,7 +456,7 @@ export default function PrivateChatsPage() {
                               e.stopPropagation();
                               openChatAsFloater(session);
                             }}
-                            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-semibold"
+                            className="px-6 py-2 bg-gray-600 text-text-on-color rounded-lg hover:bg-gray-700 transition font-semibold"
                           >
                             {plannedChats.find((chat) => chat.id === session.id) ? 'Close Chat Window' : 'Open Chat Window'}
                           </button>

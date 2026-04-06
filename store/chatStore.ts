@@ -19,6 +19,9 @@ interface Notification {
   message: string;
   autoDismiss?: boolean;
   autoDismissDelay?: number;
+  actionLabel?: string;
+  actionHref?: string;
+  onAction?: () => void;
 }
 
 interface ChatStore {
@@ -73,7 +76,7 @@ interface ChatStore {
   removeMessageRequest: (sessionId: number) => void;
 
   // Notification actions
-  showNotification: (type: 'error' | 'success' | 'info', message: string, autoDismiss?: boolean, autoDismissDelay?: number) => void;
+  showNotification: (type: 'error' | 'success' | 'info', message: string, autoDismiss?: boolean, autoDismissDelay?: number, actionLabel?: string, actionHref?: string, onAction?: () => void) => void;
   dismissNotification: () => void;
 }
 
@@ -226,7 +229,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     })),
 
   // Notification actions
-  showNotification: (type, message, autoDismiss = false, autoDismissDelay = 5000) =>
+  showNotification: (type, message, autoDismiss = false, autoDismissDelay = 5000, actionLabel, actionHref, onAction) =>
     set({
       notification: {
         id: Date.now().toString(),
@@ -234,6 +237,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         message,
         autoDismiss,
         autoDismissDelay,
+        actionLabel,
+        actionHref,
+        onAction,
       },
     }),
 

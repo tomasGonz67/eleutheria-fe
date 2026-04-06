@@ -149,17 +149,17 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
   };
 
   return (
-    <div className="bg-white p-8 rounded-lg border-4" style={{ borderColor: '#AA633F' }}>
+    <div className="bg-surface p-8 rounded-lg border-4 border-accent-chat">
       {backLink && (
-        <Link href={backLink.href} className="text-sm mb-4 inline-block hover:underline" style={{ color: '#AA633F' }}>
+        <Link href={backLink.href} className="text-sm mb-4 inline-block hover:underline text-accent-chat">
           ← {backLink.label}
         </Link>
       )}
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1">
-          <h1 className="text-3xl font-bold mb-2 text-gray-800">{title}</h1>
+          <h1 className="text-3xl font-bold mb-2 text-text-primary">{title}</h1>
           {description && (
-            <p className="text-gray-600 mb-4">{description}</p>
+            <p className="text-text-tertiary mb-4">{description}</p>
           )}
         </div>
         {/* Show Edit and Delete buttons only for current user's forum */}
@@ -167,14 +167,13 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
           <div className="flex items-center gap-3 ml-4">
             <button
               onClick={onEditForum}
-              className="text-sm font-semibold hover:underline"
-              style={{ color: '#AA633F' }}
+              className="text-sm font-semibold hover:underline text-accent-chat"
             >
               Edit
             </button>
             <button
               onClick={onDeleteForum}
-              className="text-sm font-semibold text-red-600 hover:underline"
+              className="text-sm font-semibold text-error-text hover:underline"
             >
               Delete
             </button>
@@ -182,25 +181,25 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
         )}
       </div>
       {!description && <div className="mb-2" />}
-      
+
       {/* Search Bar */}
       <SearchBar
         initialQuery={initialSearchQuery}
         onSearch={handleSearch}
         onClear={handleClearSearch}
         placeholder="Search posts in this forum..."
-        color="#AA633F"
+        accentClass="bg-accent-chat hover:bg-accent-chat-hover"
       />
-      
-      <div className="border border-black">
+
+      <div className="border border-border-strong">
         {/* Create Post Section */}
-        <form onSubmit={handleSubmit} className="px-6 pt-6 pb-6 border-b border-black">
+        <form onSubmit={handleSubmit} className="px-6 pt-6 pb-6 border-b border-border-strong">
           <div className="mb-3">
-            <span className="text-sm text-gray-600">Posting as: </span>
-            <span className="font-semibold text-gray-800">{username}</span>
+            <span className="text-sm text-text-tertiary">Posting as: </span>
+            <span className="font-semibold text-text-primary">{username}</span>
           </div>
           {error && (
-            <div className="mb-3 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div className="mb-3 p-2 bg-error-bg border border-red-400 text-error-text-strong rounded">
               {error}
             </div>
           )}
@@ -208,7 +207,7 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
             value={postContent}
             onChange={(e) => setPostContent(e.target.value)}
             placeholder="What's on your mind?"
-            className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+            className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none resize-none"
             rows={3}
             maxLength={25000}
             disabled={isSubmitting}
@@ -223,18 +222,7 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
             <button
               type="submit"
               disabled={isSubmitting || !postContent.trim()}
-              className="px-6 py-2 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
-              style={{ backgroundColor: isSubmitting || !postContent.trim() ? '#9ca3af' : '#AA633F' }}
-              onMouseEnter={(e) => {
-                if (!isSubmitting && postContent.trim()) {
-                  e.currentTarget.style.backgroundColor = '#8a4f32';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isSubmitting && postContent.trim()) {
-                  e.currentTarget.style.backgroundColor = '#AA633F';
-                }
-              }}
+              className="px-6 py-2 text-text-on-color rounded-lg transition font-semibold disabled:bg-disabled disabled:cursor-not-allowed bg-accent-chat hover:bg-accent-chat-hover"
             >
               {isSubmitting ? 'Posting...' : 'Post'}
             </button>
@@ -246,21 +234,21 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
           {posts.map((post, index) => (
             <div
               key={post.id}
-              className={`px-6 py-6 ${index !== posts.length - 1 ? 'border-b border-black' : ''}`}
+              className={`px-6 py-6 ${index !== posts.length - 1 ? 'border-b border-border-strong' : ''}`}
             >
               {/* Post Header */}
               <div className="flex items-center justify-between mb-3">
-                <span className="font-semibold text-gray-800 px-3 py-1 bg-gray-100 rounded-md">
+                <span className="font-semibold text-text-primary px-3 py-1 bg-surface-tertiary rounded-md">
                   <UserActionMenu
                     username={post.username}
                     discriminator={post.author_discriminator}
                     hideDiscriminator={post.author_hide_discriminator}
                     isOwnPost={post.is_my_post}
                     accentColor="#AA633F"
-                    className="font-semibold text-gray-800"
+                    className="font-semibold text-text-primary"
                   />
                 </span>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-text-muted">
                   {new Date(post.created_at).toLocaleString(undefined, { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                 </span>
               </div>
@@ -271,7 +259,7 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
                   <textarea
                     value={editContent}
                     onChange={(e) => setEditContent(e.target.value)}
-                    className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                    className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none resize-none"
                     rows={3}
                     maxLength={25000}
                     disabled={isSubmitting}
@@ -286,22 +274,21 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
                     <button
                       onClick={() => handleSaveEdit(post.id)}
                       disabled={isSubmitting || !editContent.trim()}
-                      className="px-4 py-1 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
-                      style={{ backgroundColor: isSubmitting || !editContent.trim() ? '#9ca3af' : '#AA633F' }}
+                      className="px-4 py-1 text-text-on-color rounded-lg transition font-semibold disabled:bg-disabled disabled:cursor-not-allowed text-sm bg-accent-chat hover:bg-accent-chat-hover"
                     >
                       {isSubmitting ? 'Saving...' : 'Save'}
                     </button>
                     <button
                       onClick={handleCancelEdit}
                       disabled={isSubmitting}
-                      className="px-4 py-1 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold text-sm disabled:opacity-50"
+                      className="px-4 py-1 border-2 border-border text-text-secondary rounded-lg hover:bg-surface-secondary transition font-semibold text-sm disabled:opacity-50"
                     >
                       Cancel
                     </button>
                   </div>
                 </div>
               ) : (
-                <TruncatedText content={post.content} className="mb-4 p-3 bg-gray-50 rounded-lg" />
+                <TruncatedText content={post.content} className="mb-4 p-3 bg-surface-secondary rounded-lg" />
               )}
 
               {/* Post Actions */}
@@ -311,26 +298,24 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
                     onClick={() => {
                       router.push(`/forums/${forumSlug || forumId}/comments/${post.id}`);
                     }}
-                    className="text-sm font-semibold hover:underline"
-                    style={{ color: '#AA633F' }}
+                    className="text-sm font-semibold hover:underline text-accent-chat"
                   >
                     View Comments {post.comment_count !== undefined && `(${post.comment_count})`}
                   </button>
                   {/* Show Edit and Delete buttons only for current user's posts */}
                   {post.is_my_post && (
                     <>
-                      <p className="text-gray-500">|</p>
+                      <p className="text-text-muted">|</p>
                       <button
                         onClick={() => handleStartEdit(post)}
-                        className="text-sm font-semibold hover:underline"
-                        style={{ color: '#AA633F' }}
+                        className="text-sm font-semibold hover:underline text-accent-chat"
                       >
                         Edit
                       </button>
-                      <p className="text-gray-500">|</p>
+                      <p className="text-text-muted">|</p>
                       <button
                         onClick={() => handleDelete(post.id)}
-                        className="text-sm font-semibold hover:underline text-red-600"
+                        className="text-sm font-semibold hover:underline text-error-text"
                       >
                         Delete
                       </button>
@@ -345,7 +330,7 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
         {/* Empty State */}
         {posts.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500">No posts yet. Be the first to post!</p>
+            <p className="text-text-muted">No posts yet. Be the first to post!</p>
           </div>
         )}
       </div>
@@ -355,7 +340,7 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}
-        color="#AA633F"
+        accentClass="bg-accent-chat hover:bg-accent-chat-hover"
       />
     </div>
   );

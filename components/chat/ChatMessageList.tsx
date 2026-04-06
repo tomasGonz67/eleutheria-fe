@@ -58,15 +58,15 @@ export default function ChatMessageList({
           <div key={message.id}>
             {showDateDivider && (
               <div className="flex items-center gap-3 my-4">
-                <div className="flex-1 border-t border-gray-300" />
-                <span className="text-xs text-gray-500 font-semibold whitespace-nowrap">{dateLabel}</span>
-                <div className="flex-1 border-t border-gray-300" />
+                <div className="flex-1 border-t border-border" />
+                <span className="text-xs text-text-muted font-semibold whitespace-nowrap">{dateLabel}</span>
+                <div className="flex-1 border-t border-border" />
               </div>
             )}
             <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
             <div
               className={`max-w-[70%] p-4 rounded-lg ${
-                isOwnMessage ? 'bg-gray-300' : 'bg-gray-100'
+                isOwnMessage ? 'bg-disabled-bg' : 'bg-surface-tertiary'
               }`}
             >
               {/* Message Header */}
@@ -77,17 +77,17 @@ export default function ChatMessageList({
                   hideDiscriminator={message.sender_hide_discriminator}
                   isOwnPost={message.is_me}
                   accentColor={accentColor}
-                  className="font-semibold text-gray-800 text-sm"
+                  className="font-semibold text-text-primary text-sm"
                 />
               </div>
 
               {/* Message Content */}
-              <p className="text-gray-700 break-words whitespace-pre-wrap max-h-[200px] overflow-y-auto">
+              <p className="text-text-secondary break-words whitespace-pre-wrap max-h-[200px] overflow-y-auto">
                 {message.content.replace(/\n{3,}/g, '\n\n').trim()}
               </p>
 
               {/* Timestamp */}
-              <p className={`text-xs text-gray-500 mt-1 ${isOwnMessage ? 'text-right' : 'text-left'}`}>
+              <p className={`text-xs text-text-muted mt-1 ${isOwnMessage ? 'text-right' : 'text-left'}`}>
                 {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
@@ -99,7 +99,7 @@ export default function ChatMessageList({
       {/* Empty State */}
       {messages.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500">{emptyStateMessage}</p>
+          <p className="text-text-muted">{emptyStateMessage}</p>
         </div>
       )}
 

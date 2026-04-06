@@ -4,14 +4,14 @@ interface PaginationProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  color?: string;
+  accentClass?: string;
 }
 
 export default function Pagination({
   currentPage,
   totalPages,
   onPageChange,
-  color = '#AA633F'
+  accentClass = 'bg-accent-chat'
 }: PaginationProps) {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -44,33 +44,33 @@ export default function Pagination({
       // Use fewer siblings on mobile (1), more on desktop (3)
       const leftSiblings = isMobile ? 1 : 3;
       const rightSiblings = isMobile ? 1 : 3;
-      
+
       // Always show first page
       pages.push(1);
-      
+
       // Calculate range around current page
       const startPage = Math.max(2, currentPage - leftSiblings);
       const endPage = Math.min(totalPages - 1, currentPage + rightSiblings);
-      
+
       // Add ellipsis after first page if needed
       if (startPage > 2) {
         pages.push('...');
       }
-      
+
       // Add pages around current page
       for (let i = startPage; i <= endPage; i++) {
         pages.push(i);
       }
-      
+
       // Add ellipsis before last page if needed
       if (endPage < totalPages - 1) {
         pages.push('...');
       }
-      
+
       // Always show last page
       pages.push(totalPages);
     }
-    
+
     return pages;
   };
 
@@ -83,7 +83,7 @@ export default function Pagination({
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="px-3 sm:px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+        className="px-3 sm:px-4 py-2 border-2 border-border text-text-secondary rounded-lg hover:bg-surface-secondary transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
       >
         Previous
       </button>
@@ -92,26 +92,21 @@ export default function Pagination({
         {getPageNumbers().map((page, index) => {
           if (page === '...') {
             return (
-              <span key={`ellipsis-${index}`} className="px-2 sm:px-4 py-2 text-gray-500 text-sm sm:text-base">
+              <span key={`ellipsis-${index}`} className="px-2 sm:px-4 py-2 text-text-muted text-sm sm:text-base">
                 ...
               </span>
             );
           }
-          
+
           return (
             <button
               key={page}
               onClick={() => onPageChange(page as number)}
               className={`px-3 sm:px-4 py-2 rounded-lg font-semibold transition text-sm sm:text-base ${
                 page === currentPage
-                  ? 'text-white'
-                  : 'border-2 border-gray-300 text-gray-700 hover:bg-gray-50'
+                  ? `${accentClass} text-text-on-color`
+                  : 'border-2 border-border text-text-secondary hover:bg-surface-secondary'
               }`}
-              style={
-                page === currentPage
-                  ? { backgroundColor: color }
-                  : {}
-              }
             >
               {page}
             </button>
@@ -122,11 +117,10 @@ export default function Pagination({
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="px-3 sm:px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+        className="px-3 sm:px-4 py-2 border-2 border-border text-text-secondary rounded-lg hover:bg-surface-secondary transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
       >
         Next
       </button>
     </div>
   );
 }
-

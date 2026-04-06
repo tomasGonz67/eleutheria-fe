@@ -179,18 +179,18 @@ export default function UserActionMenu({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1 z-50 bg-white border-2 border-gray-300 rounded-lg shadow-lg min-w-[180px]">
+        <div className="absolute left-0 top-full mt-1 z-50 bg-surface border-2 border-border rounded-lg shadow-lg min-w-[180px]">
           {isOwnUser ? (
             // Options for clicking on your own name
             <>
               {discriminator && (
-                <div className="px-4 py-2 border-b border-gray-200 bg-gray-50">
-                  <span className="text-xs text-gray-400 font-mono">#{discriminator}</span>
+                <div className="px-4 py-2 border-b border-border-light bg-surface-secondary">
+                  <span className="text-xs text-text-faint font-mono">#{discriminator}</span>
                 </div>
               )}
             <button
               onClick={handleToggleMessageRequests}
-              className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+              className="w-full text-left px-4 py-3 text-sm font-semibold text-text-secondary hover:bg-surface-secondary transition"
             >
               {acceptingRequests === null
                 ? '...'
@@ -203,24 +203,24 @@ export default function UserActionMenu({
             // Options for clicking on someone else's name
             <>
               {/* Online Status */}
-              <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+              <div className="px-4 py-3 border-b border-border-light bg-surface-secondary">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-sm font-semibold text-gray-700">{username}</span>
+                    <span className="text-sm font-semibold text-text-secondary">{username}</span>
                     {discriminator && (
-                      <p className="text-xs text-gray-400 font-mono">#{hideDiscriminator ? 'XXXXXXXX' : discriminator}</p>
+                      <p className="text-xs text-text-faint font-mono">#{hideDiscriminator ? 'XXXXXXXX' : discriminator}</p>
                     )}
                   </div>
                   {isOnline === null ? (
-                    <span className="text-xs text-gray-500">Checking...</span>
+                    <span className="text-xs text-text-muted">Checking...</span>
                   ) : isOnline ? (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-green-600">
-                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                    <span className="flex items-center gap-1 text-xs font-semibold text-success-text">
+                      <span className="w-2 h-2 bg-success rounded-full"></span>
                       Online
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-gray-500">
-                      <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+                    <span className="flex items-center gap-1 text-xs font-semibold text-text-muted">
+                      <span className="w-2 h-2 bg-disabled rounded-full"></span>
                       Offline
                     </span>
                   )}
@@ -230,13 +230,13 @@ export default function UserActionMenu({
               {/* Actions */}
               <button
                 onClick={handleSendMessage}
-                className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition border-b border-gray-200"
+                className="w-full text-left px-4 py-3 text-sm font-semibold text-text-secondary hover:bg-surface-secondary transition border-b border-border-light"
               >
                 📨 Send message
               </button>
               <button
                 onClick={handleReport}
-                className="w-full text-left px-4 py-3 text-sm font-semibold text-red-600 hover:bg-gray-50 transition"
+                className="w-full text-left px-4 py-3 text-sm font-semibold text-error-text hover:bg-surface-secondary transition"
               >
                 ⚠️ Report
               </button>
@@ -247,23 +247,23 @@ export default function UserActionMenu({
       {/* Report Modal */}
       {isReportOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-text-inverted bg-opacity-50 flex items-center justify-center p-4 z-50"
           onClick={(e) => { if (e.target === e.currentTarget) setIsReportOpen(false); }}
         >
-          <div className="bg-white rounded-lg max-w-md w-full p-6 border-4 border-red-500">
+          <div className="bg-surface rounded-lg max-w-md w-full p-6 border-4 border-error">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">Report {username}</h2>
-              <button onClick={() => setIsReportOpen(false)} className="text-gray-500 hover:text-gray-700 text-2xl">
+              <h2 className="text-2xl font-bold text-text-primary">Report {username}</h2>
+              <button onClick={() => setIsReportOpen(false)} className="text-text-muted hover:text-text-secondary text-2xl">
                 &times;
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Reason</label>
+                <label className="block text-sm font-semibold text-text-secondary mb-1">Reason</label>
                 <select
                   value={reportReason}
                   onChange={(e) => setReportReason(e.target.value)}
-                  className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
+                  className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none"
                 >
                   <option value="">Select a reason...</option>
                   <option value="harassment">Harassment</option>
@@ -274,12 +274,12 @@ export default function UserActionMenu({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Details <span className="text-gray-400 font-normal">(optional)</span></label>
+                <label className="block text-sm font-semibold text-text-secondary mb-1">Details <span className="text-text-faint font-normal">(optional)</span></label>
                 <textarea
                   value={reportDetails}
                   onChange={(e) => setReportDetails(e.target.value)}
                   placeholder="Provide additional context..."
-                  className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                  className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none resize-none"
                   rows={3}
                   maxLength={1000}
                 />
@@ -287,7 +287,7 @@ export default function UserActionMenu({
               <button
                 disabled={!reportReason}
                 onClick={handleSubmitReport}
-                className="w-full py-3 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed bg-red-600 hover:bg-red-700"
+                className="w-full py-3 text-text-on-color rounded-lg transition font-semibold disabled:bg-disabled disabled:cursor-not-allowed bg-error-hover hover:bg-error-strong"
               >
                 Submit Report
               </button>

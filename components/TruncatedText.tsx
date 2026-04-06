@@ -19,14 +19,13 @@ export default function TruncatedText({ content, className = '' }: TruncatedText
 
   return (
     <div className={`overflow-hidden ${className}`}>
-      <p className="text-gray-700 break-words whitespace-pre-wrap max-h-[250px] overflow-y-auto">
+      <p className="text-text-secondary break-words whitespace-pre-wrap max-h-[250px] overflow-y-auto">
         {expanded || !needsTruncation ? sanitized : `${sanitized.slice(0, CHAR_LIMIT)}...`}
       </p>
       {needsTruncation && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-sm font-semibold mt-1 hover:underline"
-          style={{ color: '#AA633F' }}
+          className="text-sm font-semibold mt-1 hover:underline text-accent-chat"
         >
           {expanded ? 'Show less' : 'View more'}
         </button>

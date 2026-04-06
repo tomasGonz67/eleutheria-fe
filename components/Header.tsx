@@ -207,13 +207,13 @@ export default function Header({ currentPage }: HeaderProps) {
   );
 
   const notificationDropdown = (
-    <div className="absolute right-0 top-full mt-2 bg-white border-2 border-gray-300 rounded-lg shadow-lg w-80 z-50 max-h-[400px] flex flex-col">
-      <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-        <span className="font-semibold text-gray-800 text-sm">Notifications</span>
+    <div className="absolute right-0 top-full mt-2 bg-surface border-2 border-border rounded-lg shadow-lg w-80 z-50 max-h-[400px] flex flex-col">
+      <div className="px-4 py-3 border-b border-border-light flex items-center justify-between">
+        <span className="font-semibold text-text-primary text-sm">Notifications</span>
         {notifications.some((n) => !n.is_read) && (
           <button
             onClick={handleMarkAllRead}
-            className="text-xs text-blue-600 hover:text-blue-800"
+            className="text-xs text-aegean-600 hover:text-aegean-700"
           >
             Mark all as read
           </button>
@@ -221,28 +221,28 @@ export default function Header({ currentPage }: HeaderProps) {
       </div>
       <div className="overflow-y-auto flex-1">
         {isLoadingNotifications ? (
-          <div className="px-4 py-6 text-center text-gray-500 text-sm">Loading...</div>
+          <div className="px-4 py-6 text-center text-text-muted text-sm">Loading...</div>
         ) : notifications.length === 0 ? (
-          <div className="px-4 py-6 text-center text-gray-500 text-sm">No notifications</div>
+          <div className="px-4 py-6 text-center text-text-muted text-sm">No notifications</div>
         ) : (
           notifications.map((notif) => (
             <button
               key={notif.id}
               onClick={() => handleNotificationClick(notif)}
-              className={`w-full text-left px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition ${
-                !notif.is_read ? 'bg-blue-50' : ''
+              className={`w-full text-left px-4 py-3 border-b border-border-lighter last:border-b-0 hover:bg-surface-secondary transition ${
+                !notif.is_read ? 'bg-aegean-50' : ''
               }`}
             >
-              <div className="text-sm text-gray-800">
+              <div className="text-sm text-text-primary">
                 <span className="font-semibold">{notif.from_username}</span>
                 {' replied to your post'}
               </div>
               {notif.content_preview && (
-                <div className="text-xs text-gray-500 mt-1 truncate">
+                <div className="text-xs text-text-muted mt-1 truncate">
                   {notif.content_preview}
                 </div>
               )}
-              <div className="text-xs text-gray-400 mt-1">{timeAgo(notif.created_at)}</div>
+              <div className="text-xs text-text-faint mt-1">{timeAgo(notif.created_at)}</div>
             </button>
           ))
         )}
@@ -258,27 +258,27 @@ export default function Header({ currentPage }: HeaderProps) {
   );
 
   const settingsDropdown = (
-    <div className="absolute right-0 top-full mt-2 bg-white border-2 border-gray-300 rounded-lg shadow-lg min-w-[220px] z-50">
-      <div className="px-4 py-3 border-b border-gray-200">
-        <span className="font-semibold text-gray-800 text-sm">Settings</span>
+    <div className="absolute right-0 top-full mt-2 bg-surface border-2 border-border rounded-lg shadow-lg min-w-[220px] z-50">
+      <div className="px-4 py-3 border-b border-border-light">
+        <span className="font-semibold text-text-primary text-sm">Settings</span>
       </div>
       <button
         onClick={() => { setIsSettingsOpen(false); setIsResetModalOpen(true); }}
-        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition border-b border-gray-100 flex items-center gap-3"
+        className="w-full text-left px-4 py-3 text-sm text-text-secondary hover:bg-surface-secondary transition border-b border-border-lighter flex items-center gap-3"
       >
         <span>🔄</span>
         <span>Reset User ID</span>
       </button>
       <button
         onClick={handleToggleDarkMode}
-        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition border-b border-gray-100 flex items-center justify-between"
+        className="w-full text-left px-4 py-3 text-sm text-text-secondary hover:bg-surface-secondary transition border-b border-border-lighter flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
           <span>{darkMode ? '🌙' : '☀️'}</span>
           <span>{darkMode ? 'Dark Mode' : 'Light Mode'}</span>
         </div>
-        <div className={`relative w-10 h-5 rounded-full transition-colors ${darkMode ? 'bg-aegean-600' : 'bg-gray-300'}`}>
-          <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${darkMode ? 'translate-x-5' : 'translate-x-0'}`} />
+        <div className={`relative w-10 h-5 rounded-full transition-colors ${darkMode ? 'bg-aegean-600' : 'bg-disabled-bg'}`}>
+          <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-surface rounded-full shadow transition-transform ${darkMode ? 'translate-x-5' : 'translate-x-0'}`} />
         </div>
       </button>
       <button
@@ -290,14 +290,14 @@ export default function Header({ currentPage }: HeaderProps) {
             console.error('Error toggling message requests:', error);
           }
         }}
-        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition border-b border-gray-100 flex items-center justify-between"
+        className="w-full text-left px-4 py-3 text-sm text-text-secondary hover:bg-surface-secondary transition border-b border-border-lighter flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
           <span>🔕</span>
           <span>Reject Message Invitations</span>
         </div>
-        <div className={`relative w-10 h-5 rounded-full transition-colors ${rejectingMessages ? 'bg-red-500' : 'bg-gray-300'}`}>
-          <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${rejectingMessages ? 'translate-x-5' : 'translate-x-0'}`} />
+        <div className={`relative w-10 h-5 rounded-full transition-colors ${rejectingMessages ? 'bg-error' : 'bg-disabled-bg'}`}>
+          <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-surface rounded-full shadow transition-transform ${rejectingMessages ? 'translate-x-5' : 'translate-x-0'}`} />
         </div>
       </button>
       <button
@@ -309,14 +309,14 @@ export default function Header({ currentPage }: HeaderProps) {
             console.error('Error toggling appear offline:', error);
           }
         }}
-        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition border-b border-gray-100 flex items-center justify-between"
+        className="w-full text-left px-4 py-3 text-sm text-text-secondary hover:bg-surface-secondary transition border-b border-border-lighter flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
           <span>👻</span>
           <span>Appear Offline</span>
         </div>
-        <div className={`relative w-10 h-5 rounded-full transition-colors ${appearOffline ? 'bg-red-500' : 'bg-gray-300'}`}>
-          <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${appearOffline ? 'translate-x-5' : 'translate-x-0'}`} />
+        <div className={`relative w-10 h-5 rounded-full transition-colors ${appearOffline ? 'bg-error' : 'bg-disabled-bg'}`}>
+          <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-surface rounded-full shadow transition-transform ${appearOffline ? 'translate-x-5' : 'translate-x-0'}`} />
         </div>
       </button>
       <button
@@ -328,14 +328,14 @@ export default function Header({ currentPage }: HeaderProps) {
             console.error('Error toggling hide discriminator:', error);
           }
         }}
-        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition flex items-center justify-between"
+        className="w-full text-left px-4 py-3 text-sm text-text-secondary hover:bg-surface-secondary transition flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
           <span>🔒</span>
           <span>Hide Discriminator</span>
         </div>
-        <div className={`relative w-10 h-5 rounded-full transition-colors ${hideDiscriminator ? 'bg-red-500' : 'bg-gray-300'}`}>
-          <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${hideDiscriminator ? 'translate-x-5' : 'translate-x-0'}`} />
+        <div className={`relative w-10 h-5 rounded-full transition-colors ${hideDiscriminator ? 'bg-error' : 'bg-disabled-bg'}`}>
+          <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-surface rounded-full shadow transition-transform ${hideDiscriminator ? 'translate-x-5' : 'translate-x-0'}`} />
         </div>
       </button>
     </div>
@@ -357,12 +357,9 @@ export default function Header({ currentPage }: HeaderProps) {
               href={link.href}
               className={
                 currentPage === link.key
-                  ? 'font-semibold'
-                  : 'text-gray-600'
+                  ? 'font-semibold text-accent-chat'
+                  : 'text-text-tertiary hover:text-accent-chat'
               }
-              style={currentPage === link.key ? { color: '#AA633F' } : {}}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#AA633F'}
-              onMouseLeave={(e) => currentPage !== link.key ? e.currentTarget.style.color = '' : null}
             >
               {link.label}
             </Link>
@@ -372,11 +369,11 @@ export default function Header({ currentPage }: HeaderProps) {
           <div className="relative" ref={bellDesktopRef}>
             <button
               onClick={() => { setIsBellOpen(!isBellOpen); setIsSettingsOpen(false); }}
-              className="relative text-gray-600 hover:text-gray-800 p-1"
+              className="relative text-text-tertiary hover:text-text-primary p-1"
             >
               {bellIcon}
               {notificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-error text-text-on-color text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {notificationCount > 99 ? '99+' : notificationCount}
                 </span>
               )}
@@ -388,7 +385,7 @@ export default function Header({ currentPage }: HeaderProps) {
           <div className="relative" ref={settingsDesktopRef}>
             <button
               onClick={() => { setIsSettingsOpen(!isSettingsOpen); setIsBellOpen(false); }}
-              className="text-gray-600 hover:text-gray-800 p-1"
+              className="text-text-tertiary hover:text-text-primary p-1"
             >
               {gearIcon}
             </button>
@@ -402,11 +399,11 @@ export default function Header({ currentPage }: HeaderProps) {
           <div className="relative" ref={bellMobileRef}>
             <button
               onClick={() => { setIsBellOpen(!isBellOpen); setIsMobileMenuOpen(false); setIsSettingsOpen(false); }}
-              className="relative text-gray-700 p-2"
+              className="relative text-text-secondary p-2"
             >
               {bellIcon}
               {notificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-error text-text-on-color text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {notificationCount > 99 ? '99+' : notificationCount}
                 </span>
               )}
@@ -418,7 +415,7 @@ export default function Header({ currentPage }: HeaderProps) {
           <div className="relative" ref={settingsMobileRef}>
             <button
               onClick={() => { setIsSettingsOpen(!isSettingsOpen); setIsBellOpen(false); setIsMobileMenuOpen(false); }}
-              className="text-gray-700 p-2"
+              className="text-text-secondary p-2"
             >
               {gearIcon}
             </button>
@@ -429,7 +426,7 @@ export default function Header({ currentPage }: HeaderProps) {
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => { setIsMobileMenuOpen(!isMobileMenuOpen); setIsBellOpen(false); setIsSettingsOpen(false); }}
-              className="text-gray-700 p-2"
+              className="text-text-secondary p-2"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {isMobileMenuOpen ? (
@@ -442,16 +439,15 @@ export default function Header({ currentPage }: HeaderProps) {
 
             {/* Mobile dropdown */}
             {isMobileMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 bg-white border-2 border-gray-300 rounded-lg shadow-lg min-w-[180px] z-50">
+              <div className="absolute right-0 top-full mt-2 bg-surface border-2 border-border rounded-lg shadow-lg min-w-[180px] z-50">
                 {navLinks.map((link) => (
                   <Link
                     key={link.key}
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block px-4 py-3 text-sm font-semibold border-b border-gray-100 last:border-b-0 ${
-                      currentPage === link.key ? 'bg-gray-50' : 'hover:bg-gray-50'
+                    className={`block px-4 py-3 text-sm font-semibold border-b border-border-lighter last:border-b-0 ${
+                      currentPage === link.key ? 'bg-surface-secondary text-accent-chat' : 'hover:bg-surface-secondary'
                     }`}
-                    style={currentPage === link.key ? { color: '#AA633F' } : {}}
                   >
                     {link.label}
                   </Link>
@@ -469,21 +465,21 @@ export default function Header({ currentPage }: HeaderProps) {
         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
         onClick={(e) => { if (e.target === e.currentTarget) setIsResetModalOpen(false); }}
       >
-        <div className="bg-white rounded-lg max-w-md w-full p-6 border-4 border-red-500">
+        <div className="bg-surface rounded-lg max-w-md w-full p-6 border-4 border-error">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-800">Reset User ID</h2>
-            <button onClick={() => setIsResetModalOpen(false)} className="text-gray-500 hover:text-gray-700 text-2xl">
+            <h2 className="text-xl font-bold text-text-primary">Reset User ID</h2>
+            <button onClick={() => setIsResetModalOpen(false)} className="text-text-muted hover:text-text-secondary text-2xl">
               &times;
             </button>
           </div>
-          <p className="text-gray-600 mb-2">Are you sure you want to reset your User ID?</p>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-text-tertiary mb-2">Are you sure you want to reset your User ID?</p>
+          <p className="text-sm text-text-muted mb-6">
             This will generate a new anonymous identity. Your current username, session, and all associated data (posts, messages, notifications) will no longer be linked to you. This action cannot be undone.
           </p>
           <div className="flex gap-3">
             <button
               onClick={() => setIsResetModalOpen(false)}
-              className="flex-1 py-3 border-2 border-gray-300 text-gray-600 rounded-lg transition font-semibold hover:bg-gray-100"
+              className="flex-1 py-3 border-2 border-border text-text-tertiary rounded-lg transition font-semibold hover:bg-surface-tertiary"
             >
               Cancel
             </button>
@@ -496,7 +492,7 @@ export default function Header({ currentPage }: HeaderProps) {
                 router.push('/');
                 window.location.href = '/';
               }}
-              className="flex-1 py-3 bg-red-500 text-white rounded-lg transition font-semibold hover:bg-red-600"
+              className="flex-1 py-3 bg-error text-text-on-color rounded-lg transition font-semibold hover:bg-error-hover"
             >
               Reset
             </button>

@@ -150,14 +150,14 @@ export default function LegalModal({ type, onClose }: LegalModalProps) {
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white rounded-lg max-w-2xl w-full p-6 border-4 max-h-[80vh] flex flex-col" style={{ borderColor: '#AA633F' }}>
+      <div className="bg-surface rounded-lg max-w-2xl w-full p-6 border-4 border-accent-chat max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-800" style={{ fontFamily: 'var(--font-cinzel)' }}>{title}</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">
+          <h2 className="text-2xl font-bold text-text-primary" style={{ fontFamily: 'var(--font-cinzel)' }}>{title}</h2>
+          <button onClick={onClose} className="text-text-muted hover:text-text-secondary text-2xl">
             &times;
           </button>
         </div>
-        <div className="overflow-y-auto flex-1 text-gray-700 whitespace-pre-line text-sm leading-relaxed">
+        <div className="overflow-y-auto flex-1 text-text-secondary whitespace-pre-line text-sm leading-relaxed">
           {content}
         </div>
       </div>

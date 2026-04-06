@@ -25,8 +25,8 @@ export default function FeedPage({ posts, username, userSessionToken, currentPag
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-6 py-8">
         {error ? (
-          <div className="bg-white p-8 rounded-lg border-4 border-red-500">
-            <p className="text-red-600">Error loading posts: {error}</p>
+          <div className="bg-surface p-8 rounded-lg border-4 border-error">
+            <p className="text-error-text">Error loading posts: {error}</p>
           </div>
         ) : (
           <Feed

@@ -91,8 +91,8 @@ export default function ForumPostsPage({ forum, posts, username, userSessionToke
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-6 py-8">
         {error ? (
-          <div className="bg-white p-8 rounded-lg border-4 border-red-500">
-            <p className="text-red-600">Error loading forum: {error}</p>
+          <div className="bg-surface p-8 rounded-lg border-4 border-error">
+            <p className="text-error-text">Error loading forum: {error}</p>
           </div>
         ) : (
           <>
@@ -116,9 +116,9 @@ export default function ForumPostsPage({ forum, posts, username, userSessionToke
             {/* Edit Forum Modal */}
             {isEditModalOpen && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                <div className="bg-white rounded-lg max-w-md w-full p-6 border-4" style={{ borderColor: '#AA633F' }}>
+                <div className="bg-surface rounded-lg max-w-md w-full p-6 border-4 border-accent-chat">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-bold text-gray-800">Edit Forum</h2>
+                    <h2 className="text-2xl font-bold text-text-primary">Edit Forum</h2>
                     <button
                       onClick={() => {
                         setIsEditModalOpen(false);
@@ -126,7 +126,7 @@ export default function ForumPostsPage({ forum, posts, username, userSessionToke
                         setForumName('');
                         setForumDescription('');
                       }}
-                      className="text-gray-500 hover:text-gray-700 text-2xl"
+                      className="text-text-muted hover:text-text-secondary text-2xl"
                     >
                       ×
                     </button>
@@ -134,13 +134,13 @@ export default function ForumPostsPage({ forum, posts, username, userSessionToke
 
                   <form onSubmit={handleEditSubmit}>
                     {formError && (
-                      <div className="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                      <div className="mb-4 p-2 bg-error-bg border border-red-400 text-error-text-strong rounded">
                         {formError}
                       </div>
                     )}
 
                     <div className="mb-4">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-text-secondary mb-2">
                         Forum Name
                       </label>
                       <input
@@ -150,12 +150,12 @@ export default function ForumPostsPage({ forum, posts, username, userSessionToke
                         placeholder="e.g., General Discussion"
                         maxLength={35}
                         disabled={isSubmitting}
-                        className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
+                        className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none"
                       />
                     </div>
 
                     <div className="mb-6">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-text-secondary mb-2">
                         Description
                       </label>
                       <textarea
@@ -165,7 +165,7 @@ export default function ForumPostsPage({ forum, posts, username, userSessionToke
                         maxLength={500}
                         rows={4}
                         disabled={isSubmitting}
-                        className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                        className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none resize-none"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault();
@@ -185,25 +185,14 @@ export default function ForumPostsPage({ forum, posts, username, userSessionToke
                           setForumDescription('');
                         }}
                         disabled={isSubmitting}
-                        className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 px-4 py-2 border-2 border-border text-text-secondary rounded-lg hover:bg-surface-secondary transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         disabled={isSubmitting || !forumName.trim() || !forumDescription.trim()}
-                        className="flex-1 px-4 py-2 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
-                        style={{ backgroundColor: isSubmitting || !forumName.trim() || !forumDescription.trim() ? '#9ca3af' : '#AA633F' }}
-                        onMouseEnter={(e) => {
-                          if (!isSubmitting && forumName.trim() && forumDescription.trim()) {
-                            e.currentTarget.style.backgroundColor = '#8a4f32';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isSubmitting && forumName.trim() && forumDescription.trim()) {
-                            e.currentTarget.style.backgroundColor = '#AA633F';
-                          }
-                        }}
+                        className="flex-1 px-4 py-2 text-text-on-color rounded-lg transition font-semibold disabled:bg-disabled disabled:cursor-not-allowed bg-accent-chat hover:bg-accent-chat-hover"
                       >
                         {isSubmitting ? 'Updating...' : 'Update Forum'}
                       </button>
@@ -261,7 +250,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     // Handle different response formats
     const posts = Array.isArray(postsData) ? postsData : (postsData.posts || []);
-    
+
     // Use totalPages from backend if available, otherwise calculate it
     const totalPages = postsData.totalPages || Math.ceil((postsData.totalPosts || postsData.total || posts.length) / limit);
 

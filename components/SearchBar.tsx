@@ -5,7 +5,7 @@ interface SearchBarProps {
   onSearch: (query: string) => void;
   onClear: () => void;
   placeholder?: string;
-  color?: string;
+  accentClass?: string;
 }
 
 export default function SearchBar({
@@ -13,7 +13,7 @@ export default function SearchBar({
   onSearch,
   onClear,
   placeholder = 'Search...',
-  color = '#AA633F',
+  accentClass = 'bg-accent-chat hover:bg-accent-chat-hover',
 }: SearchBarProps) {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
 
@@ -38,13 +38,13 @@ export default function SearchBar({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={placeholder}
-              className="w-full px-4 py-2 pr-10 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
+              className="w-full px-4 py-2 pr-10 border-2 border-border text-text-primary bg-surface rounded-lg focus:border-border-strong focus:outline-none"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={handleClear}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-faint hover:text-text-tertiary"
               >
                 ✕
               </button>
@@ -52,15 +52,7 @@ export default function SearchBar({
           </div>
           <button
             type="submit"
-            className="px-6 py-2 text-white rounded-lg transition font-semibold"
-            style={{ backgroundColor: color }}
-            onMouseEnter={(e) => {
-              const darkerColor = color === '#AA633F' ? '#8a4f32' : color;
-              e.currentTarget.style.backgroundColor = darkerColor;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = color;
-            }}
+            className={`px-6 py-2 text-text-on-color rounded-lg transition font-semibold ${accentClass}`}
           >
             Search
           </button>
@@ -69,12 +61,11 @@ export default function SearchBar({
 
       {/* Search Indicator */}
       {initialQuery && (
-        <div className="mb-4 flex items-center gap-2 text-gray-600">
+        <div className="mb-4 flex items-center gap-2 text-text-tertiary">
           <span>Searching for: <strong>{initialQuery}</strong></span>
           <button
             onClick={handleClear}
-            className="text-sm hover:underline"
-            style={{ color }}
+            className="text-sm hover:underline text-accent-chat"
           >
             Clear
           </button>
@@ -83,4 +74,3 @@ export default function SearchBar({
     </>
   );
 }
-

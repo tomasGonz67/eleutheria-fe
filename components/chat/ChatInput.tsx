@@ -29,19 +29,21 @@ export default function ChatInput({
 
   if (disabled && disabledMessage) {
     return (
-      <div className="p-4 border-t border-black">
-        <div className="text-center text-gray-500 text-sm italic py-2">
+      <div className="p-4 border-t border-border-strong">
+        <div className="text-center text-text-muted text-sm italic py-2">
           {disabledMessage}
         </div>
       </div>
     );
   }
 
+  const isForumAccent = accentColor === '#4D89B0';
+
   return (
-    <form onSubmit={onSubmit} className="p-4 border-t border-black">
+    <form onSubmit={onSubmit} className="p-4 border-t border-border-strong">
       {showAutoScroll && onAutoScrollChange && (
         <div className="flex items-center justify-between mb-2">
-          <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-text-tertiary cursor-pointer">
             <input
               type="checkbox"
               checked={autoScroll}
@@ -61,27 +63,18 @@ export default function ChatInput({
           placeholder={placeholder}
           disabled={disabled}
           maxLength={1000}
-          className="flex-1 px-4 py-2.5 border-2 border-gray-300 text-black rounded-lg focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
-          style={{ borderColor: disabled ? '#d1d5db' : undefined }}
-          onFocus={(e) => !disabled && (e.target.style.borderColor = accentColor)}
-          onBlur={(e) => !disabled && (e.target.style.borderColor = '#d1d5db')}
+          className={`flex-1 px-4 py-2.5 border-2 border-border text-text-inverted rounded-lg focus:outline-none ${
+            isForumAccent ? 'focus:border-accent-forum' : 'focus:border-accent-chat'
+          } disabled:bg-surface-tertiary disabled:cursor-not-allowed`}
         />
         <button
           type="submit"
           disabled={!value.trim() || disabled}
-          className="px-6 py-2.5 text-white rounded-lg transition font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
-          style={{ backgroundColor: disabled || !value.trim() ? '#d1d5db' : accentColor }}
-          onMouseEnter={(e) => {
-            if (!disabled && value.trim()) {
-              const darkerColor = accentColor === '#4D89B0' ? '#3d6e8f' : accentColor;
-              e.currentTarget.style.backgroundColor = darkerColor;
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!disabled && value.trim()) {
-              e.currentTarget.style.backgroundColor = accentColor;
-            }
-          }}
+          className={`px-6 py-2.5 text-text-on-color rounded-lg transition font-semibold disabled:bg-disabled-bg disabled:cursor-not-allowed ${
+            isForumAccent
+              ? 'bg-accent-forum hover:bg-accent-forum/80'
+              : 'bg-accent-chat hover:bg-accent-chat/80'
+          }`}
         >
           Send
         </button>

@@ -156,19 +156,16 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-6 py-8">
         {error ? (
-          <div className="bg-white p-8 rounded-lg border-4 border-red-500">
-            <p className="text-red-600">Error loading chatrooms: {error}</p>
+          <div className="bg-surface p-8 rounded-lg border-4 border-error">
+            <p className="text-error-text">Error loading chatrooms: {error}</p>
           </div>
         ) : (
-          <div className="bg-white p-8 rounded-lg border-4" style={{ borderColor: '#4D89B0' }}>
+          <div className="bg-surface p-8 rounded-lg border-4 border-accent-forum">
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-3xl font-bold text-gray-800">Chatrooms</h1>
+              <h1 className="text-3xl font-bold text-text-primary">Chatrooms</h1>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="px-4 py-2 text-white rounded-lg transition font-semibold"
-                style={{ backgroundColor: '#4D89B0' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d6e8f'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4D89B0'}
+                className="px-4 py-2 text-text-on-color rounded-lg transition font-semibold bg-accent-forum hover:bg-accent-forum-hover"
               >
                 Create Chatroom
               </button>
@@ -180,7 +177,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
               onSearch={handleSearch}
               onClear={handleClearSearch}
               placeholder="Search chatrooms..."
-              color="#4D89B0"
+              accentClass="bg-accent-forum hover:bg-accent-forum-hover"
             />
 
             {/* Chatrooms List */}
@@ -188,14 +185,13 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
               {chatrooms.map((chatroom) => (
                 <div
                   key={chatroom.id}
-                  className="block bg-white p-6 rounded-lg border-2 hover:shadow-lg transition relative"
-                  style={{ borderColor: '#4D89B0' }}
+                  className="block bg-surface p-6 rounded-lg border-2 border-accent-forum hover:shadow-lg transition relative"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <Link href={`/chatrooms/${chatroom.slug}`} className="flex-1">
                       <div>
-                        <h2 className="text-xl font-semibold mb-2 text-gray-800">{chatroom.name}</h2>
-                        <p className="text-gray-600">{chatroom.description}</p>
+                        <h2 className="text-xl font-semibold mb-2 text-text-primary">{chatroom.name}</h2>
+                        <p className="text-text-tertiary">{chatroom.description}</p>
                       </div>
                     </Link>
 
@@ -207,8 +203,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                             e.preventDefault();
                             handleStartEdit(chatroom);
                           }}
-                          className="text-sm font-semibold hover:underline"
-                          style={{ color: '#4D89B0' }}
+                          className="text-sm font-semibold text-accent-forum hover:underline"
                         >
                           Edit
                         </button>
@@ -217,7 +212,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                             e.preventDefault();
                             handleDelete(chatroom);
                           }}
-                          className="text-sm font-semibold text-red-600 hover:underline"
+                          className="text-sm font-semibold text-error-text hover:underline"
                         >
                           Delete
                         </button>
@@ -227,7 +222,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
 
                   {/* Date at bottom right */}
                   <div className="flex justify-end mt-2">
-                    <span className="text-sm text-gray-500 whitespace-nowrap">
+                    <span className="text-sm text-text-muted whitespace-nowrap">
                       {new Date(chatroom.created_at).toLocaleDateString()}
                     </span>
                   </div>
@@ -238,7 +233,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
             {/* Empty State */}
             {chatrooms.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-gray-500">No chatrooms yet. Create the first one!</p>
+                <p className="text-text-muted">No chatrooms yet. Create the first one!</p>
               </div>
             )}
 
@@ -247,7 +242,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={handlePageChange}
-              color="#4D89B0"
+              accentClass="bg-accent-forum"
             />
           </div>
         )}
@@ -255,9 +250,9 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
         {/* Create Chatroom Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full p-6 border-4" style={{ borderColor: '#4D89B0' }}>
+            <div className="bg-surface rounded-lg max-w-md w-full p-6 border-4 border-accent-forum">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">Create Chatroom</h2>
+                <h2 className="text-2xl font-bold text-text-primary">Create Chatroom</h2>
                 <button
                   onClick={() => {
                     setIsModalOpen(false);
@@ -265,7 +260,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                     setChatroomName('');
                     setChatroomDescription('');
                   }}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                  className="text-text-muted hover:text-text-secondary text-2xl"
                 >
                   ×
                 </button>
@@ -273,13 +268,13 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
 
               <form onSubmit={handleSubmit}>
                 {formError && (
-                  <div className="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                  <div className="mb-4 p-2 bg-error-bg border border-red-400 text-error-text-strong rounded">
                     {formError}
                   </div>
                 )}
 
                 <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-text-secondary mb-2">
                     Chatroom Name
                   </label>
                   <input
@@ -289,12 +284,12 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                     placeholder="e.g., General Chat"
                     maxLength={35}
                     disabled={isSubmitting}
-                    className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
+                    className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none"
                   />
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-text-secondary mb-2">
                     Description
                   </label>
                   <textarea
@@ -304,7 +299,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                     maxLength={500}
                     rows={4}
                     disabled={isSubmitting}
-                    className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                    className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none resize-none"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -324,25 +319,14 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                       setChatroomDescription('');
                     }}
                     disabled={isSubmitting}
-                    className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-4 py-2 border-2 border-border text-text-secondary rounded-lg hover:bg-surface-secondary transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting || !chatroomName.trim() || !chatroomDescription.trim()}
-                    className="flex-1 px-4 py-2 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: isSubmitting || !chatroomName.trim() || !chatroomDescription.trim() ? '#9ca3af' : '#4D89B0' }}
-                    onMouseEnter={(e) => {
-                      if (!isSubmitting && chatroomName.trim() && chatroomDescription.trim()) {
-                        e.currentTarget.style.backgroundColor = '#3d6e8f';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSubmitting && chatroomName.trim() && chatroomDescription.trim()) {
-                        e.currentTarget.style.backgroundColor = '#4D89B0';
-                      }
-                    }}
+                    className="flex-1 px-4 py-2 text-text-on-color rounded-lg transition font-semibold disabled:bg-disabled disabled:cursor-not-allowed bg-accent-forum hover:bg-accent-forum-hover"
                   >
                     {isSubmitting ? 'Creating...' : 'Create Chatroom'}
                   </button>
@@ -355,9 +339,9 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
         {/* Edit Chatroom Modal */}
         {isEditModalOpen && editingChatroom && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full p-6 border-4" style={{ borderColor: '#4D89B0' }}>
+            <div className="bg-surface rounded-lg max-w-md w-full p-6 border-4 border-accent-forum">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">Edit Chatroom</h2>
+                <h2 className="text-2xl font-bold text-text-primary">Edit Chatroom</h2>
                 <button
                   onClick={() => {
                     setIsEditModalOpen(false);
@@ -366,7 +350,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                     setChatroomName('');
                     setChatroomDescription('');
                   }}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                  className="text-text-muted hover:text-text-secondary text-2xl"
                 >
                   ×
                 </button>
@@ -374,13 +358,13 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
 
               <form onSubmit={handleEditSubmit}>
                 {formError && (
-                  <div className="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                  <div className="mb-4 p-2 bg-error-bg border border-red-400 text-error-text-strong rounded">
                     {formError}
                   </div>
                 )}
 
                 <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-text-secondary mb-2">
                     Chatroom Name
                   </label>
                   <input
@@ -390,12 +374,12 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                     placeholder="e.g., General Chat"
                     maxLength={35}
                     disabled={isSubmitting}
-                    className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
+                    className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none"
                   />
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-text-secondary mb-2">
                     Description
                   </label>
                   <textarea
@@ -405,7 +389,7 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                     maxLength={500}
                     rows={4}
                     disabled={isSubmitting}
-                    className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                    className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none resize-none"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -426,25 +410,14 @@ export default function ChatroomsPage({ chatrooms, userSessionToken, currentPage
                       setChatroomDescription('');
                     }}
                     disabled={isSubmitting}
-                    className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-4 py-2 border-2 border-border text-text-secondary rounded-lg hover:bg-surface-secondary transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting || !chatroomName.trim() || !chatroomDescription.trim()}
-                    className="flex-1 px-4 py-2 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: isSubmitting || !chatroomName.trim() || !chatroomDescription.trim() ? '#9ca3af' : '#4D89B0' }}
-                    onMouseEnter={(e) => {
-                      if (!isSubmitting && chatroomName.trim() && chatroomDescription.trim()) {
-                        e.currentTarget.style.backgroundColor = '#3d6e8f';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSubmitting && chatroomName.trim() && chatroomDescription.trim()) {
-                        e.currentTarget.style.backgroundColor = '#4D89B0';
-                      }
-                    }}
+                    className="flex-1 px-4 py-2 text-text-on-color rounded-lg transition font-semibold disabled:bg-disabled disabled:cursor-not-allowed bg-accent-forum hover:bg-accent-forum-hover"
                   >
                     {isSubmitting ? 'Updating...' : 'Update Chatroom'}
                   </button>
@@ -469,7 +442,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const API_URL = process.env.SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
     // Determine which endpoint to call based on search query
-    const chatroomsEndpoint = searchQuery 
+    const chatroomsEndpoint = searchQuery
       ? API_ENDPOINTS.searchChatrooms(searchQuery, page, limit)
       : API_ENDPOINTS.getChatrooms(page, limit);
 

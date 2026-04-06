@@ -261,8 +261,8 @@ export default function ChatroomMessagesPage() {
       <div className="min-h-screen bg-marble-100">
         <Header currentPage="chatrooms" />
         <main className="max-w-4xl mx-auto px-6 py-8">
-          <div className="bg-white p-8 rounded-lg border-4" style={{ borderColor: '#4D89B0' }}>
-            <p className="text-gray-600">Loading messages...</p>
+          <div className="bg-surface p-8 rounded-lg border-4 border-accent-forum">
+            <p className="text-text-tertiary">Loading messages...</p>
           </div>
         </main>
       </div>
@@ -279,12 +279,12 @@ export default function ChatroomMessagesPage() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-6 py-8">
         {error ? (
-          <div className="bg-white p-8 rounded-lg border-4 border-red-500">
-            <p className="text-red-600">{error}</p>
+          <div className="bg-surface p-8 rounded-lg border-4 border-error">
+            <p className="text-error-text">{error}</p>
           </div>
         ) : (
-          <div className="bg-white p-8 rounded-lg border-4" style={{ borderColor: '#4D89B0' }}>
-            <Link href="/chatrooms" className="text-sm mb-4 inline-block hover:underline" style={{ color: '#4D89B0' }}>
+          <div className="bg-surface p-8 rounded-lg border-4 border-accent-forum">
+            <Link href="/chatrooms" className="text-sm mb-4 inline-block hover:underline text-accent-forum">
               ← Back to Chatrooms
             </Link>
 
@@ -292,11 +292,11 @@ export default function ChatroomMessagesPage() {
               <div className="flex-1">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <h1 className="text-2xl font-bold mb-1 text-gray-800">
+                    <h1 className="text-2xl font-bold mb-1 text-text-primary">
                       {chatroom?.name || 'Chatroom'}
                     </h1>
                     {chatroom?.description && (
-                      <p className="text-gray-600 text-sm mb-2">{chatroom.description}</p>
+                      <p className="text-text-tertiary text-sm mb-2">{chatroom.description}</p>
                     )}
                   </div>
                   {/* Show Edit and Delete buttons only for current user's chatrooms */}
@@ -304,14 +304,13 @@ export default function ChatroomMessagesPage() {
                     <div className="flex items-center gap-3 ml-4">
                       <button
                         onClick={handleStartEdit}
-                        className="text-sm font-semibold hover:underline"
-                        style={{ color: '#4D89B0' }}
+                        className="text-sm font-semibold hover:underline text-accent-forum"
                       >
                         Edit
                       </button>
                       <button
                         onClick={handleDelete}
-                        className="text-sm font-semibold text-red-600 hover:underline"
+                        className="text-sm font-semibold text-error-text hover:underline"
                       >
                         Delete
                       </button>
@@ -322,16 +321,13 @@ export default function ChatroomMessagesPage() {
 
               {/* Active Users Sidebar */}
               <div className="w-64 self-start">
-                <div className="border border-black rounded-lg p-4">
-                  <h3 className="font-bold text-gray-800 mb-3 text-sm">
+                <div className="border border-border-strong rounded-lg p-4">
+                  <h3 className="font-bold text-text-primary mb-3 text-sm">
                     Active Users ({activeUsers.length})
                   </h3>
                   <button
                     onClick={() => setIsActiveUsersModalOpen(true)}
-                    className="w-full px-4 py-2 text-sm font-semibold rounded-lg transition"
-                    style={{ backgroundColor: '#4D89B0', color: 'white' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d6e8f'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4D89B0'}
+                    className="w-full px-4 py-2 text-sm font-semibold rounded-lg transition bg-accent-forum hover:bg-accent-forum-hover text-text-on-color"
                   >
                     Show all
                   </button>
@@ -340,7 +336,7 @@ export default function ChatroomMessagesPage() {
             </div>
 
             {/* Chat Area */}
-            <div className="border border-black rounded-lg">
+            <div className="border border-border-strong rounded-lg">
               {/* Messages */}
               <ChatMessageList
                 messages={messages}
@@ -370,9 +366,9 @@ export default function ChatroomMessagesPage() {
         {/* Edit Chatroom Modal */}
         {isEditModalOpen && chatroom && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full p-6 border-4" style={{ borderColor: '#4D89B0' }}>
+            <div className="bg-surface rounded-lg max-w-md w-full p-6 border-4 border-accent-forum">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">Edit Chatroom</h2>
+                <h2 className="text-2xl font-bold text-text-primary">Edit Chatroom</h2>
                 <button
                   onClick={() => {
                     setIsEditModalOpen(false);
@@ -380,7 +376,7 @@ export default function ChatroomMessagesPage() {
                     setChatroomName('');
                     setChatroomDescription('');
                   }}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                  className="text-text-muted hover:text-text-secondary text-2xl"
                 >
                   ×
                 </button>
@@ -394,7 +390,7 @@ export default function ChatroomMessagesPage() {
                 )}
 
                 <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-text-secondary mb-2">
                     Chatroom Name
                   </label>
                   <input
@@ -404,12 +400,12 @@ export default function ChatroomMessagesPage() {
                     placeholder="e.g., General Chat"
                     maxLength={35}
                     disabled={isSubmitting}
-                    className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none"
+                    className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none"
                   />
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-text-secondary mb-2">
                     Description
                   </label>
                   <textarea
@@ -419,7 +415,7 @@ export default function ChatroomMessagesPage() {
                     maxLength={500}
                     rows={4}
                     disabled={isSubmitting}
-                    className="w-full p-3 border-2 border-gray-300 text-black rounded-lg focus:border-gray-800 focus:outline-none resize-none"
+                    className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none resize-none"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -439,25 +435,14 @@ export default function ChatroomMessagesPage() {
                       setChatroomDescription('');
                     }}
                     disabled={isSubmitting}
-                    className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-4 py-2 border-2 border-border text-text-secondary rounded-lg hover:bg-surface-secondary transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting || !chatroomName.trim() || !chatroomDescription.trim()}
-                    className="flex-1 px-4 py-2 text-white rounded-lg transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: isSubmitting || !chatroomName.trim() || !chatroomDescription.trim() ? '#9ca3af' : '#4D89B0' }}
-                    onMouseEnter={(e) => {
-                      if (!isSubmitting && chatroomName.trim() && chatroomDescription.trim()) {
-                        e.currentTarget.style.backgroundColor = '#3d6e8f';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSubmitting && chatroomName.trim() && chatroomDescription.trim()) {
-                        e.currentTarget.style.backgroundColor = '#4D89B0';
-                      }
-                    }}
+                    className="flex-1 px-4 py-2 text-text-on-color rounded-lg transition font-semibold disabled:bg-disabled disabled:cursor-not-allowed bg-accent-forum hover:bg-accent-forum-hover"
                   >
                     {isSubmitting ? 'Updating...' : 'Update Chatroom'}
                   </button>
@@ -470,12 +455,12 @@ export default function ChatroomMessagesPage() {
         {/* Active Users Modal */}
         {isActiveUsersModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full p-6 border-4" style={{ borderColor: '#4D89B0' }}>
+            <div className="bg-surface rounded-lg max-w-md w-full p-6 border-4 border-accent-forum">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">Active Users ({activeUsers.length})</h2>
+                <h2 className="text-2xl font-bold text-text-primary">Active Users ({activeUsers.length})</h2>
                 <button
                   onClick={() => setIsActiveUsersModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                  className="text-text-muted hover:text-text-secondary text-2xl"
                 >
                   ×
                 </button>
@@ -483,15 +468,15 @@ export default function ChatroomMessagesPage() {
 
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {activeUsers.length === 0 ? (
-                  <p className="text-gray-500 text-sm text-center py-4">No users online</p>
+                  <p className="text-text-muted text-sm text-center py-4">No users online</p>
                 ) : (
                   activeUsers.map((username, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded"
+                      className="flex items-center gap-2 p-2 hover:bg-surface-secondary rounded"
                     >
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm text-gray-700">{username}</span>
+                      <div className="w-2 h-2 bg-success rounded-full"></div>
+                      <span className="text-sm text-text-secondary">{username}</span>
                     </div>
                   ))
                 )}
