@@ -84,7 +84,6 @@ Usage Data: We collect timestamps associated with your session activity, content
 We do not sell your data. We may share information only:
 - When required by law or legal process
 - To protect the rights and safety of the Platform and its users
-- With service providers who assist in operating the Platform
 
 4. Data Retention
 Session data and associated content are retained as long as necessary to provide the Platform. IP addresses and fingerprints are retained for security and abuse prevention purposes.
@@ -100,7 +99,7 @@ For users in the EU (GDPR): You have the right to access, rectify, or erase your
 For users in California (CCPA): You have the right to know what personal information we collect, to request deletion, and to opt out of the sale of personal information. We do not sell personal information.
 
 7. Children's Privacy
-The Platform is not intended for children under 13. We do not knowingly collect information from children under 13. If we learn we have collected such information, we will delete it.
+The Platform is not intended for children under 18. We do not knowingly collect information from children under 18. If we learn we have collected such information, we will delete it.
 
 8. Security
 We implement reasonable security measures to protect your information. However, no method of transmission over the Internet is 100% secure.
