@@ -14,7 +14,7 @@ Last Updated: February 2025
 By accessing or using Eleutheria ("the Platform"), you agree to be bound by these Terms of Service. If you do not agree, do not use the Platform.
 
 2. Eligibility
-You must be at least 13 years of age to use this Platform. By using Eleutheria, you represent that you meet this age requirement.
+You must be at least 18 years of age to use this Platform. By using Eleutheria, you represent that you meet this age requirement.
 
 3. User Conduct
 You agree not to:
@@ -103,28 +103,21 @@ For privacy-related questions or requests, please reach out through the Platform
 const RULES_CONTENT = `
 Community Rules
 
-Eleutheria is an anonymous platform built on free expression. That said, there are lines. These rules exist to keep the platform usable and safe for everyone.
+Eleutheria is an anonymous platform built on free expression. That said, I dont give a fuck what you do, say, or post, just as long as its not illegal. 
 
-1. No Harassment or Targeted Abuse
-Do not repeatedly target, threaten, or intimidate other users. Disagreement is fine. Harassment is not.
+1. No Spam or Flooding
 
-2. No Spam or Flooding
-Do not post repetitive content, flood chatrooms, or use the platform for advertising or self-promotion.
-
-3. No Illegal Content
+2. No Illegal Content
 Do not post content that violates any applicable law. This includes but is not limited to: CSAM, doxxing, credible threats of violence, and distribution of stolen data.
 
-4. No Impersonation
-Do not impersonate other users, moderators, or any real person or organization with intent to deceive.
-
-5. No Malicious Links or Code
+3. No Malicious Links or Code
 Do not share links to malware, phishing sites, or any content designed to harm other users' devices or accounts.
 
-6. Respect the Platform
+4. Respect the Platform
 Do not attempt to exploit, attack, or disrupt the Platform's infrastructure or other users' sessions.
 
 Consequences
-Violations may result in content removal, temporary suspension, or permanent ban at our discretion. Bans are applied by IP and browser fingerprint. There is no appeals process at this time.
+Violations may result in content removal, temporary suspension, or permanent ban at our discretion. Bans are applied by IP and browser fingerprint. You can appeal via the contact us button. Well I guess its just me at this time lol.
 
 These rules may be updated at any time. Use common sense.
 `;
