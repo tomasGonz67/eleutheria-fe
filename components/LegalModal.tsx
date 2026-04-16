@@ -44,10 +44,22 @@ The Platform is provided "as is" without warranties of any kind, express or impl
 9. Limitation of Liability
 To the maximum extent permitted by law, Eleutheria shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Platform.
 
-10. Changes to Terms
+10. Privacy
+Your use of the Platform is also governed by our Privacy Policy, which describes how we collect, use, and protect your information.
+
+11. Indemnification
+You agree to indemnify and hold harmless Eleutheria and its operators from any claims, damages, or expenses arising from your use of the Platform or your violation of these Terms.
+
+12. Governing Law
+These Terms shall be governed by and construed in accordance with the laws of the State of New Jersey, United States, without regard to its conflict of law provisions.
+
+13. Platform Availability
+We reserve the right to modify, suspend, or discontinue the Platform at any time, with or without notice, for any reason. We shall not be liable to you or any third party for any such modification, suspension, or discontinuation.
+
+14. Changes to Terms
 We may update these Terms at any time. Continued use of the Platform after changes constitutes acceptance of the updated Terms.
 
-11. Contact
+15. Contact
 For questions about these Terms, please reach out through the Platform.
 `;
 
@@ -60,7 +72,7 @@ Session Data: We use anonymous session tokens to identify users. No email, passw
 
 Device Information: We collect IP addresses and browser fingerprints for the purpose of session management, abuse prevention, and platform security.
 
-Usage Data: We collect information about how you interact with the Platform, including pages visited, content posted, and timestamps.
+Usage Data: We collect timestamps associated with your session activity, content you post, and messages you send.
 
 2. How We Use Your Information
 - To provide and maintain the Platform
