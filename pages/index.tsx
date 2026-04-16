@@ -154,7 +154,7 @@ export default function Home() {
         <div className="mt-6 text-center flex justify-center gap-4">
           <button
             onClick={() => setIsContactOpen(true)}
-            className="px-8 py-3 border-2 border-border text-text-muted rounded-lg transition font-semibold hover:border-border-strong hover:text-text-primary"
+            className="px-8 py-3 border-2 border-border-strong text-text-primary rounded-lg transition font-semibold hover:shadow-lg"
           >
             Contact Us
           </button>

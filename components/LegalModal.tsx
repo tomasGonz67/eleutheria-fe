@@ -18,12 +18,13 @@ You must be at least 13 years of age to use this Platform. By using Eleutheria, 
 
 3. User Conduct
 You agree not to:
-- Post content that is illegal, threatening, harassing, defamatory, or obscene
+- Post content that is illegal, threatening, or harassing
 - Impersonate any person or entity
 - Upload malware, viruses, or other harmful code
 - Attempt to gain unauthorized access to the Platform or other users' accounts
 - Use the Platform for any unlawful purpose
 - Spam, flood, or otherwise disrupt the Platform
+- Attempt to exploit, attack, or disrupt the Platform's infrastructure
 
 4. User-Generated Content
 You retain ownership of content you post. By posting content, you grant Eleutheria a non-exclusive, royalty-free license to display and distribute that content on the Platform. You are solely responsible for the content you post.
@@ -119,10 +120,7 @@ Do not impersonate other users, moderators, or any real person or organization w
 5. No Malicious Links or Code
 Do not share links to malware, phishing sites, or any content designed to harm other users' devices or accounts.
 
-6. No NSFW Content Without Context
-Explicit content should be kept to appropriate forums. Do not post graphic content in general chatrooms or forums.
-
-7. Respect the Platform
+6. Respect the Platform
 Do not attempt to exploit, attack, or disrupt the Platform's infrastructure or other users' sessions.
 
 Consequences
