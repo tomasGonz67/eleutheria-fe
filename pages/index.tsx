@@ -11,6 +11,7 @@ export default function Home() {
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   const { initializeSocket } = useChatStore();
   const [isContactOpen, setIsContactOpen] = useState(false);
+  const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactMessage, setContactMessage] = useState('');
@@ -159,13 +160,12 @@ export default function Home() {
           >
             Contact Us
           </button>
-        </div>
-
-        {/* Info Section */}
-        <div className="mt-6 text-center">
-          <p className="text-text-muted">
-            All interactions are anonymous. No sign-up required. Your session is tracked by cookies for moderation purposes only.
-          </p>
+          <button
+            onClick={() => setIsHowItWorksOpen(true)}
+            className="px-8 py-3 border-2 border-border-strong text-text-primary rounded-lg transition font-semibold hover:shadow-lg"
+          >
+            How This Works
+          </button>
         </div>
       </main>
 
@@ -241,6 +241,55 @@ export default function Home() {
               >
                 {contactStatus === 'sending' ? 'Sending...' : contactStatus === 'sent' ? 'Sent!' : contactStatus === 'error' ? 'Failed — try again' : 'Send Message'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* How This Works Modal */}
+      {isHowItWorksOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsHowItWorksOpen(false); }}
+        >
+          <div className="bg-surface rounded-lg max-w-2xl w-full p-6 border-4 border-accent-forum max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-text-primary">How This Works</h2>
+              <button onClick={() => setIsHowItWorksOpen(false)} className="text-text-muted hover:text-text-secondary text-2xl">
+                &times;
+              </button>
+            </div>
+            <div className="space-y-4 text-text-secondary">
+              <p>
+                <span className="font-semibold text-text-primary">Welcome to Eleutheria.</span>{' '}
+                Eleutheria is an online platform where people can meet new people,
+                post content, and have conversations — all anonymously, with no
+                sign-up required.
+              </p>
+              <div>
+                <h3 className="font-semibold text-text-primary mb-1">Freedom first</h3>
+                <p>
+                  Eleutheria is designed to maximize freedom of expression. There
+                  is no general moderation and no policing of opinions or
+                  discussions. The only exception is illegal activity — that is
+                  watched for and removed to keep the platform within legal
+                  bounds. Everything else is up to the community.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-text-primary mb-1">What you can do</h3>
+                <ul className="list-disc list-inside space-y-1">
+                  <li><span className="font-semibold text-text-primary">Global Feed</span> — see what the whole community is posting in one stream.</li>
+                  <li><span className="font-semibold text-text-primary">Forums</span> — browse topic-based forums and join longer discussions.</li>
+                  <li><span className="font-semibold text-text-primary">Chatrooms</span> — drop into public group chats organized by topic.</li>
+                  <li><span className="font-semibold text-text-primary">Random Chat</span> — get matched 1-on-1 with a stranger for a quick conversation.</li>
+                  <li><span className="font-semibold text-text-primary">Direct Messages</span> — chat privately with people you meet.</li>
+                </ul>
+              </div>
+              <p className="text-text-muted text-sm">
+                All interactions are anonymous. No sign-up required. Your session
+                is tracked by cookies for moderation purposes only.
+              </p>
             </div>
           </div>
         </div>
