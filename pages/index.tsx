@@ -164,7 +164,7 @@ export default function Home() {
             onClick={() => setIsHowItWorksOpen(true)}
             className="px-8 py-3 border-2 border-border-strong text-text-primary rounded-lg transition font-semibold hover:shadow-lg"
           >
-            How This Works
+            About Eleutheria
           </button>
         </div>
       </main>
@@ -254,7 +254,7 @@ export default function Home() {
         >
           <div className="bg-surface rounded-lg max-w-2xl w-full p-6 border-4 border-accent-forum max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-text-primary">How This Works</h2>
+              <h2 className="text-2xl font-bold text-text-primary">About Eleutheria</h2>
               <button onClick={() => setIsHowItWorksOpen(false)} className="text-text-muted hover:text-text-secondary text-2xl">
                 &times;
               </button>
