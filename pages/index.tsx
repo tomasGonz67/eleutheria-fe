@@ -271,7 +271,9 @@ export default function Home() {
                 <p>
                   Eleutheria is designed to maximize freedom of expression. There
                   is no general moderation and no policing of opinions or
-                  discussions. The only exception is illegal activity — that is
+                  discussions. The only exception is illegal activity. I literally do not give 
+                  the slightest fuck about what you say on this thing. But anything that
+                  can get me in any sort of serious/legal trouble is
                   watched for and removed to keep the platform within legal
                   bounds. Everything else is up to the community.
                 </p>
