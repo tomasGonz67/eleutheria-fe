@@ -85,6 +85,8 @@ export default function Header({ currentPage }: HeaderProps) {
   useEffect(() => {
     if (!isBellOpen) return;
 
+    setNotificationCount(0);
+
     const fetchNotifs = async () => {
       setIsLoadingNotifications(true);
       try {
