@@ -960,17 +960,19 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       }),
     ]);
 
-    // If the post itself is gone, send the user to the deleted screen.
+    // Check forum existence first: a 404 on comments means the forum is gone.
+    // Otherwise a deleted forum would surface as "post deleted" since the post
+    // endpoint also 404s when its parent forum no longer exists.
+    if (commentsResponse.status === 404) {
+      return { redirect: { destination: '/deleted?type=forum', permanent: false } };
+    }
+
+    // Forum exists but the post itself is gone.
     if (postResponse.status === 404) {
       return { redirect: { destination: '/deleted?type=post', permanent: false } };
     }
 
-    // Check each response individually for better error messages
     if (!commentsResponse.ok) {
-      // 404 on the comments endpoint typically means the forum no longer exists.
-      if (commentsResponse.status === 404) {
-        return { redirect: { destination: '/deleted?type=forum', permanent: false } };
-      }
       console.error('Comments fetch failed:', commentsResponse.status, commentsResponse.statusText);
       throw new Error(`Failed to fetch comments: ${commentsResponse.status}`);
     }
