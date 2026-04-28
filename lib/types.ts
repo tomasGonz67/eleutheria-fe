@@ -221,6 +221,7 @@ export interface FeedPost {
   is_my_post: boolean;
   created_at: string;
   comment_count?: number;
+  direct_reply_count?: number;
   parent_id?: number | null; // For comments/replies
 }
 

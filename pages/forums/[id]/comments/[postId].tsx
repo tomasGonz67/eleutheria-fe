@@ -22,6 +22,7 @@ interface PostCommentsPageProps {
   postUsername?: string;
   postDiscriminator?: string;
   postHideDiscriminator?: boolean;
+  postIsMine?: boolean;
   currentPage: number;
   totalPages: number;
   totalComments: number;
@@ -198,7 +199,7 @@ function CommentItem({
                   onClick={() => onToggleReplies(comment.id)}
                   className="text-sm font-semibold hover:underline text-accent-chat"
                 >
-                  See Direct Replies{comment.comment_count !== undefined && comment.comment_count > 0 ? ` (${comment.comment_count})` : ''}
+                  See Direct Replies{comment.direct_reply_count !== undefined && comment.direct_reply_count > 0 ? ` (${comment.direct_reply_count})` : ''}
                 </button>
                 {comment.comment_count !== undefined && comment.comment_count > 0 && (
                   <>
@@ -207,7 +208,7 @@ function CommentItem({
                       onClick={() => onExpandAllReplies(comment.id)}
                       className="text-sm font-semibold hover:underline text-accent-chat"
                     >
-                      All Replies
+                      All Replies ({comment.comment_count})
                     </button>
                   </>
                 )}
@@ -335,7 +336,7 @@ function CommentItem({
   );
 }
 
-export default function PostCommentsPage({ forum, postId, comments: initialComments, username, userSessionToken, postContent, postUsername, postDiscriminator, postHideDiscriminator, currentPage, totalPages, totalComments, error }: PostCommentsPageProps) {
+export default function PostCommentsPage({ forum, postId, comments: initialComments, username, userSessionToken, postContent, postUsername, postDiscriminator, postHideDiscriminator, postIsMine, currentPage, totalPages, totalComments, error }: PostCommentsPageProps) {
   const router = useRouter();
   const [replyContent, setReplyContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -820,6 +821,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
                     username={postUsername}
                     discriminator={postDiscriminator}
                     hideDiscriminator={postHideDiscriminator}
+                    isOwnPost={postIsMine}
                     accentColor="#AA633F"
                     className="text-sm text-text-tertiary"
                   />
@@ -990,12 +992,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     let postUsername = null;
     let postDiscriminator = null;
     let postHideDiscriminator = false;
+    let postIsMine = false;
     if (postResponse.ok) {
       const postData = await postResponse.json();
       postContent = postData.post?.content || null;
       postUsername = postData.post?.username || null;
       postDiscriminator = postData.post?.author_discriminator || null;
       postHideDiscriminator = postData.post?.author_hide_discriminator || false;
+      postIsMine = postData.post?.is_my_post || false;
     }
 
     // Get username and session token from user response (if available)
@@ -1018,6 +1022,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         postUsername,
         postDiscriminator,
         postHideDiscriminator,
+        postIsMine,
         currentPage: page,
         totalPages,
         totalComments,
