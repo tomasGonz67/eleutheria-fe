@@ -32,3 +32,8 @@ export async function markAllNotificationsRead(): Promise<{ success: boolean }> 
   const { data } = await clientApi.put('/api/notifications/read-all');
   return data;
 }
+
+export async function markAllNotificationsSeen(): Promise<{ success: boolean }> {
+  const { data } = await clientApi.put('/api/notifications/seen-all');
+  return data;
+}

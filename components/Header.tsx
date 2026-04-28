@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { useChatStore } from '@/store/chatStore';
 import { useState, useEffect, useRef } from 'react';
 import { getCurrentUser } from '@/lib/services/session';
-import { getNotifications, markNotificationRead, markAllNotificationsRead, Notification } from '@/lib/services/notifications';
+import { getNotifications, markNotificationRead, markAllNotificationsRead, markAllNotificationsSeen, Notification } from '@/lib/services/notifications';
 import { clientApi } from '@/lib/api';
 
 interface HeaderProps {
@@ -86,6 +86,9 @@ export default function Header({ currentPage }: HeaderProps) {
     if (!isBellOpen) return;
 
     setNotificationCount(0);
+    markAllNotificationsSeen().catch((error) => {
+      console.error('Error marking notifications seen:', error);
+    });
 
     const fetchNotifs = async () => {
       setIsLoadingNotifications(true);
