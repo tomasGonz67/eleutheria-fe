@@ -209,17 +209,26 @@ export default function Header({ currentPage }: HeaderProps) {
   );
 
   const notificationDropdown = (
-    <div className="absolute right-0 top-full mt-2 bg-surface border-2 border-border rounded-lg shadow-lg w-80 z-50 max-h-[400px] flex flex-col">
-      <div className="px-4 py-3 border-b border-border-light flex items-center justify-between">
-        <span className="font-semibold text-text-primary text-sm">Notifications</span>
-        {notifications.some((n) => !n.is_read) && (
+    <div className="fixed inset-0 w-full h-full bg-surface z-50 flex flex-col md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-80 md:h-auto md:max-h-[400px] md:border-2 md:border-border md:rounded-lg md:shadow-lg">
+      <div className="px-4 py-3 border-b border-border-light flex items-center justify-between gap-3">
+        <span className="font-semibold text-text-primary text-base md:text-sm">Notifications</span>
+        <div className="flex items-center gap-3">
+          {notifications.some((n) => !n.is_read) && (
+            <button
+              onClick={handleMarkAllRead}
+              className="text-xs text-aegean-600 hover:text-aegean-700"
+            >
+              Mark all as read
+            </button>
+          )}
           <button
-            onClick={handleMarkAllRead}
-            className="text-xs text-aegean-600 hover:text-aegean-700"
+            onClick={() => setIsBellOpen(false)}
+            className="md:hidden text-text-muted hover:text-text-secondary text-2xl leading-none"
+            aria-label="Close notifications"
           >
-            Mark all as read
+            &times;
           </button>
-        )}
+        </div>
       </div>
       <div className="overflow-y-auto flex-1">
         {isLoadingNotifications ? (

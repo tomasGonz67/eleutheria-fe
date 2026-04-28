@@ -361,6 +361,7 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
   const [expandedComments, setExpandedComments] = useState<Set<number>>(new Set());
   const [loadedReplies, setLoadedReplies] = useState<Map<number, FeedPost[]>>(new Map());
   const [loadingReplies, setLoadingReplies] = useState<Set<number>>(new Set());
+  const [highlightedCommentDeleted, setHighlightedCommentDeleted] = useState(false);
 
   // Sync comments state when props change (pagination / router.replace)
   useEffect(() => {
@@ -408,11 +409,20 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
         }, 200);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error expanding ancestor chain:', err);
+        // 404 from the ancestors endpoint means the highlighted comment was deleted.
+        if (err?.response?.status === 404) {
+          if (!cancelled) setHighlightedCommentDeleted(true);
+          return;
+        }
         // Fallback: try scrolling anyway (comment might be a direct reply)
         setTimeout(() => {
           const el = document.getElementById(`comment-${highlightCommentId}`);
+          if (!el && !cancelled) {
+            setHighlightedCommentDeleted(true);
+            return;
+          }
           if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
@@ -785,6 +795,14 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
           </div>
         ) : (
           <div className="bg-surface p-8 rounded-lg border-4 border-accent-chat">
+            {highlightedCommentDeleted && (
+              <div className="mb-4 p-4 bg-surface-tertiary border border-border-strong rounded-lg flex items-start gap-3">
+                <span className="text-xl leading-none">🗑️</span>
+                <p className="text-sm text-text-secondary">
+                  The comment you were notified about has been deleted. The rest of the thread is shown below.
+                </p>
+              </div>
+            )}
             <Link href={`/forums/${forum.slug || forum.id}`} className="text-sm mb-4 inline-block hover:underline text-accent-chat">
               ← Back to {forum.name}
             </Link>
@@ -942,8 +960,17 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       }),
     ]);
 
+    // If the post itself is gone, send the user to the deleted screen.
+    if (postResponse.status === 404) {
+      return { redirect: { destination: '/deleted?type=post', permanent: false } };
+    }
+
     // Check each response individually for better error messages
     if (!commentsResponse.ok) {
+      // 404 on the comments endpoint typically means the forum no longer exists.
+      if (commentsResponse.status === 404) {
+        return { redirect: { destination: '/deleted?type=forum', permanent: false } };
+      }
       console.error('Comments fetch failed:', commentsResponse.status, commentsResponse.statusText);
       throw new Error(`Failed to fetch comments: ${commentsResponse.status}`);
     }

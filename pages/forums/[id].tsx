@@ -240,6 +240,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     ]);
 
     if (!postsResponse.ok) {
+      if (postsResponse.status === 404) {
+        return { redirect: { destination: '/deleted?type=forum', permanent: false } };
+      }
       throw new Error('Failed to fetch forum data');
     }
 
