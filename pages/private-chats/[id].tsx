@@ -197,14 +197,14 @@ export default function PrivateChatPage() {
   };
 
   return (
-    <div className="min-h-screen bg-marble-100">
+    <div className="flex-1 flex flex-col bg-marble-100">
       <Head>
         <title>Private Chat | Eleutheria</title>
       </Head>
       <Header currentPage="private-chats" />
 
-      <main className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-surface rounded-lg border-4 border-aegean-600 overflow-hidden">
+      <main className="flex-1 flex flex-col w-full max-w-4xl mx-auto px-0 py-0 md:px-6 md:py-8">
+        <div className="flex-1 flex flex-col bg-surface rounded-none md:rounded-lg border-0 md:border-4 md:border-aegean-600 overflow-hidden">
           {/* Chat Header */}
           <ChatHeader
             title={
@@ -236,7 +236,7 @@ export default function PrivateChatPage() {
           />
 
           {/* Messages */}
-          <div className="border-t border-border-light">
+          <div className="flex-1 flex flex-col border-t border-border-light overflow-hidden">
             <ChatMessageList
               messages={messages}
               currentUserDiscriminator={myDiscriminator}
@@ -244,6 +244,7 @@ export default function PrivateChatPage() {
               accentColor="#1e40af"
               autoScroll={autoScroll}
               emptyStateMessage="No messages yet. Start the conversation!"
+              containerClassName="flex-1 p-6 space-y-4 overflow-y-auto"
             />
           </div>
 

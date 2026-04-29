@@ -9,6 +9,7 @@ interface ChatMessageListProps {
   accentColor?: string;
   autoScroll?: boolean;
   emptyStateMessage?: string;
+  containerClassName?: string;
 }
 
 export default function ChatMessageList({
@@ -18,6 +19,7 @@ export default function ChatMessageList({
   accentColor = '#4D89B0',
   autoScroll = true,
   emptyStateMessage = 'No messages yet. Start the conversation!',
+  containerClassName = 'p-6 space-y-4 min-h-[500px] max-h-[600px] overflow-y-auto',
 }: ChatMessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -32,7 +34,7 @@ export default function ChatMessageList({
   let lastDateLabel = '';
 
   return (
-    <div className="p-6 space-y-4 min-h-[500px] max-h-[600px] overflow-y-auto">
+    <div className={containerClassName}>
       {messages.map((message) => {
         const isOwnMessage = message.sender_discriminator === currentUserDiscriminator;
 

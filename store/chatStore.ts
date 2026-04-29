@@ -29,6 +29,17 @@ interface ChatStore {
   socket: Socket | null;
   isConnected: boolean;
 
+  // Current user's hide-discriminator setting. Single source of truth so
+  // toggling in settings updates everywhere live without a refresh.
+  myHideDiscriminator: boolean;
+  setMyHideDiscriminator: (value: boolean) => void;
+
+  // Current user's accepting-message-requests setting. Lifted for the same
+  // reason — Header gear and UserActionMenu need to stay in sync.
+  // null = not yet fetched.
+  myAcceptingMessageRequests: boolean | null;
+  setMyAcceptingMessageRequests: (value: boolean) => void;
+
   // Random chat state
   randomChatStatus: 'idle' | 'waiting' | 'matched' | 'ended';
   randomChatSessionId: number | null;
@@ -84,6 +95,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   // Socket.io initial state
   socket: null,
   isConnected: false,
+  myHideDiscriminator: false,
+  setMyHideDiscriminator: (value) => set({ myHideDiscriminator: value }),
+  myAcceptingMessageRequests: null,
+  setMyAcceptingMessageRequests: (value) => set({ myAcceptingMessageRequests: value }),
 
   // Random chat initial state
   randomChatStatus: 'idle',

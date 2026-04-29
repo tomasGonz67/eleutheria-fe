@@ -165,6 +165,12 @@ export default function FloatingChats() {
 
     // Listen for session ended
     const handleSessionEnded = (data: { session_id: number; reason: string }) => {
+      // Only react to sessions this component actually owns (planned chats).
+      // Random chats raise their own in-page system message via the
+      // /chat/random page, so we'd otherwise double-notify.
+      const isOurChat = useChatStore.getState().plannedChats.some((c) => c.id === data.session_id);
+      if (!isOurChat) return;
+
       // Check if WE were the one who ended this chat
       const endedByMe = endedByMeRef.current.has(data.session_id);
 

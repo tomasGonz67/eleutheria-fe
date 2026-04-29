@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Header from '@/components/Header';
 import ChatMessageList from '@/components/chat/ChatMessageList';
@@ -35,6 +35,11 @@ export default function ChatroomMessagesPage() {
 
   // Get Socket.io from Zustand store
   const { socket, initializeSocket, cleanupSocket } = useChatStore();
+
+  // Set when a message-send is rejected because our socket isn't in the
+  // chatroom room (BE returns 403 code=not_in_room). Sticky until refresh —
+  // the user has missed messages and the simplest recovery is a reload.
+  const [roomLost, setRoomLost] = useState(false);
 
   // Socket should already be initialized from home page
   // Just ensure it's connected (in case user navigated directly to URL)
@@ -101,28 +106,13 @@ export default function ChatroomMessagesPage() {
       }
     };
 
-    // Handle reconnection - rejoin chatroom and refresh data
-    let hasRegistered = false;
-    const handleRegistered = () => {
-      if (!hasRegistered) {
-        // First time (initial connection) - just mark as registered
-        hasRegistered = true;
-        return;
-      }
-      // Subsequent times (reconnection) - reload the page
-      console.log('🔄 Socket reconnected, reloading chatroom page...');
-      router.reload();
-    };
-
     socket.on('new_chatroom_message', handleNewMessage);
     socket.on('chatroom_users_updated', handleUsersUpdated);
-    socket.on('registered', handleRegistered);
 
     // Cleanup on unmount or when ID changes
     return () => {
       socket.off('new_chatroom_message', handleNewMessage);
       socket.off('chatroom_users_updated', handleUsersUpdated);
-      socket.off('registered', handleRegistered);
       leaveChatroom(chatroomId);
     };
   }, [socket, chatroom]);
@@ -136,14 +126,15 @@ export default function ChatroomMessagesPage() {
       setError('');
 
       try {
-        // Fetch user session, chatrooms, and messages in parallel
-        const [userResponse, chatroomsResponse, messagesResponse] = await Promise.all([
+        // Fetch user session, the single chatroom, and messages in parallel.
+        // Previously fetched the paginated /api/chatrooms list and did a
+        // client-side find, which silently failed for chatrooms past page 1.
+        const [userResponse, chatroomResponse, messagesResponse] = await Promise.all([
           clientApi.get('/api/session/me'),
-          clientApi.get('/api/chatrooms'),
+          clientApi.get(`/api/chatrooms/${id}`),
           clientApi.get(`/api/chatrooms/${id}/messages`)
         ]);
 
-        // Get user session token and discriminator
         if (userResponse.data?.user?.session_token) {
           setUserSessionToken(userResponse.data.user.session_token);
         }
@@ -151,16 +142,8 @@ export default function ChatroomMessagesPage() {
           setUserDiscriminator(userResponse.data.user.discriminator);
         }
 
-        // Find the specific chatroom by ID or slug
-        const chatroomsData = chatroomsResponse.data;
-        const chatrooms = Array.isArray(chatroomsData) ? chatroomsData : (chatroomsData.chatrooms || []);
-        const isNumeric = /^\d+$/.test(id as string);
-        const foundChatroom = chatrooms.find((c: ChatroomWithUsers) =>
-          isNumeric ? c.id === Number(id) : (c as any).slug === id
-        );
-
-        if (foundChatroom) {
-          setChatroom(foundChatroom);
+        if (chatroomResponse.data?.chatroom) {
+          setChatroom(chatroomResponse.data.chatroom);
         }
 
         setMessages(messagesResponse.data.messages || []);
@@ -189,7 +172,13 @@ export default function ChatroomMessagesPage() {
       // No need to refresh messages - Socket.io will handle it in real-time
     } catch (err: any) {
       console.error('Error sending message:', err);
-      setError(getErrorMessage(err, 'Failed to send message'));
+      // BE rejects with 403 / code=not_in_room when our socket isn't in the
+      // chatroom room — i.e. we silently disconnected.
+      if (err?.response?.status === 403 && err?.response?.data?.code === 'not_in_room') {
+        setRoomLost(true);
+      } else {
+        setError(getErrorMessage(err, 'Failed to send message'));
+      }
     } finally {
       setIsSending(false);
     }
@@ -277,13 +266,13 @@ export default function ChatroomMessagesPage() {
       <Header currentPage="chatrooms" />
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className="max-w-4xl mx-auto px-0 py-0 md:px-6 md:py-8">
         {error ? (
           <div className="bg-surface p-8 rounded-lg border-4 border-error">
             <p className="text-error-text">{error}</p>
           </div>
         ) : (
-          <div className="bg-surface p-8 rounded-lg border-4 border-accent-forum">
+          <div className="bg-surface p-3 md:p-8 rounded-none md:rounded-lg border-0 md:border-4 md:border-accent-forum">
             <Link href="/chatrooms" className="text-sm mb-4 inline-block hover:underline text-accent-forum">
               ← Back to Chatrooms
             </Link>
@@ -319,8 +308,8 @@ export default function ChatroomMessagesPage() {
                 </div>
               </div>
 
-              {/* Active Users Sidebar */}
-              <div className="w-64 self-start">
+              {/* Active Users Sidebar (hidden on mobile to give the chatroom full width) */}
+              <div className="hidden md:block w-64 self-start">
                 <div className="border border-border-strong rounded-lg p-4">
                   <h3 className="font-bold text-text-primary mb-3 text-sm">
                     Active Users ({activeUsers.length})
@@ -336,7 +325,7 @@ export default function ChatroomMessagesPage() {
             </div>
 
             {/* Chat Area */}
-            <div className="border border-border-strong rounded-lg">
+            <div className="border-0 md:border md:border-border-strong rounded-none md:rounded-lg">
               {/* Messages */}
               <ChatMessageList
                 messages={messages}
@@ -347,13 +336,20 @@ export default function ChatroomMessagesPage() {
                 emptyStateMessage="No messages yet. Start the conversation!"
               />
 
+              {/* Disconnect indicator (sticky once shown until refresh) */}
+              {roomLost && (
+                <div className="mb-2 p-2 bg-error-bg border border-red-400 text-error-text-strong rounded text-center text-sm font-semibold">
+                  You have disconnected
+                </div>
+              )}
+
               {/* Send Message Form */}
               <ChatInput
                 value={newMessage}
                 onChange={setNewMessage}
                 onSubmit={handleSubmit}
-                disabled={isSending}
-                placeholder={isSending ? 'Sending...' : 'Type a message...'}
+                disabled={isSending || roomLost}
+                placeholder={roomLost ? 'Disconnected' : isSending ? 'Sending...' : 'Type a message...'}
                 autoScroll={autoScroll}
                 onAutoScrollChange={setAutoScroll}
                 showAutoScroll={true}

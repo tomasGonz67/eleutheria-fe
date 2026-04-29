@@ -25,14 +25,16 @@ function timeAgo(dateStr: string): string {
 
 export default function Header({ currentPage }: HeaderProps) {
   const router = useRouter();
-  const { socket } = useChatStore();
+  const { socket, setMyHideDiscriminator, myAcceptingMessageRequests, setMyAcceptingMessageRequests } = useChatStore();
   const [notificationCount, setNotificationCount] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isBellOpen, setIsBellOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-  const [rejectingMessages, setRejectingMessages] = useState(false);
+  // Derived from the global store so this toggle stays in sync with the
+  // identical toggle exposed by UserActionMenu when clicking your own name.
+  const rejectingMessages = myAcceptingMessageRequests === false;
   const [appearOffline, setAppearOffline] = useState(false);
   const [hideDiscriminator, setHideDiscriminator] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -49,9 +51,10 @@ export default function Header({ currentPage }: HeaderProps) {
       try {
         const response = await getCurrentUser();
         setNotificationCount(response.user.notifications || 0);
-        setRejectingMessages(!response.user.accepting_message_requests);
+        setMyAcceptingMessageRequests(response.user.accepting_message_requests ?? true);
         setAppearOffline(response.user.appear_offline || false);
         setHideDiscriminator(response.user.hide_discriminator || false);
+        setMyHideDiscriminator(response.user.hide_discriminator || false);
       } catch (error) {
         console.error('Error fetching notifications:', error);
       }
@@ -299,7 +302,7 @@ export default function Header({ currentPage }: HeaderProps) {
         onClick={async () => {
           try {
             const res = await clientApi.put('/api/session/toggle-message-requests');
-            setRejectingMessages(!res.data.accepting_message_requests);
+            setMyAcceptingMessageRequests(res.data.accepting_message_requests);
           } catch (error) {
             console.error('Error toggling message requests:', error);
           }
@@ -338,6 +341,7 @@ export default function Header({ currentPage }: HeaderProps) {
           try {
             const res = await clientApi.put('/api/session/toggle-hide-discriminator');
             setHideDiscriminator(res.data.hide_discriminator);
+            setMyHideDiscriminator(res.data.hide_discriminator);
           } catch (error) {
             console.error('Error toggling hide discriminator:', error);
           }

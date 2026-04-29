@@ -237,7 +237,7 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
               className={`px-6 py-6 ${index !== posts.length - 1 ? 'border-b border-border-strong' : ''}`}
             >
               {/* Post Header */}
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center mb-3">
                 <span className="font-semibold text-text-primary px-3 py-1 bg-surface-tertiary rounded-md">
                   <UserActionMenu
                     username={post.username}
@@ -247,9 +247,6 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
                     accentColor="#AA633F"
                     className="font-semibold text-text-primary"
                   />
-                </span>
-                <span className="text-sm text-text-muted">
-                  {new Date(post.created_at).toLocaleString(undefined, { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                 </span>
               </div>
 
@@ -321,6 +318,13 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
                       </button>
                     </>
                   )}
+                </div>
+              )}
+
+              {/* Timestamp */}
+              {editingPostId !== post.id && (
+                <div className="mt-2 text-xs text-text-muted">
+                  {new Date(post.created_at).toLocaleString(undefined, { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                 </div>
               )}
             </div>

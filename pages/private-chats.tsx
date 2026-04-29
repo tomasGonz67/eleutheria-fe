@@ -23,7 +23,7 @@ interface ChatSession {
 
 export default function PrivateChatsPage() {
   const router = useRouter();
-  const { plannedChats, showNotification, socket } = useChatStore();
+  const { plannedChats, showNotification, socket, removeMessageRequest } = useChatStore();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [mySessionToken, setMySessionToken] = useState<string | null>(null);
   const [myDiscriminator, setMyDiscriminator] = useState<string | null>(null);
@@ -211,6 +211,9 @@ export default function PrivateChatsPage() {
         // Error marking session as read
       }
 
+      // Dismiss the floating bottom-right request notification for this session.
+      removeMessageRequest(sessionId);
+
       // Refresh the sessions list
       const { sessions: allSessions } = await getAllChatSessions();
       const plannedSessions = allSessions.filter(
@@ -242,6 +245,9 @@ export default function PrivateChatsPage() {
 
       // Then delete the session
       await clientApi.delete(`/api/chat/${sessionId}/reject`);
+
+      // Dismiss the floating bottom-right request notification for this session.
+      removeMessageRequest(sessionId);
 
       // Refresh the sessions list
       const { sessions: allSessions } = await getAllChatSessions();
@@ -344,7 +350,7 @@ export default function PrivateChatsPage() {
                     onClick={() => openChat(session.id)}
                     className="border-2 border-border-light rounded-lg p-6 hover:border-aegean-400 transition-colors cursor-pointer"
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                       <div>
                         <div className="flex items-center gap-3 mb-1">
                           <UserActionMenu
@@ -417,8 +423,8 @@ export default function PrivateChatsPage() {
                                 })()}
                               </div>
                             ) : (
-                              <div className="flex flex-col items-end gap-2">
-                                <div className="flex gap-2">
+                              <div className="flex flex-col items-stretch md:items-end gap-2">
+                                <div className="flex flex-col gap-2 md:flex-row">
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();

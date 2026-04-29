@@ -24,24 +24,33 @@ export default function UserActionMenu({
 }: UserActionMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isOnline, setIsOnline] = useState<boolean | null>(null); // null = checking, true/false = result
-  const [acceptingRequests, setAcceptingRequests] = useState<boolean | null>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportDetails, setReportDetails] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
-  const { socket, showNotification } = useChatStore();
+  const {
+    socket,
+    showNotification,
+    myHideDiscriminator,
+    myAcceptingMessageRequests: acceptingRequests,
+    setMyAcceptingMessageRequests,
+  } = useChatStore();
 
   // Check if this is the current user's own message
   const isOwnUser = isOwnPost;
+  // For your own posts, prefer the live store value over the (potentially stale)
+  // server-fetched prop so toggling "Hide Discriminator" reflects everywhere instantly.
+  const effectiveHideDiscriminator = isOwnUser ? myHideDiscriminator : hideDiscriminator;
 
-  // Fetch current user's message request preference when own menu opens
+  // Hydrate the global store on first own-menu open if Header hasn't already.
+  // Keeps the toggle responsive to whichever surface the user opens first.
   useEffect(() => {
-    if (isOpen && isOwnUser) {
+    if (isOpen && isOwnUser && acceptingRequests === null) {
       clientApi.get('/api/session/me')
-        .then(res => setAcceptingRequests(res.data.user.accepting_message_requests))
+        .then(res => setMyAcceptingMessageRequests(res.data.user.accepting_message_requests))
         .catch(() => {});
     }
-  }, [isOpen, isOwnUser]);
+  }, [isOpen, isOwnUser, acceptingRequests, setMyAcceptingMessageRequests]);
 
   // Check online status when menu opens
   useEffect(() => {
@@ -149,7 +158,7 @@ export default function UserActionMenu({
   const handleToggleMessageRequests = async () => {
     try {
       const res = await clientApi.put('/api/session/toggle-message-requests');
-      setAcceptingRequests(res.data.accepting_message_requests);
+      setMyAcceptingMessageRequests(res.data.accepting_message_requests);
       showNotification(
         'success',
         res.data.accepting_message_requests
@@ -184,8 +193,16 @@ export default function UserActionMenu({
             // Options for clicking on your own name
             <>
               {discriminator && (
-                <div className="px-4 py-2 border-b border-border-light bg-surface-secondary">
+                <div className="px-4 py-2 border-b border-border-light bg-surface-secondary flex items-center justify-between gap-2">
                   <span className="text-xs text-text-faint font-mono">#{discriminator}</span>
+                  {effectiveHideDiscriminator && (
+                    <span
+                      className="text-xs text-text-muted flex items-center gap-1"
+                      title="Your discriminator is hidden from other users"
+                    >
+                      🤫 Hidden
+                    </span>
+                  )}
                 </div>
               )}
             <button

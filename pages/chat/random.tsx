@@ -26,6 +26,7 @@ export default function RandomChatPage() {
   const {
     socket,
     initializeSocket,
+    isConnected,
     randomChatStatus,
     randomChatSessionId,
     randomChatPartner,
@@ -34,9 +35,60 @@ export default function RandomChatPage() {
     setRandomChatStatus,
     setRandomChatSessionId,
     clearRandomChat,
+    addRandomChatMessage,
     joinChatSession,
     leaveChatSession,
   } = useChatStore();
+
+  // Recovery for socket disconnects while sitting on this page. When we
+  // reconnect, ask the server what happened to our chat session — if the BE
+  // ended it (the usual outcome since BE kicks dead sockets after 5-15s),
+  // surface a system message instead of silently lying about an active chat.
+  // If the session is still active (brief blip), re-join the socket room so
+  // we resume receiving new messages.
+  const wasDisconnectedRef = useRef(false);
+  useEffect(() => {
+    if (!isConnected) {
+      wasDisconnectedRef.current = true;
+      return;
+    }
+    if (!wasDisconnectedRef.current) return;
+    wasDisconnectedRef.current = false;
+
+    if (!randomChatSessionId || randomChatStatus !== 'matched') return;
+    const sessionIdAtCheck = randomChatSessionId;
+
+    const injectEndedMessage = () => {
+      addRandomChatMessage({
+        id: Date.now(),
+        content: 'You were disconnected. The chat has ended.',
+        username: '',
+        is_me: false,
+        created_at: new Date().toISOString(),
+        isSystem: true,
+      });
+      setRandomChatStatus('ended');
+    };
+
+    (async () => {
+      try {
+        const res = await clientApi.get(`/api/chat/sessions/${sessionIdAtCheck}`);
+        const status = res.data?.session?.status;
+        if (status === 'ended') {
+          injectEndedMessage();
+        } else if (status === 'active') {
+          joinChatSession(sessionIdAtCheck);
+        }
+      } catch (err: any) {
+        // 404 = session deleted (partner cancelled while waiting, etc.) — treat as ended.
+        if (err?.response?.status === 404) {
+          injectEndedMessage();
+        } else {
+          console.error('Error checking session status after reconnect:', err);
+        }
+      }
+    })();
+  }, [isConnected, randomChatSessionId, randomChatStatus, addRandomChatMessage, setRandomChatStatus, joinChatSession]);
 
   // Keep refs to avoid stale closures in cleanup
   const statusRef = useRef(randomChatStatus);
@@ -201,22 +253,39 @@ export default function RandomChatPage() {
   const handleEndChat = async () => {
     if (!randomChatSessionId) return;
 
+    const wasWaiting = randomChatStatus === 'waiting';
+
     try {
       // Leave Socket.io room
       leaveChatSession(randomChatSessionId);
 
       // End session via REST API
       // If waiting, cancel the search. If active/ended, end the session
-      if (randomChatStatus === 'waiting') {
+      if (wasWaiting) {
         await cancelChatSession(randomChatSessionId);
       } else {
         await endChatSession(randomChatSessionId);
       }
 
-      // Reset state - go back to idle screen
-      clearRandomChat();
       setError(''); // Clear any errors
       cleanupCalled.current = true; // Mark as cleaned up
+
+      if (wasWaiting) {
+        // Still searching for a match - just bail to idle.
+        clearRandomChat();
+      } else {
+        // Mirror the partner-end UX: stay on the chat screen with messages
+        // visible and a system note so the ender sees the chat actually ended.
+        addRandomChatMessage({
+          id: Date.now(),
+          content: 'You ended the chat',
+          username: '',
+          is_me: false,
+          created_at: new Date().toISOString(),
+          isSystem: true,
+        });
+        setRandomChatStatus('ended');
+      }
     } catch (err) {
       console.error('Error ending chat:', err);
       // Even if API fails, reset UI
@@ -226,8 +295,10 @@ export default function RandomChatPage() {
   };
 
   const handleReroll = async () => {
-    // End current session and start new one
+    // End current session and start new one. Clear in between so the new
+    // chat doesn't inherit the previous chat's messages and system notes.
     await handleEndChat();
+    clearRandomChat();
     await handleFindChat();
   };
 
@@ -246,7 +317,14 @@ export default function RandomChatPage() {
       setNewMessage('');
     } catch (err: any) {
       console.error('Error sending message:', err);
-      setError(getErrorMessage(err, 'Failed to send message.'));
+      const status = err?.response?.status;
+      if (!err?.response || (status >= 500 && status < 600)) {
+        setError('Network error');
+      } else if (status === 429) {
+        setError(getErrorMessage(err, 'Too many messages.'));
+      } else {
+        setError("Chat doesn't exist");
+      }
     }
   };
 
