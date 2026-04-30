@@ -111,7 +111,7 @@ function CommentItem({
     <div id={`comment-${comment.id}`} className={`${depth > 0 ? 'ml-6 mt-2' : ''}`}>
       <div className={`border border-border rounded-lg p-4 ${getBackgroundColor(depth)}${highlightCommentId === comment.id ? ' comment-highlight' : ''}`}>
         {/* Comment Header */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center mb-3">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-text-primary px-3 py-1 bg-surface-elevated rounded-md">
               <UserActionMenu
@@ -138,9 +138,6 @@ function CommentItem({
               </>
             )}
           </div>
-          <span className="text-sm text-text-muted whitespace-nowrap">
-            {new Date(comment.created_at).toLocaleString(undefined, { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
-          </span>
         </div>
 
         {/* Comment Content - Show textarea if editing, otherwise show text */}
@@ -183,7 +180,7 @@ function CommentItem({
 
         {/* Comment Actions */}
         {editingCommentId !== comment.id && (
-          <div className="flex gap-3 items-center">
+          <div className="flex flex-wrap gap-x-3 gap-y-2 items-center">
             {isLoading ? (
               <span className="text-sm font-semibold text-accent-chat">Loading...</span>
             ) : isExpanded ? (
@@ -249,6 +246,13 @@ function CommentItem({
                 </button>
               </>
             )}
+          </div>
+        )}
+
+        {/* Timestamp */}
+        {editingCommentId !== comment.id && (
+          <div className="mt-2 text-xs text-text-muted">
+            {new Date(comment.created_at).toLocaleString(undefined, { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
           </div>
         )}
 
