@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { createPost, updatePost, deletePost } from '@/lib/services/posts';
@@ -37,6 +37,7 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
   const [error, setError] = useState('');
   const [editingPostId, setEditingPostId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState('');
+  const postTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +61,8 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
         comment_count: 0,
       }, ...prev]);
       setPostContent('');
+      // Collapse the textarea back to one row after submit.
+      if (postTextareaRef.current) postTextareaRef.current.style.height = 'auto';
     } catch (err: any) {
       console.error('Error creating post:', err);
       setError(getErrorMessage(err, 'Failed to create post. Please try again.'));
@@ -204,11 +207,16 @@ export default function Feed({ title = 'Global Feed', description, backLink, pos
             </div>
           )}
           <textarea
+            ref={postTextareaRef}
             value={postContent}
-            onChange={(e) => setPostContent(e.target.value)}
+            onChange={(e) => {
+              setPostContent(e.target.value);
+              e.target.style.height = 'auto';
+              e.target.style.height = `${e.target.scrollHeight}px`;
+            }}
             placeholder="What's on your mind?"
-            className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none resize-none"
-            rows={3}
+            className="w-full px-3 py-2 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none resize-none overflow-hidden"
+            rows={1}
             maxLength={25000}
             disabled={isSubmitting}
             onKeyDown={(e) => {

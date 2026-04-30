@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Header from '@/components/Header';
@@ -11,6 +11,7 @@ import UserActionMenu from '@/components/UserActionMenu';
 import { FeedPost, Forum } from '@/lib/types';
 import TruncatedText from '@/components/TruncatedText';
 import Pagination from '@/components/Pagination';
+import { useChatStore } from '@/store/chatStore';
 
 interface PostCommentsPageProps {
   forum: Forum;
@@ -340,8 +341,13 @@ function CommentItem({
   );
 }
 
-export default function PostCommentsPage({ forum, postId, comments: initialComments, username, userSessionToken, postContent, postUsername, postDiscriminator, postHideDiscriminator, postIsMine, currentPage, totalPages, totalComments, error }: PostCommentsPageProps) {
+export default function PostCommentsPage({ forum, postId, comments: initialComments, username: ssrUsername, userSessionToken, postContent, postUsername, postDiscriminator, postHideDiscriminator, postIsMine, currentPage, totalPages, totalComments, error }: PostCommentsPageProps) {
   const router = useRouter();
+  // Prefer the live store value over the SSR-seeded prop. SSR can fall back
+  // to "Anonymous" on transient cookie/network races even when the user is
+  // actually authenticated (most common after a mobile app-switch).
+  const myUsername = useChatStore((s) => s.myUsername);
+  const username = myUsername || ssrUsername;
   const [replyContent, setReplyContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
@@ -439,6 +445,8 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
     return () => { cancelled = true; };
   }, [highlightCommentId, forum.id, postId]);
 
+  const replyTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+
   const handleReplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -466,6 +474,8 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
       };
       setComments(prev => [newComment, ...prev]);
       setReplyContent('');
+      // Collapse the textarea back to one row after submit.
+      if (replyTextareaRef.current) replyTextareaRef.current.style.height = 'auto';
     } catch (err: any) {
       console.error('Error creating reply:', err);
       setFormError(getErrorMessage(err, 'Failed to post reply. Please try again.'));
@@ -836,11 +846,10 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
             )}
 
             {/* Reply Form */}
-            <div className="border border-border rounded-lg p-6 mb-6">
-              <h2 className="text-lg font-semibold mb-4 text-text-primary">Add a Reply</h2>
+            <div className="border border-border rounded-lg p-4 mb-6">
               <form onSubmit={handleReplySubmit}>
-                <div className="mb-3">
-                  <span className="text-sm text-text-tertiary">Posting as: </span>
+                <div className="mb-2 text-sm">
+                  <span className="text-text-tertiary">Posting as: </span>
                   <span className="font-semibold text-text-primary">{username}</span>
                 </div>
                 {formError && (
@@ -849,11 +858,16 @@ export default function PostCommentsPage({ forum, postId, comments: initialComme
                   </div>
                 )}
                 <textarea
+                  ref={replyTextareaRef}
                   value={replyContent}
-                  onChange={(e) => setReplyContent(e.target.value)}
+                  onChange={(e) => {
+                    setReplyContent(e.target.value);
+                    e.target.style.height = 'auto';
+                    e.target.style.height = `${e.target.scrollHeight}px`;
+                  }}
                   placeholder="Write your reply..."
-                  className="w-full p-3 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none resize-none"
-                  rows={3}
+                  className="w-full px-3 py-2 border-2 border-border text-text-inverted rounded-lg focus:border-border-strong focus:outline-none resize-none overflow-hidden"
+                  rows={1}
                   maxLength={5000}
                   disabled={isSubmitting}
                   onKeyDown={(e) => {

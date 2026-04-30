@@ -27,7 +27,9 @@ npm install
 npm run dev
 ```
 
-Then open [http://localhost:3001](http://localhost:3001).
+Next.js will start on **http://localhost:3000** by default, or fall through to **3001** / **3002** / etc. if 3000 is already in use. Watch the terminal output for the actual port.
+
+You'll also need the backend running somewhere reachable at the URL pointed to by `NEXT_PUBLIC_API_URL` (default `http://localhost:3000`). The simplest combo is to run only `backend` + `postgres` from Docker (`docker-compose up -d backend postgres` from the repo root) and the FE locally with `npm run dev` — Next picks 3001 since BE is on 3000.
 
 ## Environment Variables
 

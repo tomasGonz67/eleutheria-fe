@@ -7,6 +7,7 @@ import { API_ENDPOINTS } from '@/config/api';
 import { GetServerSideProps } from 'next';
 import { updateForum, deleteForum } from '@/lib/services/forums';
 import { FeedPost, ForumWithCounts } from '@/lib/types';
+import { useChatStore } from '@/store/chatStore';
 
 interface ForumPostsPageProps {
   forum: ForumWithCounts;
@@ -19,7 +20,11 @@ interface ForumPostsPageProps {
   error?: string;
 }
 
-export default function ForumPostsPage({ forum, posts, username, userSessionToken, currentPage, totalPages, searchQuery, error }: ForumPostsPageProps) {
+export default function ForumPostsPage({ forum, posts, username: ssrUsername, userSessionToken, currentPage, totalPages, searchQuery, error }: ForumPostsPageProps) {
+  // Prefer the live store value over the SSR-seeded prop. See _app.tsx
+  // and chatStore.myUsername for context.
+  const myUsername = useChatStore((s) => s.myUsername);
+  const username = myUsername || ssrUsername;
   const router = useRouter();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [forumName, setForumName] = useState('');

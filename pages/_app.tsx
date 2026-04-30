@@ -27,7 +27,7 @@ const libreBaskerville = Libre_Baskerville({
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const isHomePage = router.pathname === '/';
-  const { socket, initializeSocket, addMessageRequest, addPlannedChat, notification, dismissNotification, plannedChats } = useChatStore();
+  const { socket, initializeSocket, addMessageRequest, addPlannedChat, notification, dismissNotification, plannedChats, setMyUsername } = useChatStore();
   const [mySessionToken, setMySessionToken] = useState<string | null>(null);
   const [legalModal, setLegalModal] = useState<'terms' | 'privacy' | 'rules' | null>(null);
 
@@ -51,19 +51,30 @@ export default function App({ Component, pageProps }: AppProps) {
     }
   }, [isHomePage, socket, initializeSocket]);
 
-  // Get current user's session token
+  // Get current user's session token + username. Re-runs when the tab
+  // becomes visible again (mobile bfcache restores leave the SSR-seeded
+  // username stale even though the cookie still authenticates writes).
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
         const response = await getCurrentUser();
         setMySessionToken(response.user.session_token);
+        setMyUsername(response.user.username || null);
       } catch (error) {
         // User not authenticated
       }
     };
 
     fetchCurrentUser();
-  }, []);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchCurrentUser();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [setMyUsername]);
 
   // Rejoin sessions when socket connects/reconnects (only for open UI)
   useEffect(() => {

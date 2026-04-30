@@ -40,6 +40,12 @@ interface ChatStore {
   myAcceptingMessageRequests: boolean | null;
   setMyAcceptingMessageRequests: (value: boolean) => void;
 
+  // Current user's live username from /api/session/me. SSR can fall back
+  // to "Anonymous" on transient cookie/network races (especially mobile
+  // bfcache restores), so pages should prefer this when available.
+  myUsername: string | null;
+  setMyUsername: (value: string | null) => void;
+
   // Random chat state
   randomChatStatus: 'idle' | 'waiting' | 'matched' | 'ended';
   randomChatSessionId: number | null;
@@ -99,6 +105,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   setMyHideDiscriminator: (value) => set({ myHideDiscriminator: value }),
   myAcceptingMessageRequests: null,
   setMyAcceptingMessageRequests: (value) => set({ myAcceptingMessageRequests: value }),
+  myUsername: null,
+  setMyUsername: (value) => set({ myUsername: value }),
 
   // Random chat initial state
   randomChatStatus: 'idle',

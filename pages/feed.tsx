@@ -4,6 +4,7 @@ import Feed from '@/components/Feed';
 import { API_ENDPOINTS } from '@/config/api';
 import { GetServerSideProps } from 'next';
 import { FeedPost } from '@/lib/types';
+import { useChatStore } from '@/store/chatStore';
 
 interface FeedPageProps {
   posts: FeedPost[];
@@ -14,7 +15,12 @@ interface FeedPageProps {
   error?: string;
 }
 
-export default function FeedPage({ posts, username, userSessionToken, currentPage, totalPages, error }: FeedPageProps) {
+export default function FeedPage({ posts, username: ssrUsername, userSessionToken, currentPage, totalPages, error }: FeedPageProps) {
+  // Prefer the live store value over the SSR-seeded prop. SSR can fall back
+  // to "Anonymous" on transient cookie/network races even when the user is
+  // actually authenticated (most common after a mobile app-switch).
+  const myUsername = useChatStore((s) => s.myUsername);
+  const username = myUsername || ssrUsername;
   return (
     <div className="min-h-screen bg-marble-100">
       <Head>
